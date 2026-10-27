@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheet Viewer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/line-awesome/dist/line-awesome/css/line-awesome.min.css">
+    <script src="rightclick.js" defer></script>
+    <script src="login.js" defer></script>
+    
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f4f4f4;
+            padding: 2px 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            font-family: 'Roboto', sans-serif;
+            color: #333;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            flex-shrink: 0;
+        }
+        .header-title {
+            flex-grow: 1;
+            text-align: center;
+        }
+        .fullscreen-toggle {
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+/*
+        iframe {
+            border: none;
+            width: 100vw;
+            height: calc(100vh - 50px);
+        }
+*/
+        
+        iframe {
+    flex: 1; /* Takes all remaining space */
+    border: none;
+    width: 100%;
+    min-height: 0; /* Important for flex item sizing */
+}
+    </style>
+</head>
+<body>
+    <header>
+         <div class="header-title">Production Planning Dept | Line Plan</div>
+        
+        <i class="las la-expand fullscreen-toggle" id="fullscreenIcon" onclick="toggleFullscreen()"></i>
+    </header>
+     <iframe src="https://docs.google.com/spreadsheets/d/1OWCbpcE727--oZR2ziAPfbFLaqpehaLc-qMp7VKDDIo/edit?usp=sharing" allowfullscreen></iframe>
+
+    <script>
+    function toggleFullscreen() {
+        const elem = document.documentElement;
+        const icon = document.getElementById('fullscreenIcon');
+        
+        if (!document.fullscreenElement) {
+            elem.requestFullscreen?.().catch(e => console.log(e));
+            icon.classList.replace('la-expand', 'la-compress');
+        } else {
+            document.exitFullscreen?.();
+            icon.classList.replace('la-compress', 'la-expand');
+        }
+    }
+</script>
+</body>
+</html>

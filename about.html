@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About TSPL Smart App</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: white;
+            min-height: 100vh;
+            padding: 0;
+        }
+
+        .modal-content {
+            background: white;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-body {
+            padding: 25px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .app-info {
+            margin-bottom: 20px;
+        }
+
+        .app-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .app-description {
+            color: #7f8c8d;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .info-item {
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #3498db;
+        }
+
+        .info-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .contact-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+
+        .contact-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e1e8ed;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .contact-icon {
+            width: 36px;
+            height: 36px;
+            background: #3498db;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .contact-details {
+            flex: 1;
+        }
+
+        .contact-role {
+            font-size: 0.85rem;
+            color: #7f8c8d;
+            margin-bottom: 2px;
+        }
+
+        .contact-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .contact-info {
+            font-size: 0.9rem;
+            color: #3498db;
+        }
+
+        .contact-info a {
+            color: #3498db;
+            text-decoration: none;
+        }
+
+        .contact-info a:hover {
+            text-decoration: underline;
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #3498db 0%, #2c3e50 100%);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(52, 152, 219, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="modal-content">
+        <div class="modal-body">
+            <div class="app-info">
+                <div class="app-name">TSPL Smart App</div>
+                <p class="app-description">Our in-house developed web application designed to streamline operations and enhance productivity.</p>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">Version</div>
+                    <div class="info-value">3.0.1</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Last Updated</div>
+                    <div class="info-value">November 2025</div>
+                </div>
+            </div>
+            
+            <div class="contact-section">
+                <div class="contact-title">For any queries, please contact:</div>
+                
+                <div class="contact-item">
+                    <div class="contact-icon">Dev</div>
+                    <div class="contact-details">
+                        <div class="contact-role">Developer & Admin</div>
+                        <div class="contact-name">Manu Kumar M</div>
+                        <div class="contact-info">
+                            <a href="tel:9535740705">+91 95357 40705</a>
+                        </div>
+                        <div class="contact-info">
+                            <a href="mailto:manukumaraj2975@texportsyndicate.com">manukumar.tblr@texportsyndicate.com</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <button class="back-button" onclick="closeModal()">Back to Application</button>
+        </div>
+    </div>
+
+    <script>
+        function closeModal() {
+            // Send message to parent to close modal
+            if (window.parent !== window) {
+                window.parent.postMessage('closeAboutModal', '*');
+            }
+        }
+
+        // Close with Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // Focus management for accessibility
+        document.addEventListener('DOMContentLoaded', function() {
+            const backButton = document.querySelector('.back-button');
+            if (backButton) {
+                backButton.focus();
+            }
+        });
+    </script>
+</body>
+
+</html>

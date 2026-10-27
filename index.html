@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TSPL Login</title>
+    <link rel="icon" href="img/logo.png" type="image/png" sizes="32x32">
+    <link rel="preload" href="img/bgimg.png" as="image">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header>
+        <nav class="navbar">
+            <span class="hamburger-btn material-symbols-rounded">menu</span>
+            <a href="#" class="logo">
+                <img src="img/logo.png" alt="TSPL Logo">
+                <h2>Texport Syndicate Pvt Ltd.</h2>
+            </a>
+            <ul class="links">
+                <span class="close-btn material-symbols-rounded">close</span>
+            </ul>
+            <button class="login-btn">LOG IN</button>
+        </nav>
+    </header>
+
+    <div class="form-popup">
+        <span class="close-btn material-symbols-rounded">close</span>
+        <div class="form-box login">
+            <div class="form-details">
+                <h2>Welcome</h2>
+            </div>
+            <div class="form-content">
+                <h2>LOG IN</h2>
+                <form id="login-form">
+                    <div class="input-field">
+                        <input type="text" id="username" name="username" required>
+                        <label for="username">User ID</label>
+                        <div class="error-message" id="username-error">Please enter a valid username</div>
+                    </div>
+                    <div class="input-field">
+                        <input type="password" id="password" name="password" required>
+                        <label for="password">Password</label>
+                        <div class="error-message" id="password-error">Please enter your password</div>
+                    </div>
+                    <button class="button" type="submit" id="login-button">Go</button>
+                    <div class="form-footer">
+                        TSPL Smart App | <span class="version-text">Ver 3.011125</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="security.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TSPL | Q&amp;T</title>
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css" />
+
+    <!-- CSS Files -->
+    <!-- Commented out missing CSS file -->
+    <link rel="stylesheet" href="css/main.css">
+    <style>
+        /* About Modal Styles */
+        .about-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .about-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .about-modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh; /* Changed from height to max-height */
+            height: auto; /* Added for flexibility */
+            overflow: hidden;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .about-modal.active .about-modal-content {
+            transform: translateY(0);
+        }
+
+        .about-modal-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 15px 20px;
+            position: relative;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .about-modal-header h2 {
+            font-weight: 600;
+            font-size: 1.3rem;
+            margin: 0;
+        }
+
+        .close-about-modal {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .close-about-modal:hover {
+            transform: scale(1.2);
+        }
+
+        .about-iframe {
+            width: 100%;
+            height: calc(100% - 60px);
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Mobile overlay (click to close sidebar) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+
+    <div class="app" id="appRoot">
+        <!-- Header with fixed height -->
+        <header class="app-header">
+            <div class="brand" aria-label="Application title">
+                <button class="icon-btn" id="btnSidebar" aria-label="Toggle sidebar" title="Toggle sidebar">
+                    <i class="las la-bars" aria-hidden="true"></i>
+                </button>
+                <div class="title">TSPL | <span>HO</span></div>
+            </div>
+
+            <div class="header-actions">
+                <button class="icon-btn" id="btnFullscreen" aria-label="Enter fullscreen" title="Fullscreen">
+                    <i class="las la-expand" id="icoExpand"></i>
+                    <i class="las la-compress" id="icoCompress" style="display:none"></i>
+                </button>
+                <button class="logout-chip" id="btnLogout" type="button">
+                    <i class="las la-sign-out-alt" aria-hidden="true"></i>
+                    <span>Log out</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" aria-label="Primary navigation">
+            <div class="sidebar-inner">
+                <div class="profile">
+                    <img src="img/TSIL_big.png" alt="TSPL Logo" />
+                    <a href="#" class="link menu-link" data-embed="home.html">
+                        Quality &amp; Tech Dept.
+                    </a>
+                </div>
+
+                <nav>
+                    <!-- CFT Report & Package Files -->
+                    <div class="single group">
+                        <a href="https://docs.google.com/spreadsheets/d/1WCAkYqhp1Ab56ezY2baa8dbNNTMdGibKOZTzl9aFpnE/edit?usp=sharing" class="menu-link" target="_blank"><i class="las la-pen-square"></i><span>CFT Report</span></a>
+                        <a href="https://docs.google.com/spreadsheets/d/1u6G9HfO-tdvCMYQeFe6aPvPWt421NWKxxa3y9C0ziFQ/edit?usp=sharing" class="menu-link" target="_blank"><i class="las la-toolbox"></i><span>Package Files Data</span></a>
+                    </div>
+
+                    <!-- COT Approvals -->
+                    <div class="single group">
+                        <a href="https://docs.google.com/spreadsheets/d/17rqWjNTT3JF-4oY0XfQhj7z1bpLUD6WTjV0Eql0RE9E/edit?usp=sharing" class="menu-link" target="_blank"><i class="las la-clipboard-check"></i><span>COT Approvals</span></a>
+                   
+                        <a class="menu-link" href="#" data-embed="https://script.google.com/macros/s/AKfycbyOzGGqkAHfCAGrzauAVW6KP2mLRLV2sasBpc8dlx-UST6FM93gDmC8tAuboLw0E38qEQ/exec"><i class="las la-file-invoice"></i><span>CFT Files</span></a>
+                    </div>
+
+
+                    <!-- TS9 7 TS4 FSA Datasheet -->
+                    <div class="single group">
+                        <a href="https://docs.google.com/spreadsheets/d/1_Vh36lZ_HhXbm5S6x-D8KSoFuL7kJEwXGYkEzqv-Vx8/edit?usp=sharing" class="menu-link" target="_blank"><i class="las la-pen-square"></i><span>FSA Audit App Sheet</span></a>
+                        
+                    </div>
+
+                    <!-- ABOUT & Contact -->
+                    <div class="single group">
+                        <a href="https://lookerstudio.google.com/embed/reporting/72b4579b-c9df-4c3e-a280-34d564205d14/page/p_cvjd9osd8c" class="menu-link" target="_blank"><i class="las la-user-circle"></i><span>Contact Me</span></a>
+                        <button class="menu-link" id="about-btn" type="button">
+                            <i class="las la-info-circle"></i>
+                            <span>About</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="app-main">
+            <div class="iframe-wrap" id="iframeWrap">
+                <iframe id="mainFrame" title="Dashboard" src="home.html" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </main>
+
+        <!-- Fixed Footer -->
+        <footer class="app-footer">
+            <div class="footer-left">
+                <span>&copy; 2025 TSPL Smart Tool</span>
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <a href="#" class="footer-link">Terms of Service</a>
+            </div>
+            <div class="footer-right">
+                <span>Version: 2.0.1</span>
+                <span>Last Updated: Nov 2025</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- About Modal with iframe -->
+    <div id="about-modal" class="about-modal" role="dialog" aria-labelledby="about-modal-title" aria-hidden="true">
+        <div class="about-modal-content">
+            <div class="about-modal-header">
+                <h2 id="about-modal-title">About TSPL Smart App</h2>
+                <button class="close-about-modal" aria-label="Close" type="button">&times;</button>
+            </div>
+            <iframe id="about-iframe" class="about-iframe" src="about.html" title="About TSPL Smart App"></iframe>
+        </div>
+    </div>
+
+    <!-- Security and session checking -->
+    <!-- Commented out missing JavaScript files -->
+    <script src="security.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/about.js"></script>
+
+    <!-- Basic JavaScript to handle modal -->
+    <script>
+        // Simple modal functionality (temporary replacement for about.js)
+        document.addEventListener('DOMContentLoaded', function() {
+            const aboutBtn = document.getElementById('about-btn');
+            const aboutModal = document.getElementById('about-modal');
+            const closeBtn = document.querySelector('.close-about-modal');
+
+            if (aboutBtn && aboutModal) {
+                aboutBtn.addEventListener('click', function() {
+                    aboutModal.classList.add('active');
+                    aboutModal.setAttribute('aria-hidden', 'false');
+                });
+
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', function() {
+                        aboutModal.classList.remove('active');
+                        aboutModal.setAttribute('aria-hidden', 'true');
+                    });
+                }
+
+                // Close on backdrop click
+                aboutModal.addEventListener('click', function(e) {
+                    if (e.target === aboutModal) {
+                        aboutModal.classList.remove('active');
+                        aboutModal.setAttribute('aria-hidden', 'true');
+                    }
+                });
+
+                // Close on Escape key
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && aboutModal.classList.contains('active')) {
+                        aboutModal.classList.remove('active');
+                        aboutModal.setAttribute('aria-hidden', 'true');
+                    }
+                });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

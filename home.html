@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TSIL Home</title>
+    <style>
+      :root {
+        --bg: #fff;
+        --panel: #f8f8f8;
+        --panel-2: #f3f4f6;
+        --text: #1f2937;
+        --muted: #4b5563;
+        --brand: #2196f3; /* classic blue */
+        --border: #d1d5db;
+        --hover: rgba(37, 99, 235, 0.08);
+      }
+
+      body {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial;
+        background: var(--bg);
+        color: var(--text);
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        overflow-x: hidden;
+      }
+
+      header {
+        width: 100%;
+        background: var(--panel);
+        color: var(--brand);
+        text-align: center;
+        padding: 0.25rem 0;
+        font-size: 0.68rem;
+        border-bottom: 1px solid var(--border);
+      }
+
+      marquee {
+        font-weight: 600;
+        letter-spacing: 0.3px;
+      }
+
+      #image-slider {
+        width: 99.5%;
+        height: 300px;
+        position: relative;
+        border-radius: 0;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+      }
+
+      #image-slider img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        opacity: 0;
+        transition: opacity 1s ease-in-out;
+      }
+
+      #image-slider .caption {
+        position: absolute; inset-inline: 0; bottom: 0;
+        padding: .75rem 1rem;
+        background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,.55) 35%, rgba(0,0,0,.75) 100%);
+        color: #fff;
+        display: grid; gap: .25rem;
+      }
+      #image-slider .caption h3 { margin: 0; font-size: 1.05rem; font-weight: 700; }
+      #image-slider .caption p { margin: 0; font-size: .9rem; opacity: .9; }
+      #image-slider .dots { position: absolute; left: 0; right: 0; bottom: .5rem; display: flex; gap: .4rem; justify-content: center; align-items: center; }
+      #image-slider .dot {
+        width: 8px; height: 8px; border-radius: 999px; border: 1px solid rgba(255,255,255,.7);
+        background: rgba(255,255,255,.3); cursor: pointer; transition: transform .2s ease, background .2s ease;
+      }
+      #image-slider .dot.active { background: var(--brand); border-color: var(--brand); transform: scale(1.2); }
+
+      @media (max-width: 1024px) { #image-slider { aspect-ratio: 16 / 9; height: min(46vh, 320px); } }
+      @media (max-width: 768px)  { #image-slider { aspect-ratio: 4 / 3; height: 220px; } }
+
+      .slider-buttons {
+        position: absolute;
+        top: 50%;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        transform: translateY(-50%);
+        pointer-events: none;
+      }
+
+      .slider-button {
+        pointer-events: auto;
+        background-color: rgba(255, 255, 255, 0.7);
+        color: var(--brand);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        width: 25px;
+        height: 30px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background 0.3s ease, transform 0.2s ease;
+      }
+      .slider-button:hover {
+        background-color: var(--brand);
+        color: #fff;
+        transform: scale(1.05);
+      }
+
+      .content {
+        width: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+        padding: 0 0.75rem;
+      }
+
+      .block {
+        flex: 1 1 320px;
+        max-width: 400px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--brand);
+        border-radius: 8px;
+        padding: 0.5rem 0.75rem;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        height: 260px; /* Reduced by 50% from 525px */
+        overflow: hidden;
+      }
+      .block:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
+
+      .block h2 {
+        color: var(--brand);
+        font-size: 0.9rem;
+        margin: 0.1rem 0 0.3rem 0; /* Further reduced margins */
+        text-align: center;
+        padding-bottom: 0.3rem; /* Further reduced padding */
+        border-bottom: 2px solid var(--border);
+      }
+      .block p {
+        color: var(--muted);
+        line-height: 1.3; /* Reduced line height */
+        font-size: 0.85rem; /* Slightly smaller font */
+        margin-bottom: 0.3rem; /* Reduced margin */
+      }
+
+      .block-image {
+        width: 100%;
+        height: 174.5px; /* Fixed height for images */
+        object-fit: contain;
+        border-radius: 6px;
+        margin: 0.2rem 0; /* Further reduced margin */
+        border: 1px solid var(--border);
+        background: var(--bg);
+      }
+
+      .wish-block {
+        border-left-color: #ef4444; /* Red accent */
+      }
+
+      .info-block {
+        border-left-color: #10b981; /* Green accent */
+      }
+
+      .dob-block {
+        border-left-color: #f59e0b; /* Amber accent */
+      }
+
+      .block-content {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+/*        justify-content: space-between;*/
+      }
+
+      .note-block {
+        width: calc(100% - 3rem);
+        max-width: 1280px;
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-left: 4px solid #8b5cf6; /* Purple accent */
+        border-radius: 8px;
+        padding: 0.75rem 0.75rem;
+        margin: 1.5rem auto;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        text-align: center;
+      }
+
+      .note-block h3 {
+        color: #8b5cf6;
+        margin: 0 0 0.75rem 0;
+        font-size: 1.3rem;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+      }
+
+      .note-block p {
+        color: var(--muted);
+        line-height: 1.6;
+        margin: 0;
+        font-size: 0.95rem;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      @media (max-width: 768px) {
+        #image-slider {
+          height: 220px;
+        }
+        .block {
+          flex: 1 1 100%;
+          max-width: 100%;
+          height: auto;
+          min-height: 250px; /* Reduced min-height */
+        }
+        .block-image {
+          height: 150px; /* Adjusted for mobile */
+        }
+        .note-block {
+          width: calc(100% - 2rem);
+          padding: 1rem 1.25rem;
+          margin: 1rem auto;
+        }
+        .note-block h3 {
+          font-size: 1.2rem;
+        }
+        .note-block p {
+          font-size: 0.9rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <marquee behavior="scroll" direction="left">
+        Welcome to Texport Syndicate (I) Ltd. — Digitalisation project is in progress.
+      </marquee>
+    </header>
+
+    <div id="image-slider">
+      <img src="img/h_image1.jpg" alt="Factory floor" data-title="Operational Excellence" data-desc="Real-time insight across units and KPIs." />
+      <img src="img/h_image2.jpg" alt="Team collaboration" data-title="Collaboration & Speed" data-desc="Bringing planning, production and quality together." />
+      <img src="img/h_image3.jpg" alt="Quality check" data-title="Quality First" data-desc="Track DQR, FSA, and audit readiness at a glance." />
+      <img src="img/h_image4.jpg" alt="Innovation" data-title="Team Collaboration" data-desc="Enhancing teamwork and communication across departments." />
+      <img src="img/h_image5.jpg" alt="Digital" data-title="Empowering Digital Transformation" data-desc="TSPL’s green initiative for smarter, sustainable, and real-time business transformation." />   
+      <div class="slider-buttons">
+        <button class="slider-button left" aria-label="Previous" onclick="prevSlide()">&#10094;</button>
+        <button class="slider-button right" aria-label="Next" onclick="nextSlide()">&#10095;</button>
+      </div>
+      <div class="caption" id="sliderCaption" aria-live="polite">
+        <h3></h3>
+        <p></p>
+      </div>
+      <div class="dots" id="sliderDots"></div>
+    </div>
+
+    <div class="content">
+      <div class="block wish-block">
+        <h2>Day quotes & Greetings</h2>
+        <div class="block-content">
+          <div>
+            <img src="img/wish1.png" alt=" Day quotes and Greetings" class="block-image">
+          </div>
+          <div>
+            <p style="color: var(--brand); font-weight: 600; text-align: center; margin-top: 0.3rem;">
+              .
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="block info-block">
+        <h2>Information</h2>
+        <div class="block-content">
+          <div>
+            <img src="img/info1.png" alt="Digitalisation Information" class="block-image">
+          </div>
+          <div>
+            <p style="font-size: 0.8rem; color: var(--muted); text-align: center; margin-top: 0.3rem;">
+              Latest Update: System enhancements completed for better performance and user experience.
+            </p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="block dob-block">
+        <h2>Birthday Wishes</h2>
+        <div class="block-content">
+          <div>
+            <img src="img/bod1.png" alt="Birthday Celebrations" class="block-image">
+          </div>
+          <div>
+            <p style="color: var(--brand); font-weight: 600; text-align: center; font-size: 0.85rem; margin: 0.2rem 0;">
+              • Mahesh - Nov 15 | • Harini - Nov 22<br>
+                        </p>
+            <p style="text-align: center; margin-top: 0.2rem; font-size: 0.75rem; color: var(--muted);">
+              Happy Birthday! 🎉
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="note-block">
+      <h3>Notification</h3>
+      <p>We are pleased to inform you that the new TSPL Web Application UI went live on 10-Nov-2025.
+If you notice any missing modules, access issues, or user-login inconsistencies, please share the details by emailing manukumar.tblr@texportsyndicate.com
+.</p>
+    </div>
+
+    <script>
+      let currentSlide = 0;
+      const slides = document.querySelectorAll('#image-slider img');
+      const caption = document.getElementById('sliderCaption');
+      const capTitle = caption.querySelector('h3');
+      const capDesc = caption.querySelector('p');
+      const dotsWrap = document.getElementById('sliderDots');
+
+      function updateCaption(index) {
+        const img = slides[index];
+        capTitle.textContent = img.getAttribute('data-title') || img.alt || '';
+        capDesc.textContent  = img.getAttribute('data-desc')  || '';
+      }
+
+      function renderDots() {
+        dotsWrap.innerHTML = '';
+        slides.forEach((_, i) => {
+          const dot = document.createElement('button');
+          dot.className = 'dot' + (i === currentSlide ? ' active' : '');
+          dot.type = 'button';
+          dot.setAttribute('aria-label', `Go to slide ${i+1}`);
+          dot.addEventListener('click', () => showSlide(i));
+          dotsWrap.appendChild(dot);
+        });
+      }
+
+      function showSlide(n) {
+        slides[currentSlide].style.opacity = 0;
+        currentSlide = (n + slides.length) % slides.length;
+        slides[currentSlide].style.opacity = 1;
+        updateCaption(currentSlide);
+        [...dotsWrap.children].forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+      }
+
+      function prevSlide() { showSlide(currentSlide - 1); }
+      function nextSlide() { showSlide(currentSlide + 1); }
+
+      (function enableSwipe(){
+        const el = document.getElementById('image-slider');
+        let sx = 0, sy = 0;
+        el.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, {passive:true});
+        el.addEventListener('touchend', e => {
+          const t = e.changedTouches[0];
+          const dx = t.clientX - sx, dy = t.clientY - sy;
+          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+            dx < 0 ? nextSlide() : prevSlide();
+          }
+        });
+      })();
+
+      window.addEventListener('keydown', e => {
+        if (e.key === 'ArrowLeft') prevSlide();
+        if (e.key === 'ArrowRight') nextSlide();
+      });
+
+      slides.forEach((img, i) => img.style.opacity = i === 0 ? 1 : 0);
+      updateCaption(0);
+      renderDots();
+      setInterval(nextSlide, 5000);
+    </script>
+
+    <!-- Content Protection Features -->
+    <script>
+      // 1. Disable right-click context menu
+      document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+      });
+      
+      // 2. Disable text selection
+      document.addEventListener('selectstart', function(e) {
+        e.preventDefault();
+        return false;
+      });
+      
+      // Apply CSS to prevent text selection
+      document.head.insertAdjacentHTML('beforeend', `
+        <style>
+          body {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+          }
+        </style>
+      `);
+      
+      // 3. Enhanced keyboard shortcuts protection
+      document.addEventListener('keydown', function(e) {
+        // Disable F12 (Developer Tools)
+        if (e.key === 'F12') {
+          e.preventDefault();
+          return false;
+        }
+        
+        // Disable Ctrl+Shift+I (Developer Tools)
+        if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+          e.preventDefault();
+          return false;
+        }
+        
+        // Disable Ctrl+Shift+J (Developer Tools - Console)
+        if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+          e.preventDefault();
+          return false;
+        }
+        
+        // Disable Ctrl+U (View Source)
+        if (e.ctrlKey && e.key === 'u') {
+          e.preventDefault();
+          return false;
+        }
+        
+        // Disable Ctrl+S (Save Page)
+        if (e.ctrlKey && e.key === 's') {
+          e.preventDefault();
+          return false;
+        }
+        
+        // Disable Ctrl+P (Print)
+        if (e.ctrlKey && e.key === 'p') {
+          e.preventDefault();
+          return false;
+        }
+        
+        // Disable Ctrl+C (Copy) - only for body text, not input fields
+        if (e.ctrlKey && e.key === 'c' && !['INPUT', 'TEXTAREA'].includes(e.target.tagName)) {
+          e.preventDefault();
+          return false;
+        }
+      });
+    </script>
+  </body>
+
+</html>
+
+
+
+
+

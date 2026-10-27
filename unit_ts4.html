@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TSPL | TS4</title>
+
+    <!-- Favicon & Icons -->
+    <link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css" />
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/about.css">
+
+</head>
+
+<body>
+    <!-- Page -->
+
+    <div class="app" id="appRoot">
+        <!-- Header with fixed height -->
+        <header class="app-header">
+            <div class="brand" aria-label="Application title">
+                <button class="icon-btn" id="btnSidebar" aria-label="Toggle sidebar" title="Toggle sidebar">
+                    <i class="las la-bars" aria-hidden="true"></i>
+                </button>
+                <div class="title">TSPL | <span>TS4</span></div>
+            </div>
+
+            <div class="header-actions">
+                <button class="icon-btn" id="btnFullscreen" aria-label="Enter fullscreen" title="Fullscreen">
+                    <i class="las la-expand" id="icoExpand"></i>
+                    <i class="las la-compress" id="icoCompress" style="display:none"></i>
+                </button>
+                <button class="logout-chip" id="btnLogout" type="button">
+                    <i class="las la-sign-out-alt" aria-hidden="true"></i>
+                    <span>Log out</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Sidebar -->
+        <aside class="sidebar" aria-label="Primary navigation">
+            <div class="sidebar-inner">
+                <div class="profile">
+                    <img src="img/TSIL_big.png" alt="TSPL Logo" />
+                    <a href="#" class="link menu-link" data-embed="home.html">
+                        FIPL Management
+                    </a>
+                </div>
+
+                <nav>
+                    <!-- Single item: MMR Dashboard -->
+                    <div class="single group">
+                        <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/9e1780c1-e6ec-4152-8a39-f06907767a79/page/bxz5D">
+                            <i class="las la-users-cog"></i>
+                            <span>MMR Dashboard</span>
+                        </a>
+                    </div>
+
+                    <div class="single group">
+                        <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/8fa73c26-d1ec-478b-aad2-0fe5f75e064b/page/bxz5D">
+                            <i class="las la-chart-bar"></i>
+                            <span>KPI Dashboard</span>
+                        </a>
+                    </div>
+
+                    <div class="single group">
+                        <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/b59c6603-5e9d-4a1e-84a0-9d4d960e9ff5/page/NBKSF"><i class="las la-tshirt"></i><span>DPR Dashboard</span></a>
+                        <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/e1478da6-7076-42af-b329-762a13e9dc3e/page/kCldF"><i class="las la-compass"></i><span>DQR Dashboard</span></a>
+                        <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/f1de0d36-43f8-4bc4-b150-f5664a1e3296/page/NBKSF"><i class="lab la-ioxhost"></i><span>COT Dashboard</span></a>
+                        <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/8d1f5f41-3673-47d7-9437-59a75c6b3cf8/page/NgwQ"><i class="las la-certificate"></i><span>FSA Dashboard</span></a>
+                        <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/b9dd5f0d-bf39-43ab-acca-f76531bf3c53/page/p_w52apjfprd"><i class="lar la-arrow-alt-circle-down"></i><span>Needle Dashboard</span></a>
+                        <a class="menu-link" href="https://script.google.com/macros/s/AKfycbzpr9KPEIzeWEB3ei7eOF5cDQ2wPxQz-QqyGFIDnfGocQ4v9GNACo6K2kxAfYPX8nUZ/exec" target="_blank" rel="noopener"><i class="las la-file-invoice"></i><span>Mc_Plan Dashboard</span></a>
+                    </div>
+
+
+                    <div class="single group">
+                        <a class="menu-link" href="#" data-embed="https://script.google.com/macros/s/AKfycbyOzGGqkAHfCAGrzauAVW6KP2mLRLV2sasBpc8dlx-UST6FM93gDmC8tAuboLw0E38qEQ/exec"><i class="las la-file-invoice"></i><span>CFT Files</span></a>
+                    </div>
+
+                    <!-- PPD Line Plan -->
+                    <details class="menu group">
+                        <summary class="menu-head">
+                            <i class="las la-align-left"></i>
+                            <span>Line Plan</span>
+                            <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
+                        </summary>
+                        <div class="submenu">
+                            <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/4e6a0d10-2cd3-46e6-9033-3575da8bf3b9/page/p_x2awv5d1td"><i class="las la-table"></i><span>Plan Summary</span></a>
+                            <a href="#" class="menu-link" onclick="window.open('https://docs.google.com/spreadsheets/d/1nW7CoUhPhpuHjWVSjfEmcrKJF_3wcoQ1NUCzerwi_F0/edit?usp=sharing', '_blank')"><i class="las la-list"></i><span>Unit Line Plans</span></a>
+                        </div>
+                    </details>
+
+                    <!-- Needle Inventory -->
+                    <details class="menu group">
+                        <summary class="menu-head">
+                            <i class="lab la-vuejs"></i>
+                            <span>Needle Inventory</span>
+                            <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
+                        </summary>
+                        <div class="submenu">
+                            <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/3a8d0228-6c74-4232-85e8-980f41cc1d57/page/bbplF"><i class="las la-file-invoice"></i><span>Needle Stock & Track</span></a>
+                            <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/068ff5c9-f91f-4943-a03c-54a27fe54791/page/45GEF"><i class="las la-swatchbook"></i><span>Needle Plan</span></a>
+                            <a class="menu-link" href="ndl_form.html" target="_blank"><i class="las la-mobile-alt"></i><span>Needle Issue Form</span></a>
+                            <a class="menu-link" href="#" data-embed="https://script.google.com/macros/s/AKfycbxDeNEHHIoTMlWKpVnnsx3VJG_KuHNh1HFkOY4lyQ4Drei767Mqp-AGapqZY_Bq_T3J/exec"><i class="las la-print"></i><span>Needle Report</span></a>
+                        </div>
+                    </details>
+
+                    <!-- DEO Files -->
+                    <details class="menu group">
+                        <summary class="menu-head">
+                            <i class="las la-folder-open"></i>
+                            <span>DEO Files</span>
+                            <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
+                        </summary>
+                        <div class="submenu">
+                            <a href="#" class="menu-link" onclick="window.open('https:/docs.google.com/spreadsheets/d/10qAXKEyirFodDMSn9vEOyK3GGwWwOSEcYMz42yzyKNI/edit?usp=sharing', '_blank')"><i class="las la-file-invoice"></i><span>DCR | Cutting</span></a>
+                            <a href="#" class="menu-link" onclick="window.open('https://docs.google.com/spreadsheets/d/1tpRTDRU-KvBz8oCXEecW14T1oTftux_tAUwWL8uLMYI/edit?usp=sharing', '_blank')"><i class="las la-file-invoice"></i><span>DPR | Production</span></a>
+                            <a href="#" class="menu-link" onclick="window.open('https://docs.google.com/spreadsheets/d/1PrRMN0FPdwWfe5JSP86JfUAcOj-kWhj-duE6Kw0MkAg/edit?usp=sharing', '_blank')"><i class="las la-file-invoice"></i><span>DQR | Sew Quality</span></a>
+                            <a href="#" class="menu-link" onclick="window.open('https://docs.google.com/spreadsheets/d/17rqWjNTT3JF-4oY0XfQhj7z1bpLUD6WTjV0Eql0RE9E/edit?usp=sharing', '_blank')"><i class="las la-pen-square"></i><span>COT | Request</span></a>
+                        </div>
+                    </details>
+
+                    <!--Documents Refer -->
+                    <details class="menu group">
+                        <summary class="menu-head">
+                            <i class="lar la-folder"></i>
+                            <span>Ref Documents</span>
+                            <i class="fas fa-chevron-down caret" aria-hidden="true"></i>
+                        </summary>
+                        <div class="submenu">
+                            <a class="menu-link" href="#" data-embed="https://script.google.com/macros/s/AKfycbyqSELjqIkrCXfXEz1dI5vArD_kBatk4VvXs-nWLy5NIrPXGY0OrJlB1MSUpTY7tR4P9Q/exec"><i class="las la-book"></i><span>Needle Ref Doc</span></a>
+                            <a class="menu-link" href="#" data-embed="https://script.google.com/macros/s/AKfycbwLEfrPJFzrSO7zbtauJhLrfx9QQXc4f2bSIeHUHvGCyx9QoKtOl4JA1F0IcIspuaX3/exec"><i class="las la-book"></i><span>TSPL Process Doc</span></a>
+                        </div>
+                    </details>
+
+                    <!-- ABOUT & Contact -->
+                    <div class="single group">
+                        <a class="menu-link" href="#" data-embed="https://lookerstudio.google.com/embed/reporting/72b4579b-c9df-4c3e-a280-34d564205d14/page/p_cvjd9osd8c"><i class="las la-user-circle"></i><span>Contact Me</span></a>
+                        <button class="menu-link" id="about-btn" type="button">
+                            <i class="las la-info-circle"></i>
+                            <span>About</span>
+                        </button>
+                    </div>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main -->
+        <main class="app-main">
+            <div class="iframe-wrap" id="iframeWrap">
+                <iframe id="mainFrame" title="Dashboard" src="home.html" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+        </main>
+
+        <!-- Fixed Footer -->
+        <footer class="app-footer">
+            <div class="footer-left">
+                <span>&copy; 2025 TSPL Smart Tool</span>
+                <a href="#" class="footer-link">Privacy Policy</a>
+                <a href="#" class="footer-link">Terms of Service</a>
+            </div>
+            <div class="footer-right">
+                <span>Version: 2.0.1</span>
+                <span>Last Updated: Nov 2025</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- About Modal with iframe -->
+    <div id="about-modal" class="about-modal" role="dialog" aria-labelledby="about-modal-title" aria-hidden="true">
+        <div class="about-modal-content">
+            <div class="about-modal-header">
+                <h2 id="about-modal-title">About TSPL Smart App</h2>
+                <button class="close-about-modal" aria-label="Close" type="button">&times;</button>
+            </div>
+            <iframe id="about-iframe" class="about-iframe" src="about.html" title="About TSPL Smart App"></iframe>
+        </div>
+    </div>
+
+    <!-- Security and session checking -->
+    <script src="security.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/about.js"></script>
+    <!-- <script src="js/looker_refresh.js"></script> -->
+</body>
+
+</html>
+
+
+
+
