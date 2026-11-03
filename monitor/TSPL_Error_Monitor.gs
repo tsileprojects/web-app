@@ -159,6 +159,7 @@ function classify_(resp) {
     if (/accounts\.google\.com/.test(loc)) return { ok: true, info: true, msg: 'Requires Google login (access restricted) - OK' };
     return { ok: true, msg: 'OK (redirect)' };
   }
+  if (code === 401 || code === 403) return { ok: true, info: true, msg: 'Access restricted to signed-in users - cannot be checked automatically' };
   if (code === 404) return { ok: false, msg: 'Program not found (404) - deployment removed or link changed' };
   if (code >= 500) return { ok: false, transient: true, msg: 'Google server error ' + code };
   if (code === 429) return { ok: false, transient: true, msg: 'Too many requests (quota) 429' };
