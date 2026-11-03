@@ -1,0 +1,40 @@
+TSPL BELL + ERROR MONITOR - SETUP (about 5 minutes)
+
+A) Upload to GitHub (repo manukumaraj/webtsil1) - keep the same folders:
+   main_ho.html        (replace)  - bell button + 2 new file links added, nothing removed
+   js/main.js          (replace)  - one-line guard: stops an existing "checkLogin is not defined" error
+   js/notify.js        (new)
+   css/notify.css      (new)
+   Your old versions stay in GitHub History, so you can always go back.
+
+B) Create the monitor (Google account eprojectstsil@gmail.com):
+   1. script.google.com > New project > name it "TSPL Error Monitor"
+   2. Delete the sample code, paste ALL of TSPL_Error_Monitor.gs, Save
+   3. Select function "setup" > Run > allow permissions
+      -> creates spreadsheet "TSPL_Error_Monitor_Log" (tabs: Log, Apps, Watch_Sheets)
+      -> finds all programs linked on your site and checks them every hour
+   4. Deploy > New deployment > type Web app > Execute as: Me, Who has access: Anyone > Deploy
+   5. Copy the Web app URL (ends with /exec)
+
+C) Connect the bell:
+   In js/notify.js line 13 paste the URL:
+      var TSPL_MONITOR_URL = 'https://script.google.com/macros/s/.../exec';
+   Upload js/notify.js again. (Or send the URL to Claude and it will do this.)
+
+OPTIONAL
+ - Sheet formula checks: in the log spreadsheet, tab Watch_Sheets, add rows:
+     Spreadsheet URL | Tab name (blank = all) | Y
+   It reports #REF!, #ERROR!, #NAME?, #VALUE! cells. Read-only.
+ - Stop checking a program: tab Apps, column "Enabled" = N.
+ - Program-level error reports: copy the TSPL_report helper from the bottom of
+   TSPL_Error_Monitor.gs into any program and wrap a function with try/catch.
+
+WHAT HAPPENS AUTOMATICALLY (safe, no data changes)
+ - Temporary Google errors (5xx / timeouts) are retried before alerting
+ - An issue closes itself when the program/sheet is healthy again
+ - A program that hangs in the dashboard is reloaded once automatically
+ - When internet comes back, the open program reloads
+
+WHAT NEEDS YOUR COMMAND
+ - Code or formula errors: press "Copy for Claude" in the bell, paste to Claude,
+   say "resolve this". Nothing in your programs or data is changed automatically.

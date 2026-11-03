@@ -1,6 +1,6 @@
 // Security and session checking
 document.addEventListener('DOMContentLoaded', function() {
-    checkLogin();
+    if (typeof checkLogin === 'function') checkLogin();
 });
 
 // Add logout button functionality

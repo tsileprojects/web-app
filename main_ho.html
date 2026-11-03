@@ -14,6 +14,7 @@
     <!-- CSS Files -->
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/about.css">
+    <link rel="stylesheet" href="css/notify.css">
 
 </head>
 
@@ -31,6 +32,10 @@
             </div>
 
             <div class="header-actions">
+                <button class="icon-btn bell-btn" id="btnBell" type="button" aria-label="Notifications" title="Notifications">
+                    <i class="las la-bell" aria-hidden="true"></i>
+                    <span class="bell-badge" id="bellBadge" hidden>0</span>
+                </button>
                 <button class="icon-btn" id="btnFullscreen" aria-label="Enter fullscreen" title="Fullscreen">
                     <i class="las la-expand" id="icoExpand"></i>
                     <i class="las la-compress" id="icoCompress" style="display:none"></i>
@@ -217,6 +222,7 @@
     <script src="security.js"></script>
     <script src="js/main.js"></script>
     <script src="js/about.js"></script>
+    <script src="js/notify.js"></script>
     <!-- <script src="js/looker_refresh.js"></script> -->
 </body>
 </html>

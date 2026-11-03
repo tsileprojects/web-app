@@ -1,0 +1,55 @@
+/* ===== TSPL notification bell ===== */
+.bell-btn { position: relative; }
+.bell-btn.has-error i { color: #d93025; animation: bellShake 1.2s ease 2; }
+@keyframes bellShake { 0%,100%{transform:rotate(0)} 15%{transform:rotate(14deg)} 30%{transform:rotate(-12deg)} 45%{transform:rotate(8deg)} 60%{transform:rotate(-4deg)} }
+.bell-badge {
+  position: absolute; top: -6px; right: -6px; min-width: 17px; height: 17px; padding: 0 4px;
+  border-radius: 9px; background: #d93025; color: #fff; font: 700 10px/17px "Roboto", Arial, sans-serif;
+  text-align: center; box-shadow: 0 0 0 2px var(--panel, #f0f8ff);
+}
+.bell-panel {
+  position: fixed; top: calc(var(--header-h, 45px) + 6px); right: 12px; z-index: 1000;
+  width: 380px; max-width: calc(100vw - 24px); max-height: calc(100vh - var(--header-h, 45px) - 40px);
+  display: flex; flex-direction: column; background: #fff; color: #0f172a;
+  border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden;
+  box-shadow: 0 12px 32px rgba(15,23,42,.18), 0 2px 6px rgba(15,23,42,.08);
+  font-family: "Roboto", Arial, sans-serif; font-size: 13px;
+  -webkit-user-select: text; user-select: text;
+}
+.bell-panel[hidden] { display: none; }
+.bell-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; background: #f0f8ff; border-bottom: 1px solid #e2e8f0; }
+.bell-head strong { font-size: 14px; }
+.bell-head-actions { display: flex; gap: 4px; align-items: center; }
+.bell-link { border: 0; background: transparent; color: #2196f3; cursor: pointer; font-size: 12px; padding: 4px 6px; border-radius: 5px; }
+.bell-link:hover { background: rgba(33,150,243,.1); }
+.bell-link[data-act="close"] { color: #5b6577; font-size: 18px; line-height: 1; }
+.bell-link:disabled { opacity: .6; cursor: default; }
+.bell-tabs { display: flex; border-bottom: 1px solid #e2e8f0; }
+.bell-tabs button { flex: 1; border: 0; background: #fff; padding: 7px; cursor: pointer; color: #5b6577; font-size: 12px; border-bottom: 2px solid transparent; }
+.bell-tabs button.on { color: #2196f3; border-bottom-color: #2196f3; font-weight: 600; }
+.bell-list { overflow-y: auto; flex: 1; }
+.bell-empty { padding: 30px 10px; text-align: center; color: #5b6577; }
+.bell-empty i { font-size: 34px; color: #1e9e5a; display: block; margin-bottom: 6px; }
+.bell-item { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; border-left: 3px solid transparent; }
+.bell-item.unread { background: #fbfdff; }
+.bell-item.sev-error { border-left-color: #d93025; }
+.bell-item.sev-warning { border-left-color: #f29900; }
+.bell-item.sev-info { border-left-color: #2196f3; }
+.bell-item-top { display: flex; align-items: center; gap: 6px; }
+.bell-dot { width: 8px; height: 8px; border-radius: 50%; background: #9aa3b2; flex: none; }
+.sev-error .bell-dot { background: #d93025; } .sev-warning .bell-dot { background: #f29900; } .sev-info .bell-dot { background: #2196f3; }
+.bell-prog { font-weight: 600; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bell-time { color: #5b6577; font-size: 11px; flex: none; }
+.bell-msg { margin: 4px 0 2px 14px; line-height: 1.35; word-break: break-word; }
+.bell-meta { margin-left: 14px; color: #5b6577; font-size: 11px; }
+.bell-actions { margin: 7px 0 0 14px; display: flex; flex-wrap: wrap; gap: 5px; }
+.bell-actions button { border: 1px solid #d0d7e2; background: #fff; border-radius: 5px; padding: 3px 8px; font-size: 11.5px; cursor: pointer; color: #0f172a; }
+.bell-actions button:hover { background: #f0f8ff; border-color: #2196f3; }
+.bell-actions button[data-act="recheck"] { color: #1565c0; }
+.bell-status { margin: 4px 0 0 14px; font-size: 11.5px; color: #1565c0; }
+.bell-status:empty { display: none; }
+.bell-foot { padding: 7px 12px; font-size: 11px; color: #5b6577; background: #fafcff; border-top: 1px solid #e2e8f0; }
+.bell-foot .warn { color: #b26a00; }
+.spin { animation: bellSpin 1s linear infinite; display: inline-block; }
+@keyframes bellSpin { to { transform: rotate(360deg); } }
+@media (max-width: 480px) { .bell-panel { right: 6px; left: 6px; width: auto; } }
