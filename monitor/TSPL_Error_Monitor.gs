@@ -32,7 +32,7 @@
  */
 
 const MON = {
-  SITE_BASE: 'https://manukumaraj.github.io/webtsil1/',
+  SITE_BASE: 'https://tsileprojects.github.io/web-app/',
   SITE_PAGES: [
     'main_ho.html', 'home.html',
     'unit_ap2.html', 'unit_fipl.html', 'unit_mrh.html', 'unit_ts2.html', 'unit_ts4.html', 'unit_ts9.html',
