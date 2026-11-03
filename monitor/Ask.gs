@@ -21,7 +21,7 @@
  */
 
 const ASK = {
-  MAX_QUERIES: 4,
+  MAX_QUERIES: 6,
   MAX_ROWS_TO_AI: 60,       // rows of each result shown to the AI for writing the answer
   MAX_ROWS_TO_USER: 200,
   SOURCES: [
@@ -29,7 +29,7 @@ const ASK = {
       key: 'FSA',
       name: 'FSA / final audit data - all units',
       id: '1_PPSVI0IBkLGmEJRPA1ioA2KBSLdJlNKFxEI3k7V1f8',     // 00_FSA_C_Datamaster_7
-      sheet: 'FSA_DM_7',
+      sheet: 'FSA_DM_7', dateCol: 'D',
       guide: [
         'One row per DEFECT LINE of an audit report; report-level columns repeat on every row of that report.',
         'Every report has exactly ONE row with AW = 1.',
@@ -60,8 +60,142 @@ const ASK = {
         '          Defect rate (OQL %) = (sum(AU) + sum(AV)) / sum(V) x 100, with AW = 1.',
         'Unless the user names an audit type, include all audit types and say so.'
       ].join('\n')
+    },
+    {
+      key: 'PROD',
+      name: 'DPR - daily sewing production by line (all units)',
+      id: '1GtxRnSbt74rvsNMj8WAUAFRZhZlqEEKTgYMD2MFc62E', sheet: 'DPR_DM_L1', dateCol: 'C',   // 00_DPR_Datamaster_Live_1.0
+      guide: [
+        'One row per sewing line per day. Use for production qty, targets, target achievement, manpower, cutting/loading, WIP, line staff.',
+        'For EFFICIENCY % use source EFF (it has available/earned minutes).',
+        ' C Date   D Unit (FIPL, TS2, TS4, TS9, AP2)   E Dept. (Sew; HR rows are manpower-only - normally filter E = \'Sew\')',
+        ' F Line No. (text: 1, 1A, 4...)   G Buyer   H Style No. (text, often starts with "# ")   I Color   J Order Qty',
+        ' K Today Cut   L Cum Cut   M Cutting MP   N Today Load   O Cum Load',
+        ' P OB SAM   Q OB MP [T]   R OB MP [O]   T Ptl Target (potential)   X Unit Target (planned target for the day)',
+        ' V Utlised MP [T]   AP Utlised MP (total operators used)',
+        ' Z Sew Batch Status: R = running, BS = batch start, SC = style change, SS = style start, L Off = line off, Un T = untrained',
+        ' AA Running Days on style   AB..AJ hourly output 1st..9th hour   AK Today Pro (pieces produced today)   AL Cum Pro   AM Line WIP',
+        ' AN Sew Downtime Status   AO Note/Remarks   AX Cost of Make   AY Booked Eff % (fraction 0.53 = 53%)',
+        ' BC Floor   BD AVP   BE GM   BF FM   BG PM   BH Floor IC   BI Line Supervisor   BK IE Manager   BO QC Manager   BP QC Incharge',
+        'Target achievement % = sum(AK) / sum(X) x 100 (ignore rows where X = 0). Output per operator = sum(AK)/sum(AP).'
+      ].join('\n')
+    },
+    {
+      key: 'EFF',
+      name: 'Line efficiency & COT (change-over) - daily per line (all units)',
+      id: '1yjSi_FswtY1Edle7SUa5dyHm9biBLmPbG7AgiewJvh4', sheet: 'DPR_Data', dateCol: 'C',    // 00_COT_Datamaster_Live_1.0
+      guide: [
+        'One row per sewing line per day (updated up to yesterday). Use for EFFICIENCY %, earned/available minutes and change-over (COT) performance.',
+        ' C Date   D Unit (FIPL, TS2, TS4, TS9, AP2)   E Dept (Sew)   F Line No   G Buyer   H Style No   I Color',
+        ' J OB SAM   K OB MP [T]   L Ptl Target   M Utilised MP   N Unit Target   O Sew Batch Status (R, SC, SS, BS, L Off)',
+        ' P Today Pro   Q Aval Min (available minutes)   R Earn Min (earned minutes)   S Eff % (text like "60.21%")',
+        ' T Number of Days Run on style   U COT Eff% Slab (target eff for that day of change-over)   V COT Day Result (Achived / Not Achived / NA)',
+        ' W Over Result (Achived / Not Achived / NA)   X Day Status (Start Day, Intital Day, Progress Day, Last Day)',
+        'EFFICIENCY % = sum(R) / sum(Q) x 100 -> query select D, sum(R), sum(Q) ... group by D. Never average column S.',
+        'COT success = count of rows with V = \'Achived\' vs \'Not Achived\'.'
+      ].join('\n')
+    },
+    {
+      key: 'QUAL',
+      name: 'DQR - daily end-line sewing quality by line (all units)',
+      id: '1RDkql2lORQorVp6nRGX2vX4hiPJGR-VumiwHFZ0Qh0Y', sheet: 'DQR_DM_L1', dateCol: 'C',   // 00_DQR_Datamaster_Live_1.0
+      guide: [
+        'One row per sewing line per day. Use for end-line checking, FTR (first time right), defective %, rejections, alteration backlog.',
+        ' C Date   D Unit (FIPL, TS2, TS4, TS9, AP2)   E Dept. (Sew)   F Line No.   G Buyer   H Style No.   I Color   J Order Qty',
+        ' K Today Pro   L Cum Pro   N Check Batch Status (R, SC, BS, L Off, BStop)   O..AF hourly checked/passed pairs',
+        ' AG Today Checked Pcs   AH Today FTR Passed Pcs   AI Today Defective Pcs   AJ Today Alteration Backlog',
+        ' AK Today Altered Check Pcs   AL Today Altered Passed Pcs   AM Today Rejected Pcs   AO Today Passed Pcs   AQ Today Bal to Check',
+        ' AR Today\'s Top 3 Defects (mostly NA)   AU..BE grand totals for the style   BF Floor   BJ PM   BL Line Supervisor   BR QC Manager   BS QC Incharge   BT Batch QC',
+        'FTR % = sum(AH) / sum(AG) x 100.  Defective % = sum(AI) / sum(AG) x 100.  Rejection % = sum(AM) / sum(AG) x 100.'
+      ].join('\n')
+    },
+    {
+      key: 'CUT',
+      name: 'DCR - daily cutting report (cut, load, embroidery/print send)',
+      id: '1hrvohBCe5AXglLUeO0GoLPXAvIhpbchsHpMq7j1HRGQ', sheet: 'DCR_all_unit', dateCol: 'C',  // 00_DCR_Datamaster_4.0000
+      guide: [
+        'One row per style/colour per day. Recent data mainly units FIPL and TS2.',
+        ' B Unit   C Date   D Buyer (upper case e.g. MATALAN, AEO, DISNEY)   E Style No.   H Colour',
+        ' I Order Qty   J +/- (extra %)   K Cut Order Qty   L Today Cut   M Total Cut   N Bal to Cut',
+        ' O Today Load   P Total Load   Q Bal to Load   R Today EMB Send   S Total EMB Send   T Bal to EMB Send',
+        ' U Today PRINT Send   V Total PRINT Send   W Bal to PRINT Send',
+        'Balance figures are cumulative per style - for "current balance" use the latest date (B/C filter with {LATEST}).'
+      ].join('\n')
+    },
+    {
+      key: 'COTRQ',
+      name: 'COT approval requests (IE head / management approvals)',
+      id: '17rqWjNTT3JF-4oY0XfQhj7z1bpLUD6WTjV0Eql0RE9E', sheet: 'COT_Rq', dateCol: 'B',       // 01_COT_Approval Request_Live_1.0
+      guide: [
+        ' A Sl No   B Submit Date   C Submit by   D Unit   E Date (COT date)   F Line   G Style   H Buyer   I Eff %   J Number of Days Run',
+        ' K COT Eff% Slab   L COT Day Result   M Downtime Status   N Note/Remarks   O Request Note',
+        ' P IE Head Approval_Status   Q IE Head Comments   R Management Approval_Status   S Management Comments'
+      ].join('\n')
+    },
+    {
+      key: 'NDLSTK',
+      name: 'Needle stock - daily stock per needle type (CMD store and each unit)',
+      tables: {
+        CMD: { id: '10ts4-o0eV6xUi8QL9J2e9wmiJogVn0nfL0xseSr7J58', sheet: 'Live_Stock' },
+        FIPL: { id: '1VaBU9HxJQSsfbvKCVzJGgBuuaussdP97viq2lW3jZwM', sheet: 'Live_Stock' },
+        TS2: { id: '1mGX-AcqIazx5q-qUh0GZ2yq23ShYVxMYkyyxJiX-cbY', sheet: 'Live_Stock' },
+        TS4: { id: '14IuvKj4YJ7bWnW-cmT2wmd_bDnrIxAtg6wziX8tEjnQ', sheet: 'Live_Stock' },
+        TS9: { id: '1EzSzC68bJAQR-ExTLjZ3-f5huDSlNM5GHTNW1kcki2k', sheet: 'Live_Stock' },
+        AP2: { id: '1iOe66_UWfSltLbDDLxhuc_eDb_RXxt-Mc-fculnR5kc', sheet: 'Live_Stock' }
+      },
+      dateCol: 'B',
+      guide: [
+        'Choose "table": CMD (central store) or a unit FIPL, TS2, TS4, TS9, AP2. One row per needle type per day.',
+        ' B Date   C Unit   D Needle_Type (e.g. FFG-CPX12-14|90, FFG-DBX1-14|90 - system-size|metric)',
+        ' E Open Stock   F Rec from Line   G Iss to Line   H Send from CMD   I Rec to CMD   J Total Issues   K Total Receives   L Close Stock',
+        'CURRENT STOCK = rows on the latest date: where B = {LATEST}. Low stock: add "and L < 10" etc.'
+      ].join('\n')
+    },
+    {
+      key: 'NDLISS',
+      name: 'Needle issue register - broken / damaged needles replaced at machines',
+      tables: {
+        FIPL: { id: '1KBAAaBR-uR0kpqkNzm35daUXn-DsocxD9bzMHlqwB0o', sheet: 'FIPL_Ndl_Data' },
+        TS2: { id: '1KBAAaBR-uR0kpqkNzm35daUXn-DsocxD9bzMHlqwB0o', sheet: 'TS2_Ndl_Data' },
+        TS4: { id: '1KBAAaBR-uR0kpqkNzm35daUXn-DsocxD9bzMHlqwB0o', sheet: 'TS4_Ndl_Data' },
+        TS9: { id: '1KBAAaBR-uR0kpqkNzm35daUXn-DsocxD9bzMHlqwB0o', sheet: 'TS9_Ndl_Data' },
+        AP2: { id: '1KBAAaBR-uR0kpqkNzm35daUXn-DsocxD9bzMHlqwB0o', sheet: 'AP2_Ndl_Data' },
+        EMB: { id: '1KBAAaBR-uR0kpqkNzm35daUXn-DsocxD9bzMHlqwB0o', sheet: 'Emb_Ndl_Data' },
+        SMP: { id: '1KBAAaBR-uR0kpqkNzm35daUXn-DsocxD9bzMHlqwB0o', sheet: 'HOSmp_Ndl_Data' }
+      },
+      dateCol: 'A',
+      guide: [
+        'Choose "table": FIPL, TS2, TS4, TS9, AP2, EMB (embroidery) or SMP (HO sample room). One row per needle exchange.',
+        ' A Date   B Time   C Unit   D Issuer   E Batch No   F Style (free text)   G Operator ID   H Operation   I Machine Type (e.g. SNLS, DNLS, OL 5T, Kansai 6T, Button Hole, Bartack)',
+        ' J Machine No   K Received Needle Type   L Rec Needle (count)   M Reason (Broken, Point out, Part Miss, Beand = bent)   N Remarks   O Issued Needle Type   P Isu Needle',
+        'Count needles with sum(L) or count(A).'
+      ].join('\n')
+    },
+    {
+      key: 'GSD',
+      name: 'GSD / IE work log - OB, cost SAM and TCR requests from merchants',
+      id: '10i2hs5eF23gCO50ixFnPrBfnTFqnpIiCd4WXxHUnxbI', sheet: 'Log', dateCol: 'A',        // GSD | Log Register
+      guide: [
+        ' A Timestamp (request date-time)   B Buyer   C Style Number   D Style Description   E Cluster (Bangalore, Mumbai)',
+        ' F Style Status (New Style, Repeated style)   G Style Construction Info   H Merchant Name   I Reference sample (Development, PP, Fit, Proto)',
+        ' J Request for (Final OB, Cost SAM, TCR, Finishing OB)   K Specification   M Assigned to   O Start Time   Q End time',
+        ' R Task Status (Yet to Do, Completed)   S Total Hours   T Review By   U Reviewed Status'
+      ].join('\n')
+    },
+    {
+      key: 'SMP',
+      name: 'HO sample room indents (sample requests & stage) - data up to July 2026',
+      id: '1_sonnMx-SiB8IyA2gE3twStOdGcWr0t8ua8K5Lle6G8', sheet: 'SmpIndent', dateCol: 'B',  // 0_2_HO_SMP_MASTER
+      guide: [
+        'One row per sample indent. NOTE: latest entries are from July 2026 - say so when asked about recent months.',
+        ' A ID   B Stage Dates (date-time of last stage update)   C Buyer   D Style Number   E Style Description   F Season',
+        ' G Style Info (New / Repeated)   H Merchant   I Sample Type (SMS, Silver Seal, Fit, PP...)   J Size   K Total Pcs',
+        ' L Construction Info   M Printing   N Embroidery   O Wash   P Others   Q Specification',
+        ' R Stage (e.g. "03.Patter Requested", "09.Under Cutting", "11.Loading Pending" - number = stage order)   S Note'
+      ].join('\n')
     }
-    // More sources (needle stock, sample status, DQR...) can be added here in the same format.
+
+    // More sources can be added here in the same format.
   ]
 };
 
@@ -100,7 +234,7 @@ function askTspl_(question, history) {
                               '\nOriginal question: ' + question + '\nReturn JSON with one corrected query in "queries".', key);
           if (fix.queries && fix.queries[0]) { const q2 = Object.assign({}, q, fix.queries[0]); r = runQuery_(q2); q = q2; }
         }
-        results.push({ purpose: q.purpose || '', source: q.source, tq: q.tq, headers: r.headers || [], rows: r.rows || [], error: r.error || '' });
+        results.push({ purpose: q.purpose || '', source: q.source + (q.table ? ' / ' + q.table : ''), tq: q.tq, headers: r.headers || [], rows: r.rows || [], error: r.error || '' });
       });
       // ---- step 3: write the answer from the numbers
       const brief = results.map((r, i) => 'Result ' + (i + 1) + ' (' + r.purpose + ')' + (r.error ? ' ERROR: ' + r.error :
@@ -114,7 +248,7 @@ function askTspl_(question, history) {
         answer: ans.answer || 'No answer.',
         table: ans.table && ans.table.headers ? ans.table
              : (main ? { headers: main.headers, rows: main.rows.slice(0, ASK.MAX_ROWS_TO_USER) } : null),
-        queries: results.map(r => ({ purpose: r.purpose, source: sourceName_(r.source), tq: r.tq, rows: r.rows.length, error: r.error })),
+        queries: results.map(r => ({ purpose: r.purpose, source: sourceName_(String(r.source).split(' / ')[0]) + (String(r.source).indexOf(' / ') > -1 ? ' - ' + String(r.source).split(' / ')[1] : ''), tq: r.tq, rows: r.rows.length, error: r.error })),
         followups: (ans.followups || []).slice(0, 3)
       };
     }
@@ -129,7 +263,11 @@ function askTspl_(question, history) {
 
 function planPrompt_(today) {
   return [
-    'You turn a factory manager\'s question into Google Visualization Query Language queries over Google Sheets.',
+    'You turn a garment-factory manager\'s question into Google Visualization Query Language queries over the company\'s Google Sheets.',
+    'First pick the right data source(s) for the question (FSA final audits, PROD production, EFF efficiency/COT, QUAL end-line quality, CUT cutting,',
+    'COTRQ COT approvals, NDLSTK needle stock, NDLISS needle issues, GSD IE work log, SMP sample indents). A question can use several sources.',
+    'Sources with several tables need a "table" value (e.g. a unit name) - use one query per table when several units are asked.',
+    'Write {LATEST} (exactly) to mean the latest date present in that table, e.g. where B = {LATEST}.',
     'Today is ' + today + '. "This week" = Monday of this week to today. "Last week" = previous Monday to Sunday.',
     '"This month" = 1st of this month to today. Month names without a year mean the most recent such month.',
     'Use column LETTERS (D, F, AN...) exactly as in the guide. Allowed: select, where, group by, pivot, order by, limit, label, format,',
@@ -138,14 +276,16 @@ function planPrompt_(today) {
     'Keep results small: use group by / order by / limit 20 where sensible. Maximum ' + ASK.MAX_QUERIES + ' queries.',
     'If the question is unclear or not about this data, set "clarify" to a short question back to the user and return no queries.',
     'Data sources:',
-    ASK.SOURCES.map(s => '### source "' + s.key + '": ' + s.name + '\n' + s.guide).join('\n\n'),
-    'Return ONLY JSON: {"queries":[{"source":"FSA","purpose":"short description","tq":"select ..."}],"clarify":""}'
+    ASK.SOURCES.map(s => '### source "' + s.key + '": ' + s.name + (s.tables ? ' (tables: ' + Object.keys(s.tables).join(', ') + ')' : '') +
+                         '\nDate column: ' + (s.dateCol || '-') + '\n' + s.guide).join('\n\n'),
+    'Return ONLY JSON: {"queries":[{"source":"FSA","table":"","purpose":"short description","tq":"select ..."}],"clarify":""}'
   ].join('\n');
 }
 
 function answerPrompt_(today) {
   return [
-    'You are "Ask TSPL", an assistant for garment-factory managers at Texport Syndicate. Today is ' + today + '.',
+    'You are "Ask TSPL", an assistant for garment-factory managers at Texport Syndicate (units FIPL, TS2, TS4, TS9, AP2; departments sewing, quality, cutting, IE/GSD, CMD needle store, sample room). Today is ' + today + '.',
+    'Percentages must be computed from sums as the data guide says (e.g. efficiency = earned min / available min), never by averaging percentages.',
     'Write the answer ONLY from the query results given. Never invent numbers. Do the arithmetic carefully (percent to 1 decimal).',
     'If a result is empty, say no records were found for that filter and suggest what to check.',
     'Pass % = PASS / (PASS + FAIL) only. Say the denominator correctly (e.g. "93 of 157 concluded audits") and mention audits with no result ("-" or blank) separately.',
@@ -160,10 +300,29 @@ function answerPrompt_(today) {
 /* ---------- read-only sheet query (Google Visualization API) ---------- */
 function runQuery_(q) {
   const src = ASK.SOURCES.filter(s => s.key === q.source)[0] || ASK.SOURCES[0];
-  const tq = String(q.tq || '').trim();
+  let t = src;
+  if (src.tables) {
+    const tk = String(q.table || '').toUpperCase();
+    t = src.tables[tk];
+    if (!t) return { error: 'Choose "table" for source ' + src.key + ': ' + Object.keys(src.tables).join(', ') };
+  }
+  let tq = String(q.tq || '').trim();
   if (!/^select\b/i.test(tq)) return { error: 'Only SELECT queries are allowed' };
-  const url = 'https://docs.google.com/spreadsheets/d/' + src.id + '/gviz/tq?tqx=out:csv&sheet=' +
-              encodeURIComponent(src.sheet) + '&tq=' + encodeURIComponent(tq);
+  if (tq.indexOf('{LATEST}') > -1) {
+    const mx = gviz_(t, 'select max(' + (src.dateCol || 'A') + ')');
+    if (mx.error) return mx;
+    const v = mx.rows[0] && mx.rows[0][0];
+    const d = v ? new Date(String(v).replace(/^(\d{4})-(\d{1,2})-(\d{1,2}).*/, '$1/$2/$3')) : null;
+    if (!d || isNaN(d)) return { error: 'Could not find the latest date' };
+    tq = tq.split('{LATEST}').join("date '" + Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd') + "'");
+    q.tq = tq;
+  }
+  return gviz_(t, tq);
+}
+
+function gviz_(t, tq) {
+  const url = 'https://docs.google.com/spreadsheets/d/' + t.id + '/gviz/tq?tqx=out:csv&sheet=' +
+              encodeURIComponent(t.sheet) + '&tq=' + encodeURIComponent(tq);
   const r = UrlFetchApp.fetch(url, { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
   const body = r.getContentText();
   if (r.getResponseCode() !== 200 || /^\s*</.test(body) || /^\s*\{\s*"version"/.test(body) ||

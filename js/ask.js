@@ -8,11 +8,14 @@
   'use strict';
   var URL_ = function () { return window.TSPL_MONITOR_URL || ''; };
   var EXAMPLES = [
+    'Efficiency % by unit yesterday',
+    'Production vs target by unit this week',
+    'FTR % by unit this month',
     'AP2 FSA pass % this month',
-    'Which style has the most stain marks in October?',
-    'Top 5 defects in TS9 last week',
-    'Pass % by unit this month',
-    'Which buyer has the most failed audits in October?'
+    'Which needle types are below 20 in CMD stock?',
+    'Broken needles by machine type in TS9 in October',
+    'Lines that failed COT last week',
+    'GSD requests pending (yet to do)'
   ];
   var history = [];      // [{q, a}]
   var busy = false;
@@ -60,9 +63,9 @@
       '<div><button type="button" class="ask-icon" data-act="new" title="New chat"><i class="las la-redo-alt"></i></button>' +
       '<button type="button" class="ask-icon" data-act="close" aria-label="Close">&times;</button></div></div>' +
       '<div class="ask-log" id="askLog"></div>' +
-      '<form class="ask-form" autocomplete="off"><textarea rows="2" placeholder="Ask about FSA results, defects, styles, buyers…" maxlength="500"></textarea>' +
+      '<form class="ask-form" autocomplete="off"><textarea rows="2" placeholder="Ask about production, efficiency, quality, FSA, cutting, needles…" maxlength="500"></textarea>' +
       '<button type="submit" class="ask-send" title="Ask"><i class="las la-paper-plane"></i></button></form>' +
-      '<div class="ask-note">Numbers are read live from the FSA Datamaster. Read-only - nothing is changed.</div>';
+      '<div class="ask-note">Numbers are read live from the department Datamasters. Read-only - nothing is changed.</div>';
     document.body.appendChild(panel);
     log = panel.querySelector('#askLog');
     input = panel.querySelector('textarea');
@@ -88,7 +91,7 @@
   }
 
   function welcome() {
-    log.innerHTML = '<div class="ask-msg bot"><div class="ask-bubble">Hello! Ask me about your FSA audits in plain words - pass %, failed audits, top defects, by unit, floor, style, buyer, auditor or date.' +
+    log.innerHTML = '<div class="ask-msg bot"><div class="ask-bubble">Hello! Ask me in plain words about production & targets, efficiency & COT, end-line quality (FTR), FSA audits, cutting, needle stock & issues, GSD requests or sample indents - by unit, line, buyer, style or date.' +
       (URL_() ? '' : '<div class="ask-warn">Ask TSPL is being set up - it will answer once the monitor link is added.</div>') +
       '</div><div class="ask-chips">' + EXAMPLES.map(function (x) { return '<button type="button" data-q="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div></div>';
   }
