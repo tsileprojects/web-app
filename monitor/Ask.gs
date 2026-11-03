@@ -234,6 +234,7 @@ function askTspl_(question, history) {
                               '\nOriginal question: ' + question + '\nReturn JSON with one corrected query in "queries".', key);
           if (fix.queries && fix.queries[0]) { const q2 = Object.assign({}, q, fix.queries[0]); r = runQuery_(q2); q = q2; }
         }
+        if (!r.error) applyCalcs_(r, q);
         results.push({ purpose: q.purpose || '', source: q.source + (q.table ? ' / ' + q.table : ''), tq: q.tq, headers: r.headers || [], rows: r.rows || [], error: r.error || '' });
       });
       // ---- step 3: write the answer from the numbers
@@ -246,8 +247,8 @@ function askTspl_(question, history) {
       out = {
         ok: true,
         answer: ans.answer || 'No answer.',
-        table: ans.table && ans.table.headers ? ans.table
-             : (main ? { headers: main.headers, rows: main.rows.slice(0, ASK.MAX_ROWS_TO_USER) } : null),
+        table: main ? { headers: main.headers, rows: main.rows.slice(0, ASK.MAX_ROWS_TO_USER) }      // exact sheet numbers
+             : (ans.table && ans.table.headers ? ans.table : null),
         queries: results.map(r => ({ purpose: r.purpose, source: sourceName_(String(r.source).split(' / ')[0]) + (String(r.source).indexOf(' / ') > -1 ? ' - ' + String(r.source).split(' / ')[1] : ''), tq: r.tq, rows: r.rows.length, error: r.error })),
         followups: (ans.followups || []).slice(0, 3)
       };
@@ -272,13 +273,18 @@ function planPrompt_(today) {
     '"This month" = 1st of this month to today. Month names without a year mean the most recent such month.',
     'Use column LETTERS (D, F, AN...) exactly as in the guide. Allowed: select, where, group by, pivot, order by, limit, label, format,',
     'count, sum, avg, min, max, lower, upper, year, month (0-based!), week is not available - use date ranges. Dates: date \'yyyy-mm-dd\'.',
-    'You cannot compute percentages inside the query from conditional counts; instead return the counts (e.g. group by AN) and the answer step will compute %.',
+    'PERCENTAGES ARE CALCULATED BY THE SCRIPT, not in the query. Add to the query object:',
+    '  "ratio":[{"label":"Eff %","num":1,"den":2}]  -> column num / column den x 100 per row, plus a TOTAL row (column numbers are 0-based positions in your SELECT).',
+    '  "share":{"label":"Share %","col":1,"exclude":["-",""]} -> each row value / total of the other rows x 100 (e.g. pass % from a group by AN result; exclude blank/"-" results).',
+    'Example efficiency: {"source":"EFF","tq":"select D, sum(R), sum(Q) where ... group by D","ratio":[{"label":"Eff %","num":1,"den":2}]}',
+    'Example pass %: {"source":"FSA","tq":"select AN, count(E) where AW = 1 and ... group by AN","share":{"label":"Share %","col":1,"exclude":["-",""]}}',
+    'All sources listed below are available. Never claim data is unavailable if a listed source covers the question.',
     'Keep results small: use group by / order by / limit 20 where sensible. Maximum ' + ASK.MAX_QUERIES + ' queries.',
     'If the question is unclear or not about this data, set "clarify" to a short question back to the user and return no queries.',
     'Data sources:',
     ASK.SOURCES.map(s => '### source "' + s.key + '": ' + s.name + (s.tables ? ' (tables: ' + Object.keys(s.tables).join(', ') + ')' : '') +
                          '\nDate column: ' + (s.dateCol || '-') + '\n' + s.guide).join('\n\n'),
-    'Return ONLY JSON: {"queries":[{"source":"FSA","table":"","purpose":"short description","tq":"select ..."}],"clarify":""}'
+    'Return ONLY JSON: {"queries":[{"source":"FSA","table":"","purpose":"short description","tq":"select ...","ratio":[],"share":null}],"clarify":""}'
   ].join('\n');
 }
 
@@ -286,15 +292,47 @@ function answerPrompt_(today) {
   return [
     'You are "Ask TSPL", an assistant for garment-factory managers at Texport Syndicate (units FIPL, TS2, TS4, TS9, AP2; departments sewing, quality, cutting, IE/GSD, CMD needle store, sample room). Today is ' + today + '.',
     'Percentages must be computed from sums as the data guide says (e.g. efficiency = earned min / available min), never by averaging percentages.',
-    'Write the answer ONLY from the query results given. Never invent numbers. Do the arithmetic carefully (percent to 1 decimal).',
+    'Write the answer ONLY from the query results given. Never invent numbers.',
+    'Percent columns (ending in %) and TOTAL rows were calculated exactly by the script - copy those values, do NOT recalculate them yourself.',
     'If a result is empty, say no records were found for that filter and suggest what to check.',
     'Pass % = PASS / (PASS + FAIL) only. Say the denominator correctly (e.g. "93 of 157 concluded audits") and mention audits with no result ("-" or blank) separately.',
     'Only suggest follow-ups that this data can answer (unit, floor, auditor, buyer, style, defect type, date) - there is no line-wise data.',
     'Answer in 1-4 short sentences, leading with the key number. Use **bold** for the key figure. Mention the period and unit used.',
     'If the question was in Hindi/Kannada/Tamil/Telugu, answer in that language.',
-    'Optionally give a clean table for the user (max 15 rows) with readable headers, e.g. pass/fail counts with Pass %.',
+    'The user already sees the result table; set "table" to null. Use "tableFrom" (1-based) to choose which result is shown.',
     'Return ONLY JSON: {"answer":"...","table":{"headers":["..."],"rows":[["..."]]} or null,"tableFrom":0,"followups":["up to 3 short follow-up questions"]}'
   ].join('\n');
+}
+
+
+/* ---------- exact % calculations (done by the script, not by the AI) ---------- */
+// q.ratio: [{label, num, den}]  -> new column = num/den*100 per row (+ TOTAL row from sums)
+// q.share: {label, col, exclude:[...]} -> new column = row value / total of included rows * 100
+function applyCalcs_(r, q) {
+  const num = v => { const n = parseFloat(String(v).replace(/[,%\s]/g, '')); return isNaN(n) ? 0 : n; };
+  const pct = (a, b) => b ? (Math.round(a / b * 1000) / 10).toFixed(1) : '';
+  try {
+    (q.ratio || []).forEach(c => {
+      const ni = Number(c.num), di = Number(c.den);
+      if (isNaN(ni) || isNaN(di) || ni >= r.headers.length || di >= r.headers.length) return;
+      r.headers.push(c.label || 'Ratio %');
+      let sn = 0, sd = 0;
+      r.rows.forEach(row => { if (row[0] === 'TOTAL') return; sn += num(row[ni]); sd += num(row[di]); row.push(pct(num(row[ni]), num(row[di]))); });
+      if (r.rows.length > 1 && c.total !== false) {
+        let tot = r.rows.filter(x => x[0] === 'TOTAL')[0];
+        if (!tot) { tot = r.headers.slice(0, -1).map((h, i) => i === 0 ? 'TOTAL' : ''); r.rows.push(tot); }
+        tot[ni] = String(Math.round(sn * 100) / 100); tot[di] = String(Math.round(sd * 100) / 100);
+        tot.push(pct(sn, sd));
+      }
+    });
+    if (q.share && q.share.col != null) {
+      const ci = Number(q.share.col), ex = (q.share.exclude || []).map(x => String(x).trim().toLowerCase());
+      const inc = row => ex.indexOf(String(row[0]).trim().toLowerCase()) === -1 && row[0] !== 'TOTAL';
+      const tot = r.rows.filter(inc).reduce((a, row) => a + num(row[ci]), 0);
+      r.headers.push(q.share.label || 'Share %');
+      r.rows.forEach(row => row.push(inc(row) ? pct(num(row[ci]), tot) : ''));
+    }
+  } catch (e) {}
 }
 
 /* ---------- read-only sheet query (Google Visualization API) ---------- */
