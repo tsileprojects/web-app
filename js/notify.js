@@ -9,8 +9,9 @@
 (function () {
   'use strict';
 
-  // >>> Paste the TSPL Error Monitor web-app /exec URL here <<<
-  var TSPL_MONITOR_URL = '';
+
+  // set in js/tspl-config.js (shared with Ask TSPL)
+  var TSPL_MONITOR_URL = window.TSPL_MONITOR_URL || '';
 
   var POLL_MS = 2 * 60 * 1000;     // refresh bell every 2 minutes
   var LOAD_TIMEOUT_MS = 30000;     // program must load within 30 s

@@ -335,6 +335,7 @@ function setStatus_(id, status, by, note) {
  *   ?action=resolve&id=..   mark resolved (by you)
  *   ?action=runnow          run all checks now
  *   ?action=log&program=..&message=..   report an error
+ *   ?action=ask&q=..&h=..   Ask TSPL question (see Ask.gs)
  * ------------------------------------------------------------- */
 function doGet(e) {
   const p = (e && e.parameter) || {};
@@ -347,6 +348,7 @@ function doGet(e) {
       case 'recheck': out = recheck_(p.id); break;
       case 'runnow': out = { ok: true, result: runChecks() }; break;
       case 'log': out = { ok: true, id: logReport_(p) }; break;
+      case 'ask': out = askTspl_(p.q, p.h); break;
       default: out = { ok: true, service: 'TSPL Error Monitor', time: new Date() };
     }
   } catch (err) { out = { ok: false, error: String(err && err.message || err) }; }

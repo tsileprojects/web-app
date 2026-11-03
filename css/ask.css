@@ -1,0 +1,52 @@
+/* ===== Ask TSPL ===== */
+.ask-chip {
+  display: inline-flex; align-items: center; gap: .4rem; height: 30px; padding: 0 .75rem; border-radius: 6px;
+  border: 1px solid #b9d6f7; background: linear-gradient(135deg, #e8f2fe, #f4f0ff); color: #1559b5;
+  font: 600 .72rem "Roboto", Arial, sans-serif; cursor: pointer; transition: background .2s, box-shadow .2s;
+}
+.ask-chip i { font-size: 17px; }
+.ask-chip:hover, .ask-chip.on { background: #dbeafe; box-shadow: 0 0 0 2px rgba(33,150,243,.18); }
+.ask-panel {
+  position: fixed; top: var(--header-h, 45px); right: 0; bottom: var(--footer-h, 25px); width: 440px; max-width: 100vw; z-index: 990;
+  display: flex; flex-direction: column; background: #fff; color: #0f172a; border-left: 1px solid #e2e8f0;
+  box-shadow: -10px 0 30px rgba(15,23,42,.12); font: 13px/1.45 "Roboto", Arial, sans-serif;
+  -webkit-user-select: text; user-select: text;
+}
+.ask-panel[hidden] { display: none; }
+.ask-head { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: #f0f8ff; border-bottom: 1px solid #e2e8f0; }
+.ask-head strong { font-size: 14.5px; display: block; }
+.ask-head span { font-size: 11px; color: #5b6577; }
+.ask-icon { border: 0; background: transparent; font-size: 18px; color: #5b6577; cursor: pointer; padding: 3px 6px; border-radius: 5px; }
+.ask-icon:hover { background: rgba(2,6,23,.06); }
+.ask-log { flex: 1; overflow-y: auto; padding: 12px; background: #fafcff; }
+.ask-msg { margin-bottom: 12px; display: flex; flex-direction: column; }
+.ask-msg.me { align-items: flex-end; }
+.ask-bubble { max-width: 92%; padding: 9px 11px; border-radius: 10px; background: #fff; border: 1px solid #e2e8f0; word-break: break-word; }
+.ask-msg.me .ask-bubble { background: #1f6fd1; border-color: #1f6fd1; color: #fff; border-bottom-right-radius: 3px; }
+.ask-msg.bot .ask-bubble { border-bottom-left-radius: 3px; }
+.ask-msg.err .ask-bubble { border-color: #f3c3bf; background: #fff6f5; color: #a3281d; }
+.ask-warn { margin-top: 6px; color: #b26a00; font-size: 12px; }
+.ask-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.ask-chips button { border: 1px solid #c9dcf3; background: #fff; color: #1559b5; border-radius: 14px; padding: 4px 10px; font-size: 12px; cursor: pointer; text-align: left; }
+.ask-chips button:hover { background: #eef5fd; }
+.ask-table { margin-top: 8px; max-height: 260px; overflow: auto; border: 1px solid #e2e8f0; border-radius: 6px; }
+.ask-table table { border-collapse: collapse; width: 100%; font-size: 12px; }
+.ask-table th { position: sticky; top: 0; background: #eef5fd; text-align: left; padding: 5px 7px; font-weight: 600; white-space: nowrap; }
+.ask-table td { padding: 4px 7px; border-top: 1px solid #f1f5f9; }
+.ask-table tr:nth-child(even) td { background: #fbfdff; }
+.ask-how { margin-top: 8px; font-size: 12px; color: #5b6577; }
+.ask-how summary { cursor: pointer; color: #1f6fd1; }
+.ask-how > div { margin-top: 6px; }
+.ask-how code { display: block; margin-top: 3px; padding: 5px 7px; background: #f4f6fa; border-radius: 4px; font: 11px/1.4 Consolas, monospace; white-space: pre-wrap; word-break: break-all; color: #334155; }
+.ask-small { font-size: 11px; color: #5b6577; }
+.ask-form { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid #e2e8f0; background: #fff; }
+.ask-form textarea { flex: 1; resize: none; border: 1px solid #cfd8e3; border-radius: 8px; padding: 8px 10px; font: 13px "Roboto", Arial, sans-serif; outline: none; }
+.ask-form textarea:focus { border-color: #2196f3; box-shadow: 0 0 0 2px rgba(33,150,243,.15); }
+.ask-send { width: 42px; border: 0; border-radius: 8px; background: #1f6fd1; color: #fff; font-size: 19px; cursor: pointer; }
+.ask-send:disabled { opacity: .5; cursor: default; }
+.ask-note { padding: 0 12px 8px; font-size: 10.5px; color: #8a94a6; background: #fff; }
+.ask-typing { color: #5b6577; }
+.ask-typing span { display: inline-block; width: 6px; height: 6px; margin-right: 3px; border-radius: 50%; background: #9aa3b2; animation: askDot 1s infinite; }
+.ask-typing span:nth-child(2) { animation-delay: .15s; } .ask-typing span:nth-child(3) { animation-delay: .3s; margin-right: 6px; }
+@keyframes askDot { 0%, 80%, 100% { opacity: .3; } 40% { opacity: 1; } }
+@media (max-width: 600px) { .ask-chip span { display: none; } .ask-panel { width: 100vw; } }
