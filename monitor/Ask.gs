@@ -66,8 +66,11 @@ const ASK = {
 };
 
 /* ---------- entry used by doGet(action=ask) ---------- */
+var ASK_DEADLINE_ = 0;   // stop trying new AI calls after this time (ms epoch)
+
 function askTspl_(question, history) {
   const t0 = Date.now();
+  ASK_DEADLINE_ = t0 + 75000;
   question = String(question || '').trim().slice(0, 500);
   if (!question) return { ok: false, error: 'Please type a question.' };
   const key = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
@@ -92,7 +95,7 @@ function askTspl_(question, history) {
       const results = [];
       (plan.queries || []).slice(0, ASK.MAX_QUERIES).forEach(q => {
         let r = runQuery_(q);
-        if (r.error) {
+        if (r.error && Date.now() < ASK_DEADLINE_ - 20000) {
           const fix = gemini_(planPrompt_(today), 'This query failed with error: ' + r.error + '\nQuery: ' + q.tq +
                               '\nOriginal question: ' + question + '\nReturn JSON with one corrected query in "queries".', key);
           if (fix.queries && fix.queries[0]) { const q2 = Object.assign({}, q, fix.queries[0]); r = runQuery_(q2); q = q2; }
@@ -189,6 +192,7 @@ function gemini_(system, user, key) {
   for (let i = 0; i < Math.min(models.length, 4); i++) {
     const model = models[i];
     for (let attempt = 0; attempt < 2; attempt++) {
+      if (ASK_DEADLINE_ && Date.now() > ASK_DEADLINE_) throw new Error('AI 503: timed out waiting for a free model');
       const r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
         method: 'post', contentType: 'application/json', headers: { 'x-goog-api-key': key }, payload: body, muteHttpExceptions: true
       });
