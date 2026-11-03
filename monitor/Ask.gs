@@ -174,53 +174,71 @@ function runQuery_(q) {
 function sourceName_(k) { const s = ASK.SOURCES.filter(x => x.key === k)[0]; return s ? s.name : k; }
 
 /* ---------- Gemini ---------- */
+// Tries the best model first; if Google says it is busy (429/500/503) it moves on to the next model.
 function gemini_(system, user, key) {
-  const model = geminiModel_(key);
-  const body = {
+  const body = JSON.stringify({
     systemInstruction: { parts: [{ text: system }] },
     contents: [{ role: 'user', parts: [{ text: user }] }],
     generationConfig: { responseMimeType: 'application/json' }
-  };
-  let r, txt = '';
-  for (let attempt = 0; attempt < 3; attempt++) {
-    r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
-      method: 'post', contentType: 'application/json', headers: { 'x-goog-api-key': key },
-      payload: JSON.stringify(body), muteHttpExceptions: true
-    });
-    if (r.getResponseCode() === 429 || r.getResponseCode() >= 500) { Utilities.sleep(1500 * (attempt + 1)); continue; }
-    break;
+  });
+  const cache = CacheService.getScriptCache();
+  const models = geminiModels_(key);
+  const okModel = cache.get('gemini_ok');
+  if (okModel && models.indexOf(okModel) > 0) { models.splice(models.indexOf(okModel), 1); models.unshift(okModel); }
+  let lastErr = 'no model available';
+  for (let i = 0; i < Math.min(models.length, 4); i++) {
+    const model = models[i];
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent', {
+        method: 'post', contentType: 'application/json', headers: { 'x-goog-api-key': key }, payload: body, muteHttpExceptions: true
+      });
+      const code = r.getResponseCode();
+      let res = {}; try { res = JSON.parse(r.getContentText() || '{}'); } catch (e) {}
+      if (code === 200) {
+        let txt = '';
+        try { txt = res.candidates[0].content.parts.filter(p => p.text && !p.thought).map(p => p.text).join(''); } catch (e) {}
+        txt = txt.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
+        cache.put('gemini_ok', model, 600);
+        try { return JSON.parse(txt); } catch (e) { throw new Error('AI returned an unreadable reply'); }
+      }
+      lastErr = 'AI ' + code + ': ' + ((res.error && res.error.message) || '');
+      if (code === 400 || code === 401 || code === 403) throw new Error(lastErr);       // key / request problem: do not retry
+      if (code === 404) break;                                                            // model not available: next model
+      if (attempt === 0) Utilities.sleep(1200);
+    }
   }
-  const res = JSON.parse(r.getContentText() || '{}');
-  if (r.getResponseCode() !== 200) throw new Error('AI ' + r.getResponseCode() + ': ' + ((res.error && res.error.message) || ''));
-  try { txt = res.candidates[0].content.parts.filter(p => p.text && !p.thought).map(p => p.text).join(''); } catch (e) { txt = ''; }
-  txt = txt.replace(/^```(?:json)?\s*|\s*```$/g, '').trim();
-  try { return JSON.parse(txt); } catch (e) { throw new Error('AI returned an unreadable reply'); }
+  throw new Error(lastErr);
 }
 
-// Picks the newest stable "Flash" model automatically (cached 6 h). Override with GEMINI_MODEL.
-function geminiModel_(key) {
+// Newest stable "Flash" models first, then "Flash-Lite" as backup (list cached 6 h). GEMINI_MODEL overrides.
+function geminiModels_(key) {
   const fixed = PropertiesService.getScriptProperties().getProperty('GEMINI_MODEL');
-  if (fixed) return fixed.replace(/^models\//, '');
   const cache = CacheService.getScriptCache();
-  const c = cache.get('gemini_model'); if (c) return c;
-  let best = 'gemini-2.5-flash';
-  try {
-    const r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': key }, muteHttpExceptions: true });
-    const list = (JSON.parse(r.getContentText()).models || [])
-      .filter(m => (m.supportedGenerationMethods || []).indexOf('generateContent') > -1)
-      .map(m => m.name.replace(/^models\//, ''))
-      .filter(n => /^gemini-\d+(\.\d+)?-flash$/.test(n));            // stable names only, e.g. gemini-3.6-flash
-    list.sort((a, b) => parseFloat(b.split('-')[1]) - parseFloat(a.split('-')[1]));
-    if (list.length) best = list[0];
-  } catch (e) {}
-  cache.put('gemini_model', best, 21600);
-  return best;
+  let list = null;
+  const c = cache.get('gemini_models'); if (c) list = JSON.parse(c);
+  if (!list) {
+    list = [];
+    try {
+      const r = UrlFetchApp.fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', { headers: { 'x-goog-api-key': key }, muteHttpExceptions: true });
+      const names = (JSON.parse(r.getContentText()).models || [])
+        .filter(m => (m.supportedGenerationMethods || []).indexOf('generateContent') > -1)
+        .map(m => m.name.replace(/^models\//, ''));
+      const ver = n => parseFloat(n.split('-')[1]) || 0;
+      const flash = names.filter(n => /^gemini-\d+(\.\d+)?-flash$/.test(n)).sort((a, b) => ver(b) - ver(a));
+      const lite = names.filter(n => /^gemini-\d+(\.\d+)?-flash-lite$/.test(n)).sort((a, b) => ver(b) - ver(a));
+      list = flash.slice(0, 2).concat(lite.slice(0, 1), flash.slice(2, 3));
+    } catch (e) {}
+    if (!list.length) list = ['gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+    cache.put('gemini_models', JSON.stringify(list), 21600);
+  }
+  if (fixed) { const f = fixed.replace(/^models\//, ''); list = [f].concat(list.filter(x => x !== f)); }
+  return list.slice();
 }
 
 function friendlyErr_(e) {
   const m = String(e && e.message || e);
   if (/API key not valid|API_KEY_INVALID|403/.test(m)) return 'The AI key is not valid. Please check GEMINI_API_KEY.';
-  if (/429|quota|RESOURCE_EXHAUSTED/i.test(m)) return 'AI is busy (free limit reached). Please try again in a minute.';
+  if (/429|503|500|quota|RESOURCE_EXHAUSTED|high demand|overloaded/i.test(m)) return 'Google AI is busy right now. Please try again in a minute.';
   return 'Sorry, could not answer: ' + m.slice(0, 200);
 }
 
