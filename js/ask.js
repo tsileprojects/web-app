@@ -30,7 +30,9 @@
     var timer = setTimeout(function () { end(null); }, 120000);
     function end(r) {
       if (fin) return; fin = true; clearTimeout(timer);
-      try { delete window[name]; } catch (e) { window[name] = undefined; }
+      // keep a harmless callback: a reply that arrives after the timeout must not throw
+      window[name] = function () {};
+      setTimeout(function () { try { delete window[name]; } catch (e) { window[name] = undefined; } }, 300000);
       if (s.parentNode) s.parentNode.removeChild(s);
       done(r);
     }

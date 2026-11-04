@@ -38,10 +38,12 @@
     var name = '__tsplCb' + (++cbSeq) + '_' + Date.now();
     var s = document.createElement('script');
     var finished = false;
-    var timer = setTimeout(function () { finish(null); }, 45000);
+    var timer = setTimeout(function () { finish(null); }, params.action === 'runnow' ? 300000 : 90000);
     function finish(res) {
       if (finished) return; finished = true; clearTimeout(timer);
-      try { delete window[name]; } catch (e) { window[name] = undefined; }
+      // keep a harmless callback: a reply that arrives after the timeout must not throw
+      window[name] = function () {};
+      setTimeout(function () { try { delete window[name]; } catch (e) { window[name] = undefined; } }, 300000);
       if (s.parentNode) s.parentNode.removeChild(s);
       done && done(res);
     }
@@ -299,7 +301,10 @@
       addLocal('Warning', 'Dashboard file', 'Could not load ' + e.target.tagName.toLowerCase() + ': ' + src);
       return;
     }
-    addLocal('Error', 'Dashboard script', (e && e.message ? e.message : 'Script error') + (e && e.lineno ? ' (line ' + e.lineno + ')' : ''));
+    // "Script error." with no line = an error inside a script from another website (Google, Looker...).
+    // The browser hides its details and nothing on this page can fix it, so it is not raised as an alert.
+    if (!e || (/^Script error\.?$/i.test(String(e.message || '').trim()) && !e.lineno)) return;
+    addLocal('Error', 'Dashboard script', (e.message || 'Script error') + (e.lineno ? ' (line ' + e.lineno + ')' : ''));
   }, true);
   window.addEventListener('unhandledrejection', function (e) {
     addLocal('Error', 'Dashboard script', 'Unhandled: ' + (e && e.reason && (e.reason.message || e.reason)));
