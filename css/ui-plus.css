@@ -66,7 +66,7 @@ html.tspl-dark [data-tip]:hover::after { background: #e5e7eb; color: #0f172a; }
 .menu-link .uip-star.on { color: #f59e0b; }
 
 /* ---------- Loading placeholder over the iframe ---------- */
-.iframe-wrap { position: relative; }
+/* (.iframe-wrap is already position:absolute in main.css - do not override it) */
 .uip-skel {
   position: absolute; inset: 0; z-index: 5; padding: 22px; display: grid; gap: 16px;
   grid-template-rows: 46px 1fr 1fr; background: var(--bg);
