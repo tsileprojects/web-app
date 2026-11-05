@@ -166,7 +166,7 @@
         DR.lines.map(function (l) {
           var ach = l.tgt ? l.pro / l.tgt * 100 : null; tp += l.pro || 0; tt += l.tgt || 0; te += l.earn || 0; ta += l.avail || 0;
           var nts = ln.filter(function (n) { return n.line && String(n.line).toUpperCase() === String(l.line).toUpperCase(); }).map(function (n) { return n.text; });
-          var rem = [l.remark].concat(nts).filter(Boolean).join(' | ');
+          var rem = [l.remark].concat(nts).filter(function (x) { return x && !/^(na|n\/a|-|0)$/i.test(String(x).trim()); }).join(' | ');
           return '<tr><td><b>' + esc(l.line) + '</b></td><td class="l">' + esc(l.buyer) + '</td><td class="l">' + esc(l.style) + '</td><td>' + n0(l.pro) + '</td><td>' + n0(l.tgt) + '</td><td class="' + cls(ach, 98, 90) + '">' + p1(ach) + '</td><td>' + n0(l.mp) + '</td><td class="' + cls(l.eff, 55, 45) + '">' + p1(l.eff) + '</td><td class="' + cls(l.ftr, 95, 90) + '">' + p1(l.ftr) + '</td><td>' + p1(l.dft) + '</td><td class="wrapc">' + esc(rem) + '</td></tr>';
         }).join('') + '<tr class="tot"><td>' + esc(unit) + '</td><td></td><td></td><td>' + n0(tp) + '</td><td>' + n0(tt) + '</td><td>' + p1(tt ? tp / tt * 100 : null) + '</td><td></td><td>' + p1(ta ? te / ta * 100 : null) + '</td><td colspan="3"></td></tr></tbody></table>' +
         (r.errors && r.errors.length ? '<p class="hint">' + esc(r.errors.join('; ')) + '</p>' : '') +
@@ -211,7 +211,7 @@
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tr), 'Efficiency trend');
       if (DR && DR.lines) {
         var dl = [['Unit', 'Date', 'Line', 'Buyer', 'Style', 'Output', 'Target', 'Achieved %', 'Operators', 'Efficiency %', 'FTR %', 'Defective %', 'Remark']];
-        DR.lines.forEach(function (l) { dl.push([DR.unit, DR.date, l.line, l.buyer || '', l.style || '', l.pro || 0, l.tgt || 0, l.tgt ? r1(l.pro / l.tgt * 100) : '', l.mp || '', r1(l.eff), r1(l.ftr), r1(l.dft), l.remark || '']); });
+        DR.lines.forEach(function (l) { dl.push([DR.unit, DR.date, l.line, l.buyer || '', l.style || '', l.pro || 0, l.tgt || 0, l.tgt ? r1(l.pro / l.tgt * 100) : '', l.mp || '', r1(l.eff), r1(l.ftr), r1(l.dft), (/^(na|n\/a|-|0)$/i.test(String(l.remark || '').trim()) ? '' : l.remark || '')]); });
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dl), DR.unit + ' lines');
       }
       var nt = [['Date', 'Unit', 'Line', 'Note', 'By']];
