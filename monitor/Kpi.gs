@@ -22,7 +22,7 @@ function kpiMax_(src, col) { const r = gviz_(src, 'select max(' + col + ')'); re
 /** Fast path for the web pages: fresh copy, else the last saved copy (kept up to date by refreshKpis). */
 function kpis_() {
   const cache = CacheService.getScriptCache();
-  const hit = cache.get('kpis_v1') || cache.get('kpis_stale');
+  const hit = cache.get('kpis_v2') || cache.get('kpis_stale2');
   kpiEnsureTrigger_();
   if (hit) return JSON.parse(hit);
   return kpisCompute_();
@@ -36,8 +36,8 @@ function refreshKpis() {
   try {
     const p = reportProduction_();
     const c = CacheService.getScriptCache();
-    c.put('report_v1', JSON.stringify({ ok: true, k: k, p: p }), 1800);
-    c.put('report_stale', JSON.stringify({ ok: true, k: k, p: p }), 21600);
+    c.put('report_v2', JSON.stringify({ ok: true, k: k, p: p }), 1800);
+    c.put('report_stale2', JSON.stringify({ ok: true, k: k, p: p }), 21600);
   } catch (e) {}
   return 'refreshed';
 }
@@ -64,8 +64,8 @@ function kpisCompute_() {
   try {
     const s = kpiSrc_('PROD'); const dm = kpiMax_(s, 'C');
     let d = null;
-    if (dm) {   // latest day that already has output (today's rows fill in during the shift)
-      const r0 = gviz_(s, "select C, sum(AK) where E = 'Sew' and C >= date '" + kpiFmt_(new Date(dm.getTime() - 6 * 86400000)) + "' group by C order by C desc");
+    if (dm) {   // last COMPLETE day with output (today's rows are still filling in)
+      const r0 = gviz_(s, "select C, sum(AK) where E = 'Sew' and C >= date '" + kpiFmt_(new Date(dm.getTime() - 6 * 86400000)) + "' and C < date '" + kpiFmt_(new Date()) + "' group by C order by C desc");
       (r0.rows || []).some(x => { if (kpiNum_(x[1]) > 0) { d = kpiDate_(x[0]); return true; } return false; });
       if (!d) d = dm;
     }
@@ -125,8 +125,8 @@ function kpisCompute_() {
   out.monthStart = monthStart; out.errors = errs;
   try { out.openIssues = listIssues_().open.length; } catch (e) { out.openIssues = null; }
   const js = JSON.stringify(out);
-  cache.put('kpis_v1', js, 900);
-  cache.put('kpis_stale', js, 21600);
+  cache.put('kpis_v2', js, 900);
+  cache.put('kpis_stale2', js, 21600);
   return out;
 }
 
