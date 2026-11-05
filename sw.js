@@ -1,12 +1,12 @@
 /* TSPL app: opens instantly from the phone's saved copy and updates in the
    background (stale-while-revalidate). Live data from Google is never cached here.
    Bump VERSION whenever app files change - the app then shows "New version". */
-const VERSION = 'tspl-app-v7';
+const VERSION = 'tspl-app-v8';
 const SHELL = ['m.html', 'manifest.webmanifest', 'programs.json',
   'js/tspl-config.js', 'js/tspl-app.js', 'js/home-btn.js', 'js/i18n.js', 'img/app-192.png', 'img/tsilfaviconn.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))));   // waits for the user to tap "Update"
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL.map(u => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));   // new version takes over at once
 });
 self.addEventListener('message', e => { if (e.data === 'skipWaiting') self.skipWaiting(); });
 self.addEventListener('activate', e => {
