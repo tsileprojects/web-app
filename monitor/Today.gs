@@ -113,7 +113,8 @@ function drillLive_(unit, date, fresh) {
   const styleNames = Object.keys(prod).map(k => prod[k].style).filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 25);
   if (styleNames.length) {
     try {
-      const cond = styleNames.map(n => "H = '" + n.replace(/'/g, "\\'") + "'").join(' or ');
+      const cond = styleNames.filter(n => !(n.indexOf("'") > -1 && n.indexOf('"') > -1))
+        .map(n => n.indexOf("'") > -1 ? 'H = "' + n + '"' : "H = '" + n + "'").join(' or ');
       const r = appCsv_(kpiSrc_('PROD'), "select D, H, I, sum(AK), min(C) where E = 'Sew' and C <= date '" + date + "' and (" + cond + ") group by D, H, I");
       if (r.error) errs.push('cumulative: ' + r.error);
       (r.rows || []).forEach(x => {
