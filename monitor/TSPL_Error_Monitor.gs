@@ -353,8 +353,8 @@ function doGet(e) {
       case 'kpis': out = kpis_(); break;
       case 'apps': out = appsStatus_(); break;
       case 'report': out = reportData_(); break;
-      case 'drill': out = drillLive_(p.unit, p.date); break;
-      case 'prod_day': out = prodDay_(p.date); break;
+      case 'drill': out = drillLive_(p.unit, p.date, p.fresh); break;
+      case 'prod_day': out = prodDay_(p.date, p.fresh); break;
       case 'notes': out = notes_(); break;
       case 'addnote': out = axNoteSigned_(p); break;
       case 'auth_start': out = axStart_(p); break;
@@ -376,7 +376,7 @@ function doGet(e) {
       case 'deep_plan': out = deepPlan_(p); break;
       case 'deep_run': out = deepRun_(p); break;
       case 'deep_write': out = deepWrite_(p); break;
-      case 'today': out = todayLive_(); break;
+      case 'today': out = todayLive_(p.fresh); break;
       default: out = { ok: true, service: 'TSPL Error Monitor', time: new Date() };
     }
   } catch (err) { out = { ok: false, error: String(err && err.message || err) }; }

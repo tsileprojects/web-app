@@ -18,14 +18,23 @@ function tdHours_(x, from) {
   return { hours: hours, sum: hours.reduce((a, b) => a + b, 0), done: last };
 }
 
-function todayLive_() { return prodDay_(tdToday_()); }
+/** "Update now": re-read the sheet, but at most once a minute per view. */
+function tdFresh_(key, fresh) {
+  if (String(fresh) !== '1') return false;
+  const c = CacheService.getScriptCache();
+  if (c.get('fresh_' + key)) return false;
+  c.put('fresh_' + key, '1', 60);
+  return true;
+}
 
-function prodDay_(date) {
+function todayLive_(fresh) { return prodDay_(tdToday_(), fresh); }
+
+function prodDay_(date, fresh) {
   date = String(date || '');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, error: 'Date must be YYYY-MM-DD' };
   const isToday = date === tdToday_();
   const cache = CacheService.getScriptCache(), key = 'prodday_' + date;
-  const hit = cache.get(key); if (hit) return JSON.parse(hit);
+  const hit = cache.get(key); if (hit && !tdFresh_(key, fresh)) return JSON.parse(hit);
   const tz = Session.getScriptTimeZone();
   const out = { ok: true, date: date, live: isToday, time: Utilities.formatDate(new Date(), tz, 'HH:mm'), units: [] };
   const r = appCsv_(kpiSrc_('PROD'), "select D, sum(AK), sum(X), count(F), " + TD_H.map(c => 'sum(' + c + ')').join(', ') +
@@ -42,14 +51,14 @@ function prodDay_(date) {
 }
 
 /** Line-wise and product-wise detail for one unit and date (live for today). */
-function drillLive_(unit, date) {
+function drillLive_(unit, date, fresh) {
   unit = String(unit || '').toUpperCase();
   if (KPI_UNITS.indexOf(unit) < 0) return { ok: false, error: 'Unknown unit' };
   date = String(date || '') || tdToday_();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, error: 'Date must be YYYY-MM-DD' };
   const isToday = date === tdToday_();
   const cache = CacheService.getScriptCache(), key = 'drill3_' + unit + '_' + date;
-  const hit = cache.get(key); if (hit) return JSON.parse(hit);
+  const hit = cache.get(key); if (hit && !tdFresh_(key, fresh)) return JSON.parse(hit);
   const lines = {}, errs = [];
   const L = no => { no = String(no == null ? '' : no).trim(); if (!no) return null; return lines[no] = lines[no] || { line: no, styles: [] }; };
   const w = "D = '" + unit + "' and C = date '" + date + "'";
