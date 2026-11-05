@@ -146,7 +146,7 @@
     window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
     s.src = window.TSPL_MONITOR_URL + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
     s.onerror = function () { if (!done) { done = true; cb(null); } };
-    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 100000);
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 170000);
     document.body.appendChild(s);
   }
 

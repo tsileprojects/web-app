@@ -19,9 +19,41 @@ function kpiFmt_(d) { return Utilities.formatDate(d, Session.getScriptTimeZone()
 function kpiNum_(v) { const n = parseFloat(String(v).replace(/[,%\s]/g, '')); return isNaN(n) ? 0 : n; }
 function kpiMax_(src, col) { const r = gviz_(src, 'select max(' + col + ')'); return r.error ? null : kpiDate_(r.rows[0] && r.rows[0][0]); }
 
+/** Fast path for the web pages: fresh copy, else the last saved copy (kept up to date by refreshKpis). */
 function kpis_() {
   const cache = CacheService.getScriptCache();
-  const hit = cache.get('kpis_v1'); if (hit) return JSON.parse(hit);
+  const hit = cache.get('kpis_v1') || cache.get('kpis_stale');
+  kpiEnsureTrigger_();
+  if (hit) return JSON.parse(hit);
+  return kpisCompute_();
+}
+
+/** Time trigger (every 30 min, 6 AM - 10 PM): rebuild the numbers so nobody waits. */
+function refreshKpis() {
+  const h = Number(Utilities.formatDate(new Date(), 'Asia/Kolkata', 'H'));
+  if (h < 6 || h >= 22) return 'night - skipped';
+  const k = kpisCompute_();
+  try {
+    const p = reportProduction_();
+    const c = CacheService.getScriptCache();
+    c.put('report_v1', JSON.stringify({ ok: true, k: k, p: p }), 1800);
+    c.put('report_stale', JSON.stringify({ ok: true, k: k, p: p }), 21600);
+  } catch (e) {}
+  return 'refreshed';
+}
+
+function kpiEnsureTrigger_() {
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty('kpiTrigger') === '1') return;
+  try {
+    if (!ScriptApp.getProjectTriggers().some(t => t.getHandlerFunction() === 'refreshKpis'))
+      ScriptApp.newTrigger('refreshKpis').timeBased().everyMinutes(30).create();
+    props.setProperty('kpiTrigger', '1');
+  } catch (e) {}
+}
+
+function kpisCompute_() {
+  const cache = CacheService.getScriptCache();
   const out = { ok: true, asOf: new Date(), units: {}, trend: {} };
   KPI_UNITS.forEach(u => out.units[u] = { unit: u });
   const errs = [];
@@ -92,7 +124,9 @@ function kpis_() {
   out.units = KPI_UNITS.map(u => out.units[u]);
   out.monthStart = monthStart; out.errors = errs;
   try { out.openIssues = listIssues_().open.length; } catch (e) { out.openIssues = null; }
-  cache.put('kpis_v1', JSON.stringify(out), 300);
+  const js = JSON.stringify(out);
+  cache.put('kpis_v1', js, 900);
+  cache.put('kpis_stale', js, 21600);
   return out;
 }
 

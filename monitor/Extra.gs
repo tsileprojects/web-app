@@ -13,9 +13,9 @@ const NOTES_TAB = 'Notes';
 
 function reportData_() {
   const cache = CacheService.getScriptCache();
-  const hit = cache.get('report_v1'); if (hit) return JSON.parse(hit);
+  const hit = cache.get('report_v1') || cache.get('report_stale'); if (hit) return JSON.parse(hit);
   const out = { ok: true, k: kpis_(), p: reportProduction_() };
-  try { cache.put('report_v1', JSON.stringify(out), 300); } catch (e) {}
+  try { cache.put('report_v1', JSON.stringify(out), 900); cache.put('report_stale', JSON.stringify(out), 21600); } catch (e) {}
   return out;
 }
 
