@@ -88,7 +88,10 @@
       if (isNaN(to)) return;
       function step(ts){ t0 = t0 || ts; var k = Math.min(1, (ts - t0) / 1200), v = to * (1 - Math.pow(1 - k, 3));
         el.textContent = (dec ? v.toFixed(dec) : Math.round(v).toLocaleString('en-IN')) + suf; if (k < 1) requestAnimationFrame(step); }
+      var fin = (dec ? to.toFixed(dec) : Math.round(to).toLocaleString('en-IN')) + suf;
+      if (document.hidden) { el.textContent = fin; return; }
       requestAnimationFrame(step);
+      setTimeout(function(){ el.textContent = fin; }, 1600);
     });
   }
   function num(v, dec, suf){ return v == null ? '<span>-</span>' : '<span data-count="' + v + '" data-dec="' + (dec || 0) + '" data-suf="' + (suf || '') + '">0</span>'; }
