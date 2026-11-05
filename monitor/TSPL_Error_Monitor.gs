@@ -375,6 +375,7 @@ function doGet(e) {
       case 'deep_plan': out = deepPlan_(p); break;
       case 'deep_run': out = deepRun_(p); break;
       case 'deep_write': out = deepWrite_(p); break;
+      case 'today': out = todayLive_(); break;
       default: out = { ok: true, service: 'TSPL Error Monitor', time: new Date() };
     }
   } catch (err) { out = { ok: false, error: String(err && err.message || err) }; }
