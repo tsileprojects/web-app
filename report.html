@@ -212,40 +212,60 @@
         var exp = live && l.tgt && l.hoursDone ? l.tgt * l.hoursDone / 9 : null, pace = exp ? l.pro / exp * 100 : null; if (exp) { tex += exp; tpx += l.pro || 0; }
         var nts = ln.filter(function (n) { return n.line && String(n.line).toUpperCase() === String(l.line).toUpperCase(); }).map(function (n) { return n.text; });
         var rem = [l.remark].concat(nts).filter(function (x) { return x && !/^(na|n\/a|-|0)$/i.test(String(x).trim()); }).join(' | ');
-        return '<tr><td><b>' + esc(l.line) + '</b></td><td class="l">' + esc(l.buyer) + '</td><td class="l">' + esc(l.style) + '</td><td class="l">' + esc(l.status || '') + '</td><td>' + n0(l.pro) + '</td><td>' + n0(l.tgt) + '</td><td class="' + (live ? '' : cls(ach, 98, 90)) + '">' + p1(ach) + '</td>' +
+        return '<tr><td><b>' + esc(l.line) + '</b></td><td class="l">' + esc(l.buyer) + '</td><td class="l">' + esc(l.style) + '</td><td class="l">' + esc(l.color || '') + '</td><td class="l">' + esc(l.status || '') + '</td><td>' + n0(l.pro) + '</td><td>' + n0(l.tgt) + '</td><td class="' + (live ? '' : cls(ach, 98, 90)) + '">' + p1(ach) + '</td>' +
           (live ? '<td>' + (l.hoursDone ? l.hoursDone + '/9' : '-') + '</td><td class="' + cls(pace, 98, 90) + '">' + p1(pace) + '</td><td>' + hbars(l.hours) + '</td>' : '<td class="' + cls(l.eff, 55, 45) + '">' + p1(l.eff) + '</td>') +
           '<td>' + n0(l.mp) + '</td><td class="' + cls(l.ftr, 95, 90) + '">' + p1(l.ftr) + '</td><td>' + p1(l.dft) + '</td><td class="wrapc">' + esc(rem) + '</td></tr>';
       }).join('');
-      tot = '<tr class="tot"><td>' + esc(unit) + '</td><td></td><td></td><td></td><td>' + n0(tp) + '</td><td>' + n0(tt) + '</td><td>' + p1(tt ? tp / tt * 100 : null) + '</td>' +
+      tot = '<tr class="tot"><td>' + esc(unit) + '</td><td></td><td></td><td></td><td></td><td>' + n0(tp) + '</td><td>' + n0(tt) + '</td><td>' + p1(tt ? tp / tt * 100 : null) + '</td>' +
         (live ? '<td></td><td>' + p1(tex ? tpx / tex * 100 : null) + '</td><td></td>' : '<td>' + p1(ta ? te / ta * 100 : null) + '</td>') + '<td colspan="4"></td></tr></tbody></table>';
     }
-    // product-wise with + drop-down of its lines
-    var nCols = HOURLY ? 16 : 8;
-    var prod = DR.products.length ? '<h3 class="sub2">Product-wise (buyer & style) <span class="m" style="font-weight:400;font-size:12px">- click + to see the lines running a style</span></h3><table class="prodt"><thead><tr><th style="width:34px"></th><th class="l">' + T('buyer') + '</th><th class="l">' + T('style') + '</th><th class="l">Lines</th>' +
-      (HOURLY ? [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (h) { return '<th>H' + h + '</th>'; }).join('') : '') + '<th>' + T('output') + '</th><th>' + T('target') + '</th><th>' + (live ? 'Of day target' : T('achieved')) + '</th>' + (HOURLY ? '' : '<th>Share of unit output</th>') + '</tr></thead><tbody>' +
-      DR.products.map(function (x, pi) {
+    // product-wise with + drop-down: colours, then lines
+    var prod = '';
+    if (DR.products.length) {
+      var H9 = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+      prod = '<h3 class="sub2">Product-wise (buyer, style & colour) <span class="m" style="font-weight:400;font-size:12px">- click + to see colours and the lines running a style</span></h3><div style="overflow-x:auto"><table class="prodt"><thead><tr><th style="width:34px"></th><th class="l">' + T('buyer') + '</th><th class="l">' + T('style') + '</th><th class="l">Colours</th><th class="l">Lines</th>' +
+        (HOURLY ? H9.map(function (h) { return '<th>H' + h + '</th>'; }).join('') : '') +
+        '<th>Today ' + T('output') + '</th><th>Today ' + T('target') + '</th><th>' + (live ? 'Of day target' : T('achieved')) + '</th>' +
+        (HOURLY ? '' : '<th title="Order quantity from the DPR (sum of colours)">Order qty</th><th title="Sum of every day\'s DPR output for this style in this unit, up to the selected day">Produced to date<br>(' + esc(unit) + ')</th><th title="All units that ran this style">Produced to date<br>(all units)</th><th title="Order qty minus produced to date in this unit">Balance</th><th>Share of unit output</th>') + '</tr></thead><tbody>';
+      prod += DR.products.map(function (x) {
         var a = x.tgt ? x.pro / x.tgt * 100 : null, key = x.buyer + '|' + x.style, open = !!OPENP[key];
         var plines = DR.lines.filter(function (l) { return x.lines.indexOf(l.line) > -1; });
         var ph = [0, 0, 0, 0, 0, 0, 0, 0, 0]; plines.forEach(function (l) { (l.hours || []).forEach(function (v, i) { ph[i] += v || 0; }); });
-        var row = '<tr class="prow" data-k="' + esc(key) + '" style="cursor:pointer"><td><button type="button" class="pbtn" aria-expanded="' + open + '" title="' + (open ? 'Hide' : 'Show') + ' lines" style="width:26px;height:26px;padding:0;justify-content:center;font-weight:800">' + (open ? '&minus;' : '+') + '</button></td>' +
-          '<td class="l">' + esc(x.buyer) + '</td><td class="l"><b>' + esc(x.style) + '</b></td><td class="l">' + x.lines.length + ' line' + (x.lines.length > 1 ? 's' : '') + ': ' + esc(x.lines.join(', ')) + '</td>' +
+        var cols = (x.colors || []).map(function (c) { return c.color; });
+        var bal = x.order ? x.order - (x.cumUnit || 0) : null;
+        var row = '<tr class="prow" data-k="' + esc(key) + '" style="cursor:pointer"><td><button type="button" class="pbtn" aria-expanded="' + open + '" title="' + (open ? 'Hide' : 'Show') + ' colours and lines" style="width:26px;height:26px;padding:0;justify-content:center;font-weight:800">' + (open ? '&minus;' : '+') + '</button></td>' +
+          '<td class="l">' + esc(x.buyer) + '</td><td class="l"><b>' + esc(x.style) + '</b>' + (x.since ? '<div class="m" style="font-size:11px">since ' + dmy(x.since) + '</div>' : '') + '</td>' +
+          '<td class="l">' + cols.length + ': ' + esc(cols.join(', ')) + '</td><td class="l">' + x.lines.length + ': ' + esc(x.lines.join(', ')) + '</td>' +
           (HOURLY ? ph.map(function (v) { return '<td>' + hcell(v) + '</td>'; }).join('') : '') +
-          '<td><b>' + n0(x.pro) + '</b></td><td>' + n0(x.tgt) + '</td><td class="' + (live ? '' : cls(a, 98, 90)) + '">' + p1(a) + '</td>' + (HOURLY ? '' : '<td>' + p1(tp ? x.pro / tp * 100 : null) + '</td>') + '</tr>';
+          '<td><b>' + n0(x.pro) + '</b></td><td>' + n0(x.tgt) + '</td><td class="' + (live ? '' : cls(a, 98, 90)) + '">' + p1(a) + '</td>' +
+          (HOURLY ? '' : '<td>' + n0(x.order || null) + '</td><td><b>' + n0(x.cumUnit || 0) + '</b></td><td>' + n0(x.cumAll || 0) + (x.unitsRun && x.unitsRun.length > 1 ? '<div class="m" style="font-size:11px">' + esc(x.unitsRun.join(', ')) + '</div>' : '') + '</td>' +
+            '<td class="' + (bal != null && bal <= 0 ? 'g' : '') + '">' + (bal == null ? '-' : bal <= 0 ? 'Done' : n0(bal)) + '</td><td>' + p1(tp ? x.pro / tp * 100 : null) + '</td>') + '</tr>';
         if (open) {
+          var span = HOURLY ? 17 : 13;
+          // colour-wise
+          row += '<tr style="background:rgba(33,150,243,.04)"><td></td><td colspan="' + (span - 1) + '" class="l" style="padding:8px 10px">' +
+            '<b style="font-size:12.5px">Colour-wise</b><table style="margin-top:4px"><thead><tr><th class="l">Colour</th><th class="l">Lines</th><th>Today output</th><th>Today target</th><th>Order qty</th><th>Produced to date</th><th title="Cum Pro as entered in the DPR">DPR cum pro</th><th>Balance</th><th>Cum cut</th><th>Cum loaded</th><th>Line WIP</th></tr></thead><tbody>' +
+            (x.colors || []).map(function (c) { var b2 = c.order ? c.order - (c.cumUnit || 0) : null;
+              return '<tr><td class="l"><b>' + esc(c.color) + '</b></td><td class="l">' + esc(c.lines.join(', ')) + '</td><td>' + n0(c.pro) + '</td><td>' + n0(c.tgt) + '</td><td>' + n0(c.order || null) + '</td><td><b>' + n0(c.cumUnit || 0) + '</b></td><td>' + n0(c.dprCum || null) + '</td>' +
+                '<td class="' + (b2 != null && b2 <= 0 ? 'g' : '') + '">' + (b2 == null ? '-' : b2 <= 0 ? 'Done' : n0(b2)) + '</td><td>' + n0(c.cumCut || null) + '</td><td>' + n0(c.cumLoad || null) + '</td><td class="' + ((c.wip || 0) < 0 ? 'r' : '') + '">' + n0(c.wip) + '</td></tr>'; }).join('') +
+            '</tbody></table><b style="font-size:12.5px;display:block;margin-top:10px">Lines running this style</b></td></tr>';
+          // line-wise under the style
           row += plines.map(function (l) {
-            var st = (l.styles || []).filter(function (s2) { return s2.buyer + '|' + s2.style === key; })[0] || { pro: l.pro, tgt: l.tgt };
-            var shared = (l.styles || []).length > 1;
+            var sts = (l.styles || []).filter(function (s2) { return s2.buyer + '|' + s2.style === key; });
+            var st = sts.reduce(function (acc, s2) { acc.pro += s2.pro; acc.tgt += s2.tgt; if (s2.color && acc.col.indexOf(s2.color) < 0) acc.col.push(s2.color); return acc; }, { pro: 0, tgt: 0, col: [] });
+            var shared = (l.styles || []).some(function (s2) { return s2.buyer + '|' + s2.style !== key; });
             var exp = live && st.tgt && l.hoursDone ? st.tgt * l.hoursDone / 9 : null, pace = exp ? st.pro / exp * 100 : null;
             return '<tr style="background:rgba(33,150,243,.06)"><td></td><td class="l m">&nbsp;&nbsp;&#8627; Line</td><td class="l"><b>' + esc(l.line) + '</b>' + (l.status ? ' <span class="m">(' + esc(l.status) + ')</span>' : '') + (shared ? ' <span class="m" title="This line also runs another style">*shared</span>' : '') + '</td>' +
-              '<td class="l">' + n0(l.mp) + ' ops' + (live ? ' · hour ' + (l.hoursDone || 0) + '/9 · pace <b class="' + cls(pace, 98, 90) + '">' + p1(pace) + '</b>' : '') + '</td>' +
+              '<td class="l">' + esc(st.col.join(', ')) + '</td><td class="l">' + n0(l.mp) + ' ops' + (live ? ' · hour ' + (l.hoursDone || 0) + '/9 · pace <b class="' + cls(pace, 98, 90) + '">' + p1(pace) + '</b>' : '') + '</td>' +
               (HOURLY ? (l.hours || []).concat([0, 0, 0, 0, 0, 0, 0, 0, 0]).slice(0, 9).map(function (v) { return '<td>' + hcell(v) + '</td>'; }).join('') : '') +
-              '<td>' + n0(st.pro) + '</td><td>' + n0(st.tgt) + '</td><td>' + p1(st.tgt ? st.pro / st.tgt * 100 : null) + '</td>' + (HOURLY ? '' : '<td>' + (live ? hbars(l.hours) : '') + '</td>') + '</tr>';
+              '<td>' + n0(st.pro) + '</td><td>' + n0(st.tgt) + '</td><td>' + p1(st.tgt ? st.pro / st.tgt * 100 : null) + '</td>' + (HOURLY ? '' : '<td colspan="4"></td><td>' + (live ? hbars(l.hours) : '') + '</td>') + '</tr>';
           }).join('');
         }
         return row;
-      }).join('') + '</tbody></table>' : '';
+      }).join('') + '</tbody></table></div>';
+    }
     document.getElementById('drill').innerHTML = tools + (DR.lines.length ? '<h3 class="sub2" style="margin-top:0">Line-wise' + (HOURLY ? ' - hour by hour (pieces)' : '') + '</h3>' + head + body + tot : '<div class="msg">No DPR lines for ' + esc(unit) + ' on ' + dmy(date) + ' yet.</div>') + prod +
-      (live ? '<p class="hint">Pace = output so far vs target x hours entered / 9. H1-H9 = pieces in the 1st to 9th hour from the DPR. *shared = the line also runs another style; its hourly pieces are for the whole line. Efficiency is not shown for today because the COT sheet is updated up to yesterday.</p>' : '') +
+      (live ? '<p class="hint">Pace = output so far vs target x hours entered / 9. H1-H9 = pieces in the 1st to 9th hour from the DPR. Produced to date = sum of every day\'s DPR output for the style (shown next to the DPR\'s own Cum Pro column). Balance = order qty - produced to date in this unit. *shared = the line also runs another style; its hourly pieces are for the whole line. Efficiency is not shown for today because the COT sheet is updated up to yesterday.</p>' : '') +
       (r.errors && r.errors.length ? '<p class="hint">' + esc(r.errors.join('; ')) + '</p>' : '') +
       '<p class="hint no-print"><a href="#" id="drillBack">' + T('back') + '</a></p>';
     document.getElementById('bUpd').onclick = function () { updateNow(); };
@@ -320,10 +340,10 @@
       Object.keys(k.trend || {}).forEach(function (u) { if (ONLY && u !== ONLY) return; k.trend[u].forEach(function (x) { tr.push([u, x.d, x.eff]); }); });
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tr), 'Efficiency trend');
       if (DR && DR.lines) {
-        var dl = [['Unit', 'Date', 'Line', 'Buyer', 'Style', 'Output', 'Target', 'Achieved %', 'Operators', 'Efficiency %', 'FTR %', 'Defective %', 'Remark', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9']];
-        DR.lines.forEach(function (l) { dl.push([DR.unit, DR.date, l.line, l.buyer || '', l.style || '', l.pro || 0, l.tgt || 0, l.tgt ? r1(l.pro / l.tgt * 100) : '', l.mp || '', r1(l.eff), r1(l.ftr), r1(l.dft), (/^(na|n\/a|-|0)$/i.test(String(l.remark || '').trim()) ? '' : l.remark || '')].concat((l.hours || []).concat([0,0,0,0,0,0,0,0,0]).slice(0, 9))); });
+        var dl = [['Unit', 'Date', 'Line', 'Buyer', 'Style', 'Colour', 'Output', 'Target', 'Achieved %', 'Operators', 'Efficiency %', 'FTR %', 'Defective %', 'Remark', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9']];
+        DR.lines.forEach(function (l) { dl.push([DR.unit, DR.date, l.line, l.buyer || '', l.style || '', l.color || '', l.pro || 0, l.tgt || 0, l.tgt ? r1(l.pro / l.tgt * 100) : '', l.mp || '', r1(l.eff), r1(l.ftr), r1(l.dft), (/^(na|n\/a|-|0)$/i.test(String(l.remark || '').trim()) ? '' : l.remark || '')].concat((l.hours || []).concat([0,0,0,0,0,0,0,0,0]).slice(0, 9))); });
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dl), DR.unit + ' lines');
-        if (DR.products && DR.products.length) { var pr = [['Unit', 'Date', 'Buyer', 'Style', 'Lines', 'Output', 'Target', 'Achieved %']]; DR.products.forEach(function (x) { pr.push([DR.unit, DR.date, x.buyer, x.style, x.lines.join(', '), x.pro, x.tgt, x.tgt ? r1(x.pro / x.tgt * 100) : '']); }); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pr), DR.unit + ' products'); }
+        if (DR.products && DR.products.length) { var pr = [['Unit', 'Date', 'Buyer', 'Style', 'Colour', 'Lines', 'Today output', 'Today target', 'Achieved %', 'Order qty', 'Produced to date (unit)', 'DPR cum pro', 'Balance', 'Cum cut', 'Cum loaded', 'Line WIP', 'Produced to date (all units)']]; DR.products.forEach(function (x) { (x.colors || []).forEach(function (c) { pr.push([DR.unit, DR.date, x.buyer, x.style, c.color, c.lines.join(', '), c.pro, c.tgt, c.tgt ? r1(c.pro / c.tgt * 100) : '', c.order || '', c.cumUnit || 0, c.dprCum || '', c.order ? c.order - (c.cumUnit || 0) : '', c.cumCut || '', c.cumLoad || '', c.wip || 0, x.cumAll || '']); }); }); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pr), DR.unit + ' products'); }
       }
       var nt = [['Date', 'Unit', 'Line', 'Note', 'By']];
       NOTES.forEach(function (n) { if (!ONLY || n.unit === ONLY) nt.push([n.date, n.unit, n.line, n.text, n.by]); });

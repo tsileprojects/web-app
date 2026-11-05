@@ -220,7 +220,7 @@
 <script>
 (function () {
   'use strict';
-  var VERSION = '3.3';
+  var VERSION = '3.4';
   var A = TSPL_APP, Q = TSPL_QUEUE, esc = A.esc, T = window.TSPL_T || function (k) { return k; };
   var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'];
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
@@ -406,7 +406,12 @@
           var st = (l.styles || []).filter(function (s2) { return s2.buyer + '|' + s2.style === key; })[0] || l, e2 = st.tgt && l.hoursDone ? st.tgt * l.hoursDone / 9 : null, pc = e2 ? st.pro / e2 * 100 : null;
           return '<div class="stk" style="padding-left:14px"><div>↳ <b>Line ' + esc(l.line) + '</b><small>hour ' + (l.hoursDone || 0) + '/9 · ' + (l.hours || []).filter(function (h) { return h; }).map(n0).join(' · ') + ' pcs/hr</small></div><b class="' + cls(pc, 98, 90) + '">' + n0(st.pro) + '<small style="font-weight:400"> / ' + n0(st.tgt) + '</small></b></div>';
         }).join('');
-        return '<details style="border-bottom:1px dashed var(--line)"><summary style="list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:8px;padding:8px 0"><span><span class="tag m" style="margin-right:6px">+ ' + x.lines.length + '</span><b>' + esc(x.style) + '</b><small class="m" style="display:block;font-size:11.5px">' + esc(x.buyer) + ' · lines ' + esc(x.lines.join(', ')) + '</small></span><b>' + n0(x.pro) + '<small style="font-weight:400"> / ' + n0(x.tgt) + '</small></b></summary>' + sub + '</details>';
+        var colsHtml = (x.colors || []).map(function (c) { var b = c.order ? c.order - (c.cumUnit || 0) : null;
+          return '<div class="stk" style="padding-left:14px"><div>🎨 <b>' + esc(c.color) + '</b><small>lines ' + esc(c.lines.join(', ')) + ' · order ' + n0(c.order || null) + ' · produced to date ' + n0(c.cumUnit || 0) + ' · balance ' + (b == null ? '-' : b <= 0 ? 'done' : n0(b)) + '</small></div><b>' + n0(c.pro) + '<small style="font-weight:400"> / ' + n0(c.tgt) + '</small></b></div>'; }).join('');
+        var bal = x.order ? x.order - (x.cumUnit || 0) : null;
+        return '<details style="border-bottom:1px dashed var(--line)"><summary style="list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:8px;padding:8px 0"><span><span class="tag m" style="margin-right:6px">+ ' + x.lines.length + '</span><b>' + esc(x.style) + '</b><small class="m" style="display:block;font-size:11.5px">' + esc(x.buyer) + ' · ' + (x.colors || []).length + ' colour(s) · lines ' + esc(x.lines.join(', ')) + '</small>' +
+          '<small class="m" style="display:block;font-size:11.5px">Order ' + n0(x.order || null) + ' · produced to date ' + n0(x.cumUnit || 0) + (x.cumAll && x.cumAll !== x.cumUnit ? ' (all units ' + n0(x.cumAll) + ')' : '') + ' · balance ' + (bal == null ? '-' : bal <= 0 ? 'done' : n0(bal)) + '</small></span><b>' + n0(x.pro) + '<small style="font-weight:400"> / ' + n0(x.tgt) + '</small></b></summary>' +
+          '<div class="m" style="font-size:12px;margin:4px 0 2px 14px">Colour-wise</div>' + colsHtml + '<div class="m" style="font-size:12px;margin:8px 0 2px 14px">Lines</div>' + sub + '</details>';
       }).join('');
       $('drill').innerHTML = (lines ? '<div class="m" style="font-size:12px">Line-wise · as of ' + esc(r.time) + '</div>' + lines : '<div class="empty">No DPR lines entered for today yet.</div>') +
         (prods ? '<h2 style="margin-top:14px">Product-wise (buyer & style) <small class="m" style="font-size:11px;font-weight:400">tap + to see lines</small></h2>' + prods : '');

@@ -1,7 +1,7 @@
 /* TSPL app: opens instantly from the phone's saved copy and updates in the
    background (stale-while-revalidate). Live data from Google is never cached here.
    Bump VERSION whenever app files change - the app then shows "New version". */
-const VERSION = 'tspl-app-v9';
+const VERSION = 'tspl-app-v10';
 const SHELL = ['m.html', 'manifest.webmanifest', 'programs.json',
   'js/tspl-config.js', 'js/tspl-app.js', 'js/home-btn.js', 'js/i18n.js', 'img/app-192.png', 'img/tsilfaviconn.png'];
 
