@@ -103,6 +103,7 @@
   <!-- HOME -->
   <section class="view on" id="v-home">
     <div class="asof"><span id="asof">Loading…</span><button class="lnk" id="reload" type="button">Refresh</button></div>
+    <div class="card" id="todayCard" style="border-left:4px solid #2563eb"><h2><span>Today - live <span class="m" style="font-size:12px;font-weight:400" id="todayAt"></span></span></h2><div id="today"><div class="skel"></div></div></div>
     <div class="kpis" id="kpis"><div class="kpi skel"></div><div class="kpi skel"></div><div class="kpi skel"></div><div class="kpi skel"></div></div>
     <div class="acts">
       <button class="act" type="button" data-do="note"><i>&#128221;</i>Add note</button>
@@ -219,7 +220,7 @@
 <script>
 (function () {
   'use strict';
-  var VERSION = '3.0';
+  var VERSION = '3.1';
   var A = TSPL_APP, Q = TSPL_QUEUE, esc = A.esc, T = window.TSPL_T || function (k) { return k; };
   var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'];
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
@@ -278,7 +279,7 @@
     sheet('unitSheet', true);
   };
   $('unitChips').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; setUnit(b.dataset.u); sheet('unitSheet', false); };
-  function setUnit(u) { UNIT = u; ls('tsplAppUnit', u); $('setUnit').value = u; ['dUnit', 'rUnit', 'nUnit'].forEach(function (id) { if (u) $(id).value = u; }); unitLabel(); renderHome(); if (VIEW === 'report') renderReport(); if (VIEW === 'ndl' && ND_SEG === 'stock') loadStock(); }
+  function setUnit(u) { UNIT = u; ls('tsplAppUnit', u); renderToday(); $('setUnit').value = u; ['dUnit', 'rUnit', 'nUnit'].forEach(function (id) { if (u) $(id).value = u; }); unitLabel(); renderHome(); if (VIEW === 'report') renderReport(); if (VIEW === 'ndl' && ND_SEG === 'stock') loadStock(); }
   $('setUnit').onchange = function () { setUnit(this.value); };
   unitLabel();
 
@@ -345,7 +346,25 @@
       if (cb) cb();
     }, 120000);
   }
-  $('reload').onclick = function () { $('asof').textContent = 'Refreshing…'; loadHome(); };
+  $('reload').onclick = function () { $('asof').textContent = 'Refreshing…'; loadHome(); loadToday(); };
+
+  // ---------- today live ----------
+  var TODAY = null; try { TODAY = JSON.parse(ls('tsplAppToday') || 'null'); } catch (e) {}
+  function renderToday() {
+    if (!TODAY || !TODAY.ok) { if (TODAY && !TODAY.ok) $('today').innerHTML = '<div class="empty">Today\'s DPR could not be read.</div>'; return; }
+    var us = TODAY.units.filter(function (u) { return !UNIT || u.unit === UNIT; }), tp = 0, tt = 0, ex = 0;
+    us.forEach(function (u) { tp += u.pro; tt += u.tgt; if (u.tgt && u.hoursDone) ex += u.tgt * u.hoursDone / 9; });
+    var pace = ex ? tp / ex * 100 : null, c = cls(pace, 98, 90);
+    $('todayAt').textContent = '· ' + dmy(TODAY.date) + ' ' + TODAY.time;
+    $('today').innerHTML = '<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px"><div><div style="font-size:26px;font-weight:800" class="' + (pace == null ? '' : c) + '">' + n0(tp) + '</div><div class="m" style="font-size:12px">of ' + n0(tt) + ' pcs day target (' + p1(tt ? tp / tt * 100 : null) + ')</div></div>' +
+      '<div style="text-align:right"><div class="' + c + '" style="font-weight:700">' + (pace == null ? 'not started' : 'pace ' + p1(pace)) + '</div><div class="m" style="font-size:12px">expected by now ' + n0(ex) + '</div></div></div>' +
+      '<div class="bar"><i style="width:' + Math.min(tt ? tp / tt * 100 : 0, 100) + '%;background:' + col(pace == null ? 'm' : c) + '"></i></div>' +
+      (us.length > 1 ? '<div class="m" style="font-size:12px;margin-top:6px">' + us.map(function (u) { var e = u.tgt && u.hoursDone ? u.tgt * u.hoursDone / 9 : 0; return '<b>' + u.unit + '</b> ' + n0(u.pro) + (e ? ' (' + p1(u.pro / e * 100) + ')' : ''); }).join(' · ') + '</div>' : '');
+  }
+  function loadToday() {
+    if (navigator.onLine === false) return renderToday();
+    A.jsonp({ action: 'today' }, function (r) { if (r) { TODAY = r; ls('tsplAppToday', JSON.stringify(r)); renderToday(); } }, 90000);
+  }
 
   // ---------- report ----------
   function renderReport() {
@@ -676,6 +695,7 @@
   // ---------- start ----------
   renderHome();                               // instant from the saved copy
   loadHome();                                 // then fresh numbers
+  renderToday(); loadToday(); setInterval(function () { if (!document.hidden) loadToday(); }, 5 * 60000);
   Q.changed(); Q.flush();
   setInterval(function () { if (!document.hidden) loadHome(); else if (ls('tsplAppAlerts') === '1') loadHome(); }, 3 * 60000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden && Date.now() - HOME_AT > 60000) loadHome(); });

@@ -58,6 +58,13 @@
   .note { font-size:13px; padding:7px 0; border-bottom:1px dashed var(--line); } .note:last-child { border-bottom:0; } .note small { color:var(--muted); display:block; }
   .skel { background:linear-gradient(90deg, rgba(148,163,184,.15) 25%, rgba(148,163,184,.3) 37%, rgba(148,163,184,.15) 63%); background-size:400% 100%; animation:sh 1.3s ease infinite; border-radius:8px; color:transparent !important; }
   @keyframes sh { 0% { background-position:100% 50%; } 100% { background-position:0 50%; } }
+  .tday { display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; }
+  .tu { border:1px solid var(--line); border-radius:10px; padding:10px 12px; cursor:pointer; }
+  .tu:hover { border-color:var(--brand); }
+  .tu .h { display:flex; justify-content:space-between; align-items:center; } .tu .h b { font-size:16px; }
+  .hrs { display:flex; align-items:flex-end; gap:3px; height:34px; margin-top:6px; }
+  .hrs i { flex:1; background:#93c5fd; border-radius:2px 2px 0 0; min-height:2px; } .hrs i.z { background:var(--soft); }
+  .tu .s { font-size:11.5px; color:var(--muted); }
   .zoom { position:fixed; inset:0; background:rgba(0,0,0,.75); display:flex; align-items:center; justify-content:center; z-index:50; cursor:zoom-out; } .zoom img { max-width:92vw; max-height:92vh; border-radius:8px; background:#fff; }
   @media (max-width:1100px) { .grid { grid-template-columns:1fr; } .kpis { grid-template-columns:repeat(2, minmax(0,1fr)); } }
   @media (max-width:600px) { .wishes { grid-template-columns:1fr; } .wrap { padding:12px; } }
@@ -88,6 +95,10 @@
 
   <div class="grid">
     <div>
+      <div class="card" id="todayCard">
+        <h2><span>Today - live production <span class="m" style="font-size:12px;font-weight:400" id="todayAt"></span></span><span class="m" style="font-size:12px;font-weight:400">DPR hourly · refreshes every 5 min</span></h2>
+        <div id="today"><div class="skel" style="height:110px"></div></div>
+      </div>
       <div class="card">
         <h2><span id="unitsTitle">Units</span><a id="unitsMore" href="report.html" target="_blank" rel="noopener">Line-wise detail &rsaquo;</a></h2>
         <div class="units" id="units"><div class="unit skel" style="height:150px"></div><div class="unit skel" style="height:150px"></div><div class="unit skel" style="height:150px"></div></div>
@@ -125,7 +136,7 @@
   try { PPAGE = (window.parent.location.pathname.split('/').pop() || '').replace('.html', ''); } catch (e) {}
   var ONLY = ((PPAGE.match(/^unit_(ap2|fipl|ts2|ts4|ts9)$/) || [])[1] || new URLSearchParams(location.search).get('unit') || '').toUpperCase();
   if (ONLY) { ['lnkReport', 'lnkTv', 'unitsMore'].forEach(function (id) { var a = document.getElementById(id); a.href += '?unit=' + ONLY; }); }
-  var DATA = null, NOTES = [], loadedAt = null;
+  var DATA = null, NOTES = [], loadedAt = null, TODAY = null;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function n0(v) { return v == null ? '-' : Math.round(v).toLocaleString('en-IN'); }
@@ -165,12 +176,12 @@
     var ach = tt ? tp / tt * 100 : null, eff = ta ? te / ta * 100 : null, fsa = fp + ff ? fp / (fp + ff) * 100 : null;
     var issues = DATA.openIssues || 0;
     document.getElementById('kpis').innerHTML =
-      '<div class="kpi" style="--c:' + col(cls(ach, 98, 90)) + '"><div class="l">' + T('outputVsTarget') + ' · ' + dmy(DATA.prodDate) + '</div><div class="v ' + cls(ach, 98, 90) + '">' + p1(ach) + '</div><div class="n">' + n0(tp) + ' / ' + n0(tt) + ' ' + T('pcs') + '</div></div>' +
+      '<div class="kpi" id="k1" data-y="' + p1(ach) + ' (' + dmy(DATA.prodDate) + ')" style="--c:' + col(cls(ach, 98, 90)) + '"><div class="l">' + T('outputVsTarget') + ' · ' + dmy(DATA.prodDate) + '</div><div class="v ' + cls(ach, 98, 90) + '">' + p1(ach) + '</div><div class="n">' + n0(tp) + ' / ' + n0(tt) + ' ' + T('pcs') + '</div></div>' +
       '<div class="kpi" style="--c:' + col(cls(eff, 55, 45)) + '"><div class="l">' + T('efficiency') + ' · ' + dmy(DATA.effDate) + '</div><div class="v ' + cls(eff, 55, 45) + '">' + p1(eff) + '</div><div class="n">' + n0(te) + ' / ' + n0(ta) + ' min earned</div></div>' +
       '<div class="kpi" style="--c:' + col(cls(fsa, 85, 70)) + '"><div class="l">' + T('fsa') + '</div><div class="v ' + cls(fsa, 85, 70) + '">' + p1(fsa) + '</div><div class="n">' + fp + ' pass / ' + ff + ' fail this month</div></div>' +
       '<div class="kpi" style="--c:' + (issues ? '#dc2626' : '#16a34a') + '"><div class="l">Programs</div><div class="v ' + (issues ? 'r' : 'g') + '">' + (issues ? issues + ' issue' + (issues > 1 ? 's' : '') : 'All OK') + '</div><div class="n"><a href="status.html" target="_blank" rel="noopener" style="color:inherit">Program status &rsaquo;</a></div></div>';
 
-    document.getElementById('unitsTitle').textContent = ONLY ? ONLY + ' - output & efficiency' : T('unitsSlide');
+    document.getElementById('unitsTitle').textContent = (ONLY ? ONLY + ' - ' : '') + 'Last full day (' + dmy(DATA.prodDate) + ') - output & efficiency';
     document.getElementById('units').innerHTML = units.map(function (u) {
       var a = u.tgt ? u.pro / u.tgt * 100 : null, c = cls(a, 98, 90), t = (DATA.trend || {})[u.unit] || [], prev = t.length > 1 ? t[t.length - 2].eff : null;
       var tagc = a == null ? 'm' : c, tagt = a == null ? 'No data' : c === 'g' ? 'On target' : c === 'a' ? 'Watch' : 'Act now';
@@ -195,6 +206,7 @@
     document.getElementById('ex').innerHTML = ex.length ? ex.slice(0, 8).map(function (e) { return '<div class="ex"><span class="dot" style="background:' + e[0] + '"></span><div><b>' + esc(e[1]) + '</b><span>' + esc(e[2]) + '</span></div></div>'; }).join('')
       : '<div class="g">' + T('allOnTrack') + '</div>';
     tick();
+    renderToday();
   }
   function renderNotes() {
     var list = NOTES.filter(function (n) { return !ONLY || n.unit === ONLY || n.unit === 'TSPL'; }).slice(0, 6);
@@ -214,6 +226,37 @@
   }
   document.getElementById('units').addEventListener('click', function (e) { var u = e.target.closest('[data-u]'); if (u) window.open('report.html?unit=' + u.getAttribute('data-u'), '_blank', 'noopener'); });
 
+
+  // ---------- today (live) ----------
+  function renderToday() {
+    if (!TODAY) return;
+    if (!TODAY.ok) { document.getElementById('today').innerHTML = '<div class="m">Today\'s DPR could not be read (' + esc(TODAY.error || '') + ').</div>'; return; }
+    var us = TODAY.units.filter(function (u) { return !ONLY || u.unit === ONLY; });
+    document.getElementById('todayAt').textContent = '· ' + dmy(TODAY.date) + ' as of ' + TODAY.time;
+    var tp = 0, tt = 0;
+    document.getElementById('today').innerHTML = '<div class="tday">' + us.map(function (u) {
+      tp += u.pro; tt += u.tgt;
+      var dayPct = u.tgt ? u.pro / u.tgt * 100 : null, exp = u.tgt && u.hoursDone ? u.tgt * u.hoursDone / 9 : null, pace = exp ? u.pro / exp * 100 : null;
+      var c = cls(pace, 98, 90), mx = Math.max.apply(0, (u.hours || []).concat([1]));
+      var tag = !u.tgt ? '<span class="tag m">No DPR yet</span>' : !u.hoursDone ? '<span class="tag m">Not started</span>' : '<span class="tag ' + c + '">' + (c === 'g' ? 'On pace' : c === 'a' ? 'Slightly behind' : 'Behind') + '</span>';
+      return '<div class="tu" data-u="' + u.unit + '" title="Open line-wise detail"><div class="h"><b>' + u.unit + '</b>' + tag + '</div>' +
+        '<div class="row"><span class="big ' + (pace == null ? 'm' : c) + '" style="font-size:20px">' + n0(u.pro) + '</span><span class="m" style="font-size:12px">of ' + n0(u.tgt) + ' (' + p1(dayPct) + ')</span></div>' +
+        '<div class="bar"><i style="width:' + Math.min(dayPct || 0, 100) + '%;background:' + col(pace == null ? 'm' : c) + '"></i></div>' +
+        '<div class="s">' + (u.hoursDone ? 'Hour ' + u.hoursDone + ' of 9 · expected by now ' + n0(exp) + ' · pace ' + p1(pace) : 'No hourly output entered yet') + '</div>' +
+        '<div class="hrs" title="Pieces per hour (1st to 9th hour)">' + (u.hours && u.hours.length ? u.hours.map(function (h, i) { return '<i class="' + (h ? '' : 'z') + '" style="height:' + Math.max(4, h / mx * 100) + '%" title="Hour ' + (i + 1) + ': ' + n0(h) + ' pcs"></i>'; }).join('') : '') + '</div></div>';
+    }).join('') + '</div>';
+    // first KPI card shows today so far
+    var k1 = document.getElementById('k1');
+    if (k1 && tt) {
+      var ach = tp / tt * 100;
+      k1.innerHTML = '<div class="l">Today so far · ' + dmy(TODAY.date) + ' ' + TODAY.time + '</div><div class="v">' + n0(tp) + '</div><div class="n">of ' + n0(tt) + ' pcs target (' + p1(ach) + ') · yesterday ' + (k1.getAttribute('data-y') || '-') + '</div>';
+      k1.style.setProperty('--c', '#2563eb');
+    }
+  }
+  function loadToday() {
+    jsonp({ action: 'today' }, function (r) { if (r) { TODAY = r; renderToday(); } }, 90000);
+  }
+  document.getElementById('today').addEventListener('click', function (e) { var u = e.target.closest('[data-u]'); if (u) window.open('report.html?unit=' + u.getAttribute('data-u'), '_blank', 'noopener'); });
   // ---------- quick launch (uses the menu of the page around this one) ----------
   var APPS = [];
   function collect() {
@@ -260,7 +303,9 @@
   setTimeout(function () { collect(); renderApps(); }, 400);   // after the portal menu is ready
   setInterval(tick, 30000);
   setInterval(load, 5 * 60000);
+  setInterval(loadToday, 5 * 60000);
   load();
+  loadToday();
 })();
 </script>
 </body>

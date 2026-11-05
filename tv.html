@@ -55,7 +55,7 @@
   var ONLY = (P.get('unit') || '').toUpperCase();          // ?unit=TS4 shows one unit
   var ROTATE = (+P.get('sec') || 15) * 1000;                // ?sec=20 changes rotation time
   var T = window.TSPL_T || function (k) { return k; };
-  var data = null, slides = [], cur = 0, loadedAt = null, NOTES = [];
+  var data = null, slides = [], cur = 0, loadedAt = null, NOTES = [], TODAY = null;
   var C = { good:'#4ade80', warn:'#fbbf24', bad:'#f87171', blue:'#60a5fa' };
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function n0(v){ return v == null ? '-' : Math.round(v).toLocaleString('en-IN'); }
@@ -114,6 +114,17 @@
           '<div class="sub" style="margin-top:1vh">' + T('lastDays', { n: t.length }) + '</div>' + spark(t, C.blue) + '<div>' + arrow(u.eff, prev, T('vsDayBefore')) + '</div>' +
           '<div>' + arrow(u.effMtd, u.effPrevMonth, T('monthVsLast')) + '</div></div></div>';
       }).join('') + '</div>' });
+    // 1b. today so far (live)
+    if (TODAY && TODAY.ok) {
+      var TU = TODAY.units.filter(function (u) { return !ONLY || u.unit === ONLY; });
+      slides.splice(0, 0, { title: 'Today so far · ' + dmy(TODAY.date) + ' ' + TODAY.time, html:
+        '<div class="grid" style="grid-template-columns:repeat(' + Math.min(TU.length, 5) + ',minmax(0,1fr))">' + TU.map(function (u) {
+          var e = u.tgt && u.hoursDone ? u.tgt * u.hoursDone / 9 : null, pace = e ? u.pro / e * 100 : null, dp = u.tgt ? u.pro / u.tgt * 100 : null;
+          return '<div class="card"><div class="unit">' + esc(u.unit) + '</div><div class="lbl">Output so far</div><div class="big" style="color:' + tone(pace, 98, 90) + '">' + num(u.pro) + '</div>' +
+            '<div class="sub">of ' + n0(u.tgt) + ' pcs (' + pct(dp) + ')</div><div class="bar"><i style="width:' + Math.min(dp || 0, 100) + '%;background:' + tone(pace, 98, 90) + '"></i></div>' +
+            '<div style="margin-top:auto"><div class="lbl">Pace (hour ' + (u.hoursDone || 0) + ' of 9)</div><div class="mid" style="color:' + tone(pace, 98, 90) + '">' + (pace == null ? '-' : pct(pace)) + '</div><div class="sub">expected by now ' + n0(e) + '</div></div></div>';
+        }).join('') + '</div>' });
+    }
     // 2. efficiency ranking
     var R = U.filter(function(u){ return u.eff != null; }).sort(function(a, b){ return b.eff - a.eff; });
     slides.push({ title: T('ranking') + ' · ' + dmy(data.effDate), html: R.length ? R.map(function (u) {
@@ -159,6 +170,7 @@
     countUp(m);
   }
   function load(){
+    jsonp({ action: 'today' }, function (r) { if (r && r.ok) { TODAY = r; if (data) { build(); show(cur); } } });
     jsonp({ action: 'notes' }, function (r) { if (r && r.ok) { NOTES = r.notes || []; if (data) { build(); show(cur); } } });
     jsonp({ action: 'kpis' }, function (r) {
       if (r && r.ok) { data = r; loadedAt = Date.now(); build(); show(cur); }
