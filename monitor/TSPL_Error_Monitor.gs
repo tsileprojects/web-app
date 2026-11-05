@@ -352,6 +352,10 @@ function doGet(e) {
       case 'ask': out = askTspl_(p.q, p.h); break;
       case 'kpis': out = kpis_(); break;
       case 'apps': out = appsStatus_(); break;
+      case 'report': out = reportData_(); break;
+      case 'drill': out = drill_(p.unit, p.date); break;
+      case 'notes': out = notes_(); break;
+      case 'addnote': out = addNote_(p); break;
       default: out = { ok: true, service: 'TSPL Error Monitor', time: new Date() };
     }
   } catch (err) { out = { ok: false, error: String(err && err.message || err) }; }

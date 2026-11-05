@@ -40,12 +40,13 @@
 <body>
 <header>
   <div class="brand">TSPL <span>LIVE</span></div>
-  <div class="slide-title" id="slideTitle">Loading…</div>
+  <div class="slide-title" id="slideTitle">…</div>
   <div class="clock"><b id="clk">--:--</b><small id="upd">connecting…</small></div>
 </header>
 <main id="main"><div class="msg">Loading live factory numbers…</div></main>
 <footer><span id="src">Source: DPR, COT, DQR and FSA Datamasters · refreshes every 5 minutes</span><span class="dots" id="dots"></span></footer>
 
+<script src="js/i18n.js"></script>
 <script src="js/tspl-config.js"></script>
 <script>
 (function () {
@@ -53,7 +54,8 @@
   var P = new URLSearchParams(location.search);
   var ONLY = (P.get('unit') || '').toUpperCase();          // ?unit=TS4 shows one unit
   var ROTATE = (+P.get('sec') || 15) * 1000;                // ?sec=20 changes rotation time
-  var data = null, slides = [], cur = 0, loadedAt = null;
+  var T = window.TSPL_T || function (k) { return k; };
+  var data = null, slides = [], cur = 0, loadedAt = null, NOTES = [];
   var C = { good:'#4ade80', warn:'#fbbf24', bad:'#f87171', blue:'#60a5fa' };
   function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function n0(v){ return v == null ? '-' : Math.round(v).toLocaleString('en-IN'); }
@@ -100,31 +102,31 @@
     var U = data.units.filter(function(u){ return !ONLY || u.unit === ONLY; });
     slides = [];
     // 1. unit overview
-    slides.push({ title: 'Units - production & efficiency', html:
+    slides.push({ title: T('unitsSlide'), html:
       '<div class="grid" style="grid-template-columns:repeat(' + Math.min(U.length, 5) + ',minmax(0,1fr))">' + U.map(function (u) {
         var ach = u.tgt ? u.pro / u.tgt * 100 : null, t = data.trend[u.unit] || [], prev = t.length > 1 ? t[t.length - 2].eff : null;
         return '<div class="card"><div class="unit">' + esc(u.unit) + '</div>' +
           '<div class="help" data-tip="Output vs target = pieces produced / unit target on the latest DPR day (' + dmy(data.prodDate) + '). Efficiency = earned minutes / available minutes (COT sheet).">?</div>' +
-          '<div><div class="lbl">Output vs target</div><div class="big" style="color:' + tone(ach, 98, 90) + '">' + num(ach, 1, '%') + '</div>' +
+          '<div><div class="lbl">' + T('outputVsTarget') + '</div><div class="big" style="color:' + tone(ach, 98, 90) + '">' + num(ach, 1, '%') + '</div>' +
           '<div class="bar" style="margin-top:1vh"><i style="width:' + Math.min(ach || 0, 100) + '%;background:' + tone(ach, 98, 90) + '"></i></div>' +
-          '<div class="sub" style="margin-top:.6vh">' + n0(u.pro) + ' of ' + n0(u.tgt) + ' pcs · ' + dmy(data.prodDate) + '</div></div>' +
-          '<div style="margin-top:auto;border-top:1px solid #22386a;padding-top:2vh"><div class="lbl">Efficiency · ' + dmy(data.effDate) + '</div><div class="big" style="font-size:5.2vh;color:' + tone(u.eff, 55, 45) + '">' + num(u.eff, 1, '%') + '</div>' +
-          '<div class="sub" style="margin-top:1vh">Last ' + t.length + ' days</div>' + spark(t, C.blue) + '<div>' + arrow(u.eff, prev, 'vs day before') + '</div>' +
-          '<div>' + arrow(u.effMtd, u.effPrevMonth, 'this month vs last') + '</div></div></div>';
+          '<div class="sub" style="margin-top:.6vh">' + n0(u.pro) + ' / ' + n0(u.tgt) + ' ' + T('pcs') + ' · ' + dmy(data.prodDate) + '</div></div>' +
+          '<div style="margin-top:auto;border-top:1px solid #22386a;padding-top:2vh"><div class="lbl">' + T('efficiency') + ' · ' + dmy(data.effDate) + '</div><div class="big" style="font-size:5.2vh;color:' + tone(u.eff, 55, 45) + '">' + num(u.eff, 1, '%') + '</div>' +
+          '<div class="sub" style="margin-top:1vh">' + T('lastDays', { n: t.length }) + '</div>' + spark(t, C.blue) + '<div>' + arrow(u.eff, prev, T('vsDayBefore')) + '</div>' +
+          '<div>' + arrow(u.effMtd, u.effPrevMonth, T('monthVsLast')) + '</div></div></div>';
       }).join('') + '</div>' });
     // 2. efficiency ranking
     var R = U.filter(function(u){ return u.eff != null; }).sort(function(a, b){ return b.eff - a.eff; });
-    slides.push({ title: 'Efficiency ranking · ' + dmy(data.effDate), html: R.length ? R.map(function (u) {
+    slides.push({ title: T('ranking') + ' · ' + dmy(data.effDate), html: R.length ? R.map(function (u) {
         return '<div class="rank"><span style="font-weight:900">' + esc(u.unit) + '</span><div class="bar"><i style="width:' + Math.min(u.eff, 100) + '%;background:' + tone(u.eff, 55, 45) + '"></i></div><b>' + num(u.eff, 1, '%') + '</b></div>';
       }).join('') + '<div class="sub" style="font-size:2vh">Green 55% and above · amber 45-55% · red below 45%. Efficiency = earned minutes / available minutes.</div>' : '<div class="msg">No efficiency data yet.</div>' });
     // 3. quality
-    slides.push({ title: 'Quality - month to date', html:
+    slides.push({ title: T('quality'), html:
       '<div class="grid" style="grid-template-columns:repeat(' + Math.min(U.length, 5) + ',minmax(0,1fr))">' + U.map(function (u) {
         return '<div class="card"><div class="unit">' + esc(u.unit) + '</div>' +
           '<div class="help" data-tip="FTR = first-time-right passed pieces / checked pieces (DQR). FSA pass % = passed final audits / (passed + failed) this month.">?</div>' +
-          '<div><div class="lbl">End-line FTR</div><div class="big" style="color:' + tone(u.ftr, 95, 90) + '">' + (u.ftr == null ? '<span style="font-size:3vh;color:#a9bddc">No DQR data</span>' : num(u.ftr, 1, '%')) + '</div>' +
+          '<div><div class="lbl">' + T('ftr') + '</div><div class="big" style="color:' + tone(u.ftr, 95, 90) + '">' + (u.ftr == null ? '<span style="font-size:3vh;color:#a9bddc">' + T('noDqr') + '</span>' : num(u.ftr, 1, '%')) + '</div>' +
           '<div class="sub">' + (u.ftrChk ? n0(u.ftrChk) + ' pcs checked' : '') + '</div></div>' +
-          '<div style="margin-top:auto"><div class="lbl">FSA pass rate</div><div class="mid" style="color:' + tone(u.fsa, 85, 70) + '">' + (u.fsa == null ? '<span style="font-size:2.6vh;color:#a9bddc">No audits yet</span>' : num(u.fsa, 1, '%')) + '</div>' +
+          '<div style="margin-top:auto"><div class="lbl">' + T('fsa') + '</div><div class="mid" style="color:' + tone(u.fsa, 85, 70) + '">' + (u.fsa == null ? '<span style="font-size:2.6vh;color:#a9bddc">' + T('noAudits') + '</span>' : num(u.fsa, 1, '%')) + '</div>' +
           '<div class="sub">' + (u.fsaN ? (u.fsaPass || 0) + ' pass / ' + (u.fsaFail || 0) + ' fail' : '') + '</div></div></div>';
       }).join('') + '</div>' });
     // 4. exceptions
@@ -136,9 +138,15 @@
       if (u.ftr == null) ex.push(['#94a3b8', u.unit + ' has no end-line quality (DQR) data this month', 'check DQR entry']);
     });
     if (data.openIssues) ex.push([C.bad, data.openIssues + ' program issue(s) open', 'see the bell on the HO dashboard']);
-    slides.push({ title: 'Needs attention', html: ex.length ? ex.slice(0, 7).map(function (e) {
+    slides.push({ title: T('needsAttention'), html: ex.length ? ex.slice(0, 7).map(function (e) {
         return '<div class="alert"><span class="dot" style="background:' + e[0] + '"></span><div><b>' + esc(e[1]) + '</b><div class="sub">' + esc(e[2]) + '</div></div></div>';
-      }).join('') : '<div class="msg" style="color:#4ade80">All units on track. Well done!</div>' });
+      }).join('') : '<div class="msg" style="color:#4ade80">' + T('allOnTrack') + '</div>' });
+    // 5. notes from the units (last 3 days)
+    var since = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
+    var nl = NOTES.filter(function (n) { return n.date >= since && (!ONLY || n.unit === ONLY || n.unit === 'TSPL'); }).slice(0, 7);
+    if (nl.length) slides.push({ title: T('notes'), html: nl.map(function (n) {
+        return '<div class="alert"><span class="dot" style="background:' + C.blue + '"></span><div><b>' + esc(n.unit) + (n.line ? ' · ' + T('line') + ' ' + esc(n.line) : '') + ' - ' + esc(n.text) + '</b><div class="sub">' + dmy(n.date) + ' · ' + esc(n.by) + '</div></div></div>';
+      }).join('') });
     document.getElementById('dots').innerHTML = slides.map(function(_, i){ return '<span class="' + (i === cur ? 'on' : '') + '"></span>'; }).join('');
   }
   function show(i){
@@ -151,14 +159,15 @@
     countUp(m);
   }
   function load(){
+    jsonp({ action: 'notes' }, function (r) { if (r && r.ok) { NOTES = r.notes || []; if (data) { build(); show(cur); } } });
     jsonp({ action: 'kpis' }, function (r) {
       if (r && r.ok) { data = r; loadedAt = Date.now(); build(); show(cur); }
-      else { if (!data) document.getElementById('main').innerHTML = '<div class="msg">Still collecting the live numbers. Trying again in 1 minute…</div>'; setTimeout(load, 60000); }
+      else { if (!data) document.getElementById('main').innerHTML = '<div class="msg">' + T('tryAgain') + '</div>'; setTimeout(load, 60000); }
     });
   }
   setInterval(function(){
     var d = new Date(); document.getElementById('clk').textContent = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-    if (loadedAt) { var m = Math.floor((Date.now() - loadedAt) / 60000); document.getElementById('upd').textContent = m < 1 ? 'updated just now' : 'updated ' + m + ' min ago'; }
+    if (loadedAt) { var m = Math.floor((Date.now() - loadedAt) / 60000); document.getElementById('upd').textContent = m < 1 ? T('updatedNow') : T('updatedMin', { n: m }); }
   }, 1000);
   setInterval(function(){ if (slides.length) show(cur + 1); }, ROTATE);
   setInterval(load, 5 * 60000);

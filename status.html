@@ -40,20 +40,23 @@
 </head>
 <body>
 <header>
-  <div><h1>TSPL | <span>Program Status</span></h1><div class="meta" id="meta">Loading…</div></div>
-  <div><button id="btnRe" type="button"><i class="las la-sync"></i> Refresh</button></div>
+  <div><h1>TSPL | <span data-i18n="programStatus">Program Status</span></h1><div class="meta" id="meta">Loading…</div></div>
+  <div><button id="btnRe" type="button"><i class="las la-sync"></i> <span data-i18n="refresh">Refresh</span></button></div>
 </header>
 <div class="wrap">
   <div class="sum" id="sum"></div>
-  <div class="bar"><input id="q" type="search" placeholder="Search program or page…" aria-label="Search"></div>
+  <div class="bar"><input id="q" type="search" placeholder="Search program or page…" data-i18n-ph="searchProg" aria-label="Search"></div>
   <div id="list"><div class="msg">Loading program status…</div></div>
 </div>
+<script src="js/i18n.js"></script>
 <script src="js/tspl-config.js"></script>
 <script>
 (function () {
   'use strict';
+  var T = window.TSPL_T || function (k) { return k; };
+  if (window.TSPL_I18N) TSPL_I18N.apply();
   var data = [], filt = '', loadedAt = null;
-  var LABEL = { ok: 'Working', down: 'Problem', restricted: 'Login needed', off: 'Not monitored', unknown: 'Not checked' };
+  var LABEL = { ok: T('working'), down: T('problem'), restricted: T('loginNeeded'), off: T('notMonitored'), unknown: T('notChecked') };
   var TIP = {
     ok: 'The monitor opened this program and it loaded normally.',
     down: 'The program gave an error or did not load. Open the bell on the HO dashboard to see the details and re-check.',
@@ -81,7 +84,7 @@
       if (filt && (a.state === filt) === false && !(filt === 'off' && a.state === 'unknown')) return false;
       return !q || (a.program + ' ' + a.page).toLowerCase().indexOf(q) > -1;
     }).sort(function (a, b) { var o = { down: 0, restricted: 1, unknown: 2, off: 3, ok: 4 }; return o[a.state] - o[b.state] || String(a.program).localeCompare(b.program); });
-    document.getElementById('list').innerHTML = rows.length ? '<table><thead><tr><th>Program</th><th>Status</th><th>Last checked</th></tr></thead><tbody>' + rows.map(function (a) {
+    document.getElementById('list').innerHTML = rows.length ? '<table><thead><tr><th>' + T('program') + '</th><th>' + T('status') + '</th><th>' + T('lastChecked') + '</th></tr></thead><tbody>' + rows.map(function (a) {
       return '<tr><td><b>' + esc(a.program) + '</b><div class="sub">' + esc(a.page) + '</div></td><td><span class="pill ' + a.state + '">' + LABEL[a.state] + '</span>' +
         (a.issue || (a.state === 'down' && a.status) ? '<div class="sub">' + esc(a.issue || a.status) + '</div>' : '') + '</td><td>' + when(a.checked) + '</td></tr>';
     }).join('') + '</tbody></table>' : '<div class="msg">No programs match.</div>';
@@ -93,7 +96,7 @@
       data = r.apps || []; loadedAt = Date.now(); tick(); render();
     });
   }
-  function tick() { if (!loadedAt) return; var m = Math.floor((Date.now() - loadedAt) / 60000); document.getElementById('meta').textContent = data.length + ' programs · updated ' + (m < 1 ? 'just now' : m + ' min ago') + ' · the monitor checks every program on its schedule'; }
+  function tick() { if (!loadedAt) return; var m = Math.floor((Date.now() - loadedAt) / 60000); document.getElementById('meta').textContent = data.length + ' · ' + (m < 1 ? T('updatedNow') : T('updatedMin', { n: m })); }
   document.getElementById('sum').addEventListener('click', function (e) { var t = e.target.closest('.tile'); if (!t) return; filt = filt === t.dataset.k ? '' : t.dataset.k; render(); });
   document.getElementById('q').addEventListener('input', render);
   document.getElementById('btnRe').addEventListener('click', load);

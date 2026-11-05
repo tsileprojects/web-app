@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Daily Report</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+<style>
+  :root { --bg:#f4f7fb; --card:#fff; --line:#e2e8f0; --text:#0f172a; --muted:#5b6577; --brand:#2196f3; --good:#15803d; --warn:#b45309; --bad:#b91c1c; --head:#f1f5f9; }
+  html.tspl-dark { --bg:#0f172a; --card:#111c33; --line:#263552; --text:#e5e7eb; --muted:#9fb0c8; --head:#16223d; --good:#4ade80; --warn:#fbbf24; --bad:#f87171; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
+  header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:14px 24px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:3; }
+  h1 { font-size:18px; margin:0; } h1 span { color:var(--brand); }
+  .meta { font-size:13px; color:var(--muted); margin-top:2px; }
+  .acts { display:flex; gap:8px; flex-wrap:wrap; }
+  button, select, input, textarea { font:inherit; font-size:13px; color:var(--text); background:var(--card); border:1px solid var(--line); border-radius:8px; }
+  button { padding:7px 12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  button:hover { border-color:var(--brand); }
+  button.pri { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .wrap { max-width:1180px; margin:0 auto; padding:18px 24px 48px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:16px; }
+  h2 { font-size:15px; margin:0 0 10px; display:flex; align-items:center; gap:8px; }
+  h2 small { font-weight:400; color:var(--muted); font-size:12.5px; }
+  .tw { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th, td { padding:8px 10px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+  th { font-size:11.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; background:var(--head); }
+  th:first-child, td:first-child, td.l, th.l { text-align:left; }
+  td.wrapc { white-space:normal; min-width:160px; text-align:left; }
+  tr.click { cursor:pointer; } tr.click:hover td { background:rgba(33,150,243,.07); } tr.sel td { background:rgba(33,150,243,.12); }
+  tr.tot td { font-weight:700; background:var(--head); }
+  .g { color:var(--good); font-weight:700; } .a { color:var(--warn); font-weight:700; } .r { color:var(--bad); font-weight:700; } .m { color:var(--muted); }
+  .up { color:var(--good); } .dn { color:var(--bad); }
+  .note-ic { color:var(--brand); margin-left:6px; font-size:12px; }
+  .hint { font-size:12.5px; color:var(--muted); margin:8px 0 0; }
+  .grid2 { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  .notes { list-style:none; margin:0; padding:0; max-height:340px; overflow:auto; }
+  .notes li { padding:8px 0; border-bottom:1px dashed var(--line); font-size:13.5px; }
+  .notes li b { margin-right:6px; } .notes .when { color:var(--muted); font-size:12px; }
+  form.addn { display:grid; gap:8px; grid-template-columns: 110px 90px 1fr; }
+  form.addn textarea { grid-column:1 / -1; min-height:60px; padding:8px; resize:vertical; }
+  form.addn input, form.addn select { padding:7px 8px; }
+  form.addn .row { grid-column:1 / -1; display:flex; gap:8px; align-items:center; }
+  form.addn .row input { flex:1; }
+  .msg { padding:30px; text-align:center; color:var(--muted); }
+  .flash { font-size:12.5px; margin-left:6px; }
+  .print-only { display:none; }
+  @media (max-width:860px) { .grid2 { grid-template-columns:1fr; } form.addn { grid-template-columns:1fr 1fr; } }
+  @media print {
+    header { position:static; border:0; } .acts, form.addn, .no-print { display:none !important; }
+    body { background:#fff; color:#000; } .card { border:1px solid #ccc; break-inside:avoid; } .print-only { display:block; }
+    .wrap { padding:0; max-width:none; } .notes { max-height:none; }
+  }
+</style>
+<script>try { if (localStorage.getItem('tsplTheme') === 'dark') document.documentElement.classList.add('tspl-dark'); } catch (e) {}</script>
+<script src="js/i18n.js"></script>
+</head>
+<body>
+<header>
+  <div><h1>TSPL | <span data-i18n="dailyReport">Daily Report</span></h1><div class="meta" id="meta" data-i18n="loading">Loading…</div></div>
+  <div class="acts">
+    <button type="button" id="btnXls"><i class="las la-file-excel"></i><span data-i18n="downloadXls">Download Excel</span></button>
+    <button type="button" id="btnPdf"><i class="las la-print"></i><span data-i18n="printPdf">Print / PDF</span></button>
+    <button type="button" id="btnRe"><i class="las la-sync"></i><span data-i18n="refresh">Refresh</span></button>
+  </div>
+</header>
+<div class="wrap">
+  <div class="card">
+    <h2><span data-i18n="dailyReport">Daily Report</span> <small id="dates"></small></h2>
+    <div class="tw" id="sum"><div class="msg" data-i18n="loading">Loading…</div></div>
+    <p class="hint no-print" data-i18n="clickUnit">Click a unit to see line-wise detail.</p>
+  </div>
+  <div class="card" id="drillCard" hidden>
+    <h2><span id="drillTitle"></span> <small id="drillSub"></small></h2>
+    <div class="tw" id="drill"></div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h2><i class="las la-sticky-note"></i><span data-i18n="notes">Notes</span> <small>(31 days)</small></h2>
+      <ul class="notes" id="notes"><li class="m" data-i18n="loading">Loading…</li></ul>
+    </div>
+    <div class="card no-print">
+      <h2><i class="las la-plus-circle"></i><span data-i18n="addNote">Add a note</span></h2>
+      <form class="addn" id="noteForm" autocomplete="off">
+        <select id="nUnit" aria-label="Unit"></select>
+        <input id="nLine" placeholder="Line" aria-label="Line" maxlength="10" data-i18n-ph="line">
+        <input id="nDate" type="date" aria-label="Date">
+        <textarea id="nText" maxlength="300" data-i18n-ph="notePh" aria-label="Note"></textarea>
+        <div class="row"><input id="nBy" maxlength="40" data-i18n-ph="yourName" aria-label="Your name"><button class="pri" type="submit"><i class="las la-save"></i><span data-i18n="save">Save note</span></button><span class="flash" id="nFlash"></span></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="js/tspl-config.js"></script>
+<script>
+(function () {
+  'use strict';
+  var T = window.TSPL_T || function (k) { return k; };
+  if (window.TSPL_I18N) TSPL_I18N.apply();
+  var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'];
+  var ONLY = (new URLSearchParams(location.search).get('unit') || '').toUpperCase();
+  var R = null, NOTES = [], DR = null, loadedAt = null;
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function n0(v) { return v == null || v === '' ? '-' : Math.round(v).toLocaleString('en-IN'); }
+  function p1(v) { return v == null ? '-' : (Math.round(v * 10) / 10).toFixed(1) + '%'; }
+  function cls(v, g, a) { return v == null ? 'm' : v >= g ? 'g' : v >= a ? 'a' : 'r'; }
+  function dmy(s) { if (!s) return ''; var p = String(s).split('-'); return p[2] + '-' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1] - 1] + '-' + p[0].slice(2); }
+  function delta(a, b) { if (a == null || b == null) return '<span class="m">-</span>'; var d = Math.round((a - b) * 10) / 10; return '<span class="' + (d >= 0 ? 'up' : 'dn') + '">' + (d >= 0 ? '▲ ' : '▼ ') + Math.abs(d).toFixed(1) + '</span>'; }
+
+  function jsonp(params, cb, ms) {
+    var name = '__rp' + Date.now() + Math.floor(Math.random() * 1000), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = window.TSPL_MONITOR_URL + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 100000);
+    document.body.appendChild(s);
+  }
+
+  function units() { return (R.k.units || []).filter(function (u) { return !ONLY || u.unit === ONLY; }); }
+  function notesFor(unit, date) { return NOTES.filter(function (n) { return n.unit === unit && (!date || n.date === date); }); }
+
+  function renderSummary() {
+    var k = R.k, p = R.p, tp = 0, tt = 0;
+    document.getElementById('dates').textContent = T('output') + ': ' + dmy(p.date) + ' · ' + T('efficiency') + ': ' + dmy(k.effDate) + ' · ' + T('quality');
+    var rows = units().map(function (u) {
+      var x = (p.units || {})[u.unit] || {}, ach = x.tgt ? x.pro / x.tgt * 100 : null, t = (k.trend || {})[u.unit] || [], prev = t.length > 1 ? t[t.length - 2].eff : null;
+      tp += x.pro || 0; tt += x.tgt || 0;
+      var nn = notesFor(u.unit, p.date).length + notesFor(u.unit, k.effDate).length;
+      return '<tr class="click' + (DR && DR.unit === u.unit ? ' sel' : '') + '" data-u="' + u.unit + '"><td><b>' + u.unit + '</b>' + (nn ? '<i class="las la-sticky-note note-ic" title="' + T('notes') + '"></i>' : '') + '</td>' +
+        '<td>' + n0(x.pro) + '</td><td>' + n0(x.tgt) + '</td><td class="' + cls(ach, 98, 90) + '">' + p1(ach) + '</td>' +
+        '<td class="' + cls(u.eff, 55, 45) + '">' + p1(u.eff) + '</td><td>' + delta(u.eff, prev) + '</td><td>' + p1(u.effMtd) + '</td><td>' + p1(u.effPrevMonth) + '</td><td>' + delta(u.effMtd, u.effPrevMonth) + '</td>' +
+        '<td class="' + (u.ftr == null ? 'm' : cls(u.ftr, 95, 90)) + '">' + (u.ftr == null ? T('noDqr') : p1(u.ftr)) + '</td>' +
+        '<td class="' + (u.fsa == null ? 'm' : cls(u.fsa, 85, 70)) + '">' + (u.fsa == null ? T('noAudits') : p1(u.fsa)) + '</td></tr>';
+    }).join('');
+    var ta = tt ? tp / tt * 100 : null;
+    var tot = ONLY ? '' : '<tr class="tot"><td>TSPL</td><td>' + n0(tp) + '</td><td>' + n0(tt) + '</td><td class="' + cls(ta, 98, 90) + '">' + p1(ta) + '</td><td colspan="7"></td></tr>';
+    document.getElementById('sum').innerHTML = '<table><thead><tr><th>' + T('unit') + '</th><th>' + T('output') + '</th><th>' + T('target') + '</th><th>' + T('achieved') + '</th><th>' + T('efficiency') + '</th><th>' + T('vsDayBefore') + '</th><th>' + T('thisMonth') + '</th><th>' + T('lastMonth') + '</th><th>' + T('change') + '</th><th>' + T('ftr') + '</th><th>' + T('fsa') + '</th></tr></thead><tbody>' + rows + tot + '</tbody></table>';
+  }
+
+  function renderNotes() {
+    var list = NOTES.filter(function (n) { return !ONLY || n.unit === ONLY || n.unit === 'TSPL'; });
+    document.getElementById('notes').innerHTML = list.length ? list.slice(0, 80).map(function (n) {
+      return '<li><b>' + esc(n.unit) + (n.line ? ' · ' + T('line') + ' ' + esc(n.line) : '') + '</b>' + esc(n.text) + '<div class="when">' + dmy(n.date) + ' · ' + esc(n.by) + '</div></li>';
+    }).join('') : '<li class="m">' + T('noNotes') + '</li>';
+  }
+
+  function openDrill(unit) {
+    var date = R.p.date || R.k.prodDate;
+    var card = document.getElementById('drillCard');
+    card.hidden = false;
+    document.getElementById('drillTitle').textContent = unit + ' · ' + T('line');
+    document.getElementById('drillSub').textContent = dmy(date);
+    document.getElementById('drill').innerHTML = '<div class="msg">' + T('loading') + '</div>';
+    DR = { unit: unit, date: date, lines: null }; renderSummary();
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    jsonp({ action: 'drill', unit: unit, date: date }, function (r) {
+      if (!r || !r.ok) { document.getElementById('drill').innerHTML = '<div class="msg">' + esc(r && r.error || T('tryAgain')) + '</div>'; return; }
+      DR.lines = r.lines || [];
+      var ln = notesFor(unit, date);
+      var tp = 0, tt = 0, te = 0, ta = 0;
+      document.getElementById('drill').innerHTML = DR.lines.length ? '<table><thead><tr><th>' + T('line') + '</th><th class="l">' + T('buyer') + '</th><th class="l">' + T('style') + '</th><th>' + T('output') + '</th><th>' + T('target') + '</th><th>' + T('achieved') + '</th><th>' + T('mp') + '</th><th>' + T('efficiency') + '</th><th>' + T('ftr') + '</th><th>' + T('dft') + '</th><th class="l">' + T('remark') + '</th></tr></thead><tbody>' +
+        DR.lines.map(function (l) {
+          var ach = l.tgt ? l.pro / l.tgt * 100 : null; tp += l.pro || 0; tt += l.tgt || 0; te += l.earn || 0; ta += l.avail || 0;
+          var nts = ln.filter(function (n) { return n.line && String(n.line).toUpperCase() === String(l.line).toUpperCase(); }).map(function (n) { return n.text; });
+          var rem = [l.remark].concat(nts).filter(Boolean).join(' | ');
+          return '<tr><td><b>' + esc(l.line) + '</b></td><td class="l">' + esc(l.buyer) + '</td><td class="l">' + esc(l.style) + '</td><td>' + n0(l.pro) + '</td><td>' + n0(l.tgt) + '</td><td class="' + cls(ach, 98, 90) + '">' + p1(ach) + '</td><td>' + n0(l.mp) + '</td><td class="' + cls(l.eff, 55, 45) + '">' + p1(l.eff) + '</td><td class="' + cls(l.ftr, 95, 90) + '">' + p1(l.ftr) + '</td><td>' + p1(l.dft) + '</td><td class="wrapc">' + esc(rem) + '</td></tr>';
+        }).join('') + '<tr class="tot"><td>' + esc(unit) + '</td><td></td><td></td><td>' + n0(tp) + '</td><td>' + n0(tt) + '</td><td>' + p1(tt ? tp / tt * 100 : null) + '</td><td></td><td>' + p1(ta ? te / ta * 100 : null) + '</td><td colspan="3"></td></tr></tbody></table>' +
+        (r.errors && r.errors.length ? '<p class="hint">' + esc(r.errors.join('; ')) + '</p>' : '') +
+        '<p class="hint no-print"><a href="#" id="drillBack">' + T('back') + '</a></p>'
+        : '<div class="msg">-</div>';
+      var b = document.getElementById('drillBack'); if (b) b.onclick = function (e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+    }, 120000);
+  }
+
+  function load() {
+    document.getElementById('meta').textContent = T('loading');
+    jsonp({ action: 'report' }, function (r) {
+      if (!r || !r.ok) { document.getElementById('meta').textContent = T('tryAgain'); setTimeout(load, 60000); return; }
+      R = r; loadedAt = Date.now(); tick(); renderSummary();
+      if (ONLY) openDrill(ONLY);
+    }, 150000);
+    loadNotes();
+  }
+  function loadNotes() { jsonp({ action: 'notes' }, function (r) { if (r && r.ok) { NOTES = r.notes || []; renderNotes(); if (R) renderSummary(); } }, 60000); }
+  function tick() { if (!loadedAt) return; var m = Math.floor((Date.now() - loadedAt) / 60000); document.getElementById('meta').textContent = (m < 1 ? T('updatedNow') : T('updatedMin', { n: m })); }
+
+  // ---------- Excel ----------
+  function loadXlsx(cb) {
+    if (window.XLSX) return cb();
+    var s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload = cb; s.onerror = function () { alert('Could not load the Excel library. Check the internet connection.'); };
+    document.head.appendChild(s);
+  }
+  function r1(v) { return v == null ? '' : Math.round(v * 10) / 10; }
+  document.getElementById('btnXls').addEventListener('click', function () {
+    if (!R) return;
+    loadXlsx(function () {
+      var wb = XLSX.utils.book_new(), k = R.k, p = R.p;
+      var sum = [['TSPL Daily Report'], ['Output date', dmy(p.date), 'Efficiency date', dmy(k.effDate)], [],
+        ['Unit', 'Output', 'Target', 'Achieved %', 'Efficiency %', 'This month eff %', 'Last month eff %', 'End-line FTR % (MTD)', 'FSA pass % (MTD)', 'FSA pass', 'FSA fail']];
+      units().forEach(function (u) { var x = (p.units || {})[u.unit] || {};
+        sum.push([u.unit, x.pro || 0, x.tgt || 0, x.tgt ? r1(x.pro / x.tgt * 100) : '', r1(u.eff), r1(u.effMtd), r1(u.effPrevMonth), r1(u.ftr), r1(u.fsa), u.fsaPass || 0, u.fsaFail || 0]); });
+      var ws = XLSX.utils.aoa_to_sheet(sum); ws['!cols'] = [{ wch: 8 }, { wch: 10 }, { wch: 10 }, { wch: 11 }, { wch: 12 }, { wch: 16 }, { wch: 16 }, { wch: 19 }, { wch: 16 }, { wch: 9 }, { wch: 9 }];
+      XLSX.utils.book_append_sheet(wb, ws, 'Summary');
+      var tr = [['Unit', 'Date', 'Efficiency %']];
+      Object.keys(k.trend || {}).forEach(function (u) { if (ONLY && u !== ONLY) return; k.trend[u].forEach(function (x) { tr.push([u, x.d, x.eff]); }); });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tr), 'Efficiency trend');
+      if (DR && DR.lines) {
+        var dl = [['Unit', 'Date', 'Line', 'Buyer', 'Style', 'Output', 'Target', 'Achieved %', 'Operators', 'Efficiency %', 'FTR %', 'Defective %', 'Remark']];
+        DR.lines.forEach(function (l) { dl.push([DR.unit, DR.date, l.line, l.buyer || '', l.style || '', l.pro || 0, l.tgt || 0, l.tgt ? r1(l.pro / l.tgt * 100) : '', l.mp || '', r1(l.eff), r1(l.ftr), r1(l.dft), l.remark || '']); });
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dl), DR.unit + ' lines');
+      }
+      var nt = [['Date', 'Unit', 'Line', 'Note', 'By']];
+      NOTES.forEach(function (n) { if (!ONLY || n.unit === ONLY) nt.push([n.date, n.unit, n.line, n.text, n.by]); });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(nt), 'Notes');
+      XLSX.writeFile(wb, 'TSPL_Report_' + (ONLY ? ONLY + '_' : '') + (p.date || 'latest') + '.xlsx');
+    });
+  });
+  document.getElementById('btnPdf').addEventListener('click', function () { window.print(); });
+  document.getElementById('btnRe').addEventListener('click', load);
+  document.getElementById('sum').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-u]'); if (tr) openDrill(tr.getAttribute('data-u')); });
+
+  // ---------- Notes form ----------
+  var sel = document.getElementById('nUnit');
+  sel.innerHTML = UNITS.map(function (u) { return '<option' + (u === ONLY ? ' selected' : '') + '>' + u + '</option>'; }).join('') + '<option value="TSPL">' + T('allUnits') + '</option>';
+  var d = new Date(Date.now() - 86400000); document.getElementById('nDate').value = d.toISOString().slice(0, 10);
+  try { document.getElementById('nBy').value = localStorage.getItem('tsplNoteBy') || ''; } catch (e) {}
+  document.getElementById('noteForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = { action: 'addnote', unit: sel.value, line: document.getElementById('nLine').value.trim(), date: document.getElementById('nDate').value,
+      text: document.getElementById('nText').value.trim(), by: document.getElementById('nBy').value.trim() };
+    var fl = document.getElementById('nFlash'); fl.className = 'flash m'; fl.textContent = T('loading');
+    try { localStorage.setItem('tsplNoteBy', f.by); } catch (er) {}
+    jsonp(f, function (r) {
+      if (r && r.ok) { fl.className = 'flash g'; fl.textContent = T('saved'); document.getElementById('nText').value = ''; document.getElementById('nLine').value = ''; loadNotes(); }
+      else { fl.className = 'flash r'; fl.textContent = (r && r.error) || 'Error'; }
+    }, 30000);
+  });
+
+  setInterval(tick, 30000);
+  load();
+})();
+</script>
+</body>
+</html>

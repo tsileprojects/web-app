@@ -83,3 +83,13 @@ html.tspl-dark [data-tip]:hover::after { background: #e5e7eb; color: #0f172a; }
 .uip-skel .msg { position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%); font-size: .82rem; color: var(--muted); }
 @keyframes uipShimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
 @media (prefers-reduced-motion: reduce) { .uip-skel i { animation: none; } }
+
+/* ---------- Language button ---------- */
+.uip-lang { width: auto !important; min-width: 34px; padding: 0 8px !important; font-size: 12px; font-weight: 600; }
+.uip-lang span { white-space: nowrap; }
+
+/* ---------- Department colour code ---------- */
+details.menu.uip-dept { border-left: 3px solid var(--dept) !important; }
+details.menu.uip-dept > summary .las:first-child,
+details.menu.uip-dept > summary i:first-child { color: var(--dept); }
+a.menu-link.uip-dept-link > i:first-child { color: var(--dept); opacity: 1; }

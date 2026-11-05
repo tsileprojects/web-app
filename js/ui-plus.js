@@ -17,12 +17,23 @@
 
   function ready(fn) { if (document.readyState !== 'loading') fn(); else document.addEventListener('DOMContentLoaded', fn); }
 
+  function withI18n(fn) {
+    if (window.TSPL_T) return fn();
+    var sc = document.createElement('script'); sc.src = 'js/i18n.js';
+    sc.onload = fn; sc.onerror = function () { window.TSPL_T = function (k) { return k; }; fn(); };
+    document.head.appendChild(sc);
+  }
+  var T = function (k, v) { return window.TSPL_T ? window.TSPL_T(k, v) : k; };
+
   ready(function () {
     var app = document.querySelector('.app');
     if (!app) return;
-    headerButtons();
-    sidebar();
-    skeleton();
+    withI18n(function () {
+      headerButtons();
+      sidebar();
+      deptColours();
+      skeleton();
+    });
   });
 
   // ---------- Header: dark mode, TV, status, help tips ----------
@@ -39,27 +50,27 @@
       return b;
     }
     var first = bar.firstElementChild;
-    var dark = btn('btnTheme', document.documentElement.classList.contains('tspl-dark') ? 'la-sun' : 'la-moon',
-      'Dark / light mode. Easier on the eyes at night; your choice is remembered on this computer.', function () {
+    var dark = btn('btnTheme', document.documentElement.classList.contains('tspl-dark') ? 'la-sun' : 'la-moon', T('tipTheme'), function () {
         var on = document.documentElement.classList.toggle('tspl-dark');
         store('tsplTheme', on ? 'dark' : 'light');
         dark.querySelector('i').className = 'las ' + (on ? 'la-sun' : 'la-moon');
       });
-    var tv = btn('btnTv', 'la-tv', 'TV display. Opens a full-screen live board (output, efficiency, quality) for the floor or meeting-room TV.', function () {
-      window.open('tv.html' + (unit ? '?unit=' + unit.toUpperCase() : ''), '_blank', 'noopener');
+    var q = unit ? '?unit=' + unit.toUpperCase() : '';
+    var tv = btn('btnTv', 'la-tv', T('tipTv'), function () { window.open('tv.html' + q, '_blank', 'noopener'); });
+    var st = btn('btnStatus', 'la-heartbeat', T('tipStatus'), function () { window.open('status.html', '_blank', 'noopener'); });
+    var rp = btn('btnReport', 'la-file-download', T('tipReport'), function () { window.open('report.html' + q, '_blank', 'noopener'); });
+    var langs = window.TSPL_I18N ? TSPL_I18N.langs : [['en', 'EN']];
+    var cur = window.TSPL_I18N ? TSPL_I18N.lang() : 'en';
+    var lg = btn('btnLang', 'la-language', T('tipLang'), function () {
+      var i = langs.map(function (x) { return x[0]; }).indexOf(cur);
+      TSPL_I18N.set(langs[(i + 1) % langs.length][0]);
     });
-    var st = btn('btnStatus', 'la-heartbeat', 'Program status. Shows which programs are up, down or restricted, from the error monitor.', function () {
-      window.open('status.html', '_blank', 'noopener');
-    });
-    [st, tv, dark].forEach(function (b) { bar.insertBefore(b, first); });
+    lg.classList.add('uip-lang');
+    lg.innerHTML = '<span>' + (langs.filter(function (x) { return x[0] === cur; })[0] || langs[0])[1] + '</span>';
+    [rp, st, tv, dark, lg].forEach(function (b) { bar.insertBefore(b, first); });
 
     // Help tips on the existing buttons
-    var tips = {
-      btnBell: 'Notifications. Program errors found by the monitor; open to fix, ignore or re-check them.',
-      btnAsk: 'Ask TSPL. Ask a question in plain words about production, efficiency, quality, FSA, needles and more.',
-      btnFullscreen: 'Full screen. Hides the browser bars; press Esc to come back.',
-      btnSidebar: 'Show / hide the menu.'
-    };
+    var tips = { btnBell: T('tipBell'), btnAsk: T('tipAsk'), btnFullscreen: T('tipFull') };
     Object.keys(tips).forEach(function (id) {
       var el = document.getElementById(id);
       if (el && !el.hasAttribute('data-tip')) { el.setAttribute('data-tip', tips[id]); el.removeAttribute('title'); }
@@ -77,8 +88,8 @@
     // search box
     var box = document.createElement('div');
     box.className = 'uip-search';
-    box.innerHTML = '<i class="las la-search" aria-hidden="true"></i><input type="search" placeholder="Search programs…" aria-label="Search programs"><button type="button" aria-label="Clear search" hidden>&times;</button>';
-    var empty = document.createElement('div'); empty.className = 'uip-empty uip-hide'; empty.textContent = 'No program matches.';
+    box.innerHTML = '<i class="las la-search" aria-hidden="true"></i><input type="search" placeholder="' + T('search') + '" aria-label="' + T('search') + '"><button type="button" aria-label="Clear search" hidden>&times;</button>';
+    var empty = document.createElement('div'); empty.className = 'uip-empty uip-hide'; empty.textContent = T('noMatch');
     nav.parentNode.insertBefore(box, nav);
     nav.parentNode.insertBefore(empty, nav);
     var input = box.querySelector('input'), clear = box.querySelector('button');
@@ -129,7 +140,7 @@
       var valid = pins.filter(function (k) { return links.some(function (a) { return keyOf(a) === k; }); });
       group.classList.toggle('uip-hide', !valid.length);
       if (!valid.length) return;
-      group.innerHTML = '<div class="uip-pinned-head"><i class="las la-star"></i>Pinned</div>';
+      group.innerHTML = '<div class="uip-pinned-head"><i class="las la-star"></i>' + T('pinned') + '</div>';
       valid.forEach(function (k) {
         var src = links.filter(function (a) { return keyOf(a) === k; })[0];
         var a = document.createElement('a');
@@ -162,13 +173,42 @@
     render();
   }
 
+  // ---------- Department colour code ----------
+  var DEPT = [
+    [/fsa|final audit|quality|dqr|qty|cft/i, '#8b5cf6', 'Quality / FSA'],
+    [/needle|cmd/i, '#f97316', 'Needles / CMD'],
+    [/mc_plan|machine|mc plan/i, '#0d9488', 'Machines'],
+    [/dpr|cot|pro and eff|production|eff/i, '#16a34a', 'Production / Efficiency'],
+    [/kpi|mmr|gm/i, '#2563eb', 'Management KPI'],
+    [/gsd|sam|ie\b/i, '#4f46e5', 'GSD / IE'],
+    [/fc|finance|psc|cost/i, '#ca8a04', 'Finance / Costing'],
+    [/emb|smp|sample|ppd|cut/i, '#db2777', 'Sampling / EMB / Cutting'],
+    [/doc|format|ref|library|process/i, '#64748b', 'Documents']
+  ];
+  function deptOf(text) { for (var i = 0; i < DEPT.length; i++) if (DEPT[i][0].test(text)) return DEPT[i]; return null; }
+  function deptColours() {
+    var nav = document.querySelector('aside.sidebar nav');
+    if (!nav) return;
+    nav.querySelectorAll('details.menu').forEach(function (m) {
+      var head = m.querySelector('summary');
+      var d = deptOf(head ? head.textContent : '');
+      if (!d) { var votes = {}; m.querySelectorAll('.menu-link').forEach(function (a) { var x = deptOf(a.textContent); if (x) votes[x[1]] = (votes[x[1]] || 0) + 1; });
+        var best = Object.keys(votes).sort(function (a, b) { return votes[b] - votes[a]; })[0]; if (best) d = DEPT.filter(function (x) { return x[1] === best; })[0]; }
+      if (d) { m.style.setProperty('--dept', d[1]); m.classList.add('uip-dept'); m.setAttribute('data-dept', d[2]); }
+    });
+    nav.querySelectorAll('.menu-link').forEach(function (a) {
+      var d = deptOf(a.textContent);
+      if (d) { a.style.setProperty('--dept', d[1]); a.classList.add('uip-dept-link'); }
+    });
+  }
+
   // ---------- Loading placeholder ----------
   function skeleton() {
     var wrap = document.getElementById('iframeWrap'), frame = document.getElementById('mainFrame');
     if (!wrap || !frame) return;
     var sk = document.createElement('div');
     sk.className = 'uip-skel'; sk.setAttribute('aria-hidden', 'true');
-    sk.innerHTML = '<div class="row"><i></i><i></i><i></i><i></i></div><div class="row two"><i></i><i></i></div><div class="row two"><i></i><i></i></div><div class="msg">Loading dashboard…</div>';
+    sk.innerHTML = '<div class="row"><i></i><i></i><i></i><i></i></div><div class="row two"><i></i><i></i></div><div class="row two"><i></i><i></i></div><div class="msg">' + T('loadingDash') + '</div>';
     wrap.appendChild(sk);
     var timer = null;
     function on() { sk.classList.add('on'); clearTimeout(timer); timer = setTimeout(off, 15000); }
