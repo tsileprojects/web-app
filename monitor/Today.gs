@@ -63,20 +63,24 @@ function drillLive_(unit, date, fresh) {
   const L = no => { no = String(no == null ? '' : no).trim(); if (!no) return null; return lines[no] = lines[no] || { line: no, styles: [] }; };
   const w = "D = '" + unit + "' and C = date '" + date + "'";
   try {
-    const r = appCsv_(kpiSrc_('PROD'), "select F, G, H, Z, sum(AK), sum(X), sum(AP), max(AO), " + TD_H.map(c => 'sum(' + c + ')').join(', ') +
-      " where " + w + " and E = 'Sew' group by F, G, H, Z");
+    // F line, G buyer, H style, I colour, Z status | AK today, X target, AP operators, AO remark, J order qty, AL cum pro, L cum cut, O cum load, AM WIP | hourly
+    const r = appCsv_(kpiSrc_('PROD'), "select F, G, H, I, Z, sum(AK), sum(X), sum(AP), max(AO), max(J), sum(AL), max(L), max(O), sum(AM), " + TD_H.map(c => 'sum(' + c + ')').join(', ') +
+      " where " + w + " and E = 'Sew' group by F, G, H, I, Z");
     if (r.error) errs.push('production: ' + r.error);
     (r.rows || []).forEach(x => {
       const l = L(x[0]); if (!l) return;
-      const h = tdHours_(x, 8), pro = Math.max(kpiNum_(x[4]), h.sum), tgt = kpiNum_(x[5]);
-      l.styles.push({ buyer: String(x[1] || '').trim(), style: String(x[2] || '').trim(), status: String(x[3] || '').trim(), pro: pro, tgt: tgt });
-      l.buyer = l.buyer || String(x[1] || '').trim();
-      l.style = l.style ? l.style + ', ' + String(x[2] || '').trim() : String(x[2] || '').trim();
-      l.status = String(x[3] || '').trim();
-      l.pro = (l.pro || 0) + pro; l.tgt = (l.tgt || 0) + tgt; l.mp = (l.mp || 0) + kpiNum_(x[6]);
+      const h = tdHours_(x, 14), pro = Math.max(kpiNum_(x[5]), h.sum), tgt = kpiNum_(x[6]);
+      const st = { buyer: String(x[1] || '').trim(), style: String(x[2] || '').trim(), color: String(x[3] || '').trim(), status: String(x[4] || '').trim(), pro: pro, tgt: tgt,
+        order: kpiNum_(x[9]), dprCum: kpiNum_(x[10]), cumCut: kpiNum_(x[11]), cumLoad: kpiNum_(x[12]), wip: kpiNum_(x[13]), hours: h.hours };
+      l.styles.push(st);
+      l.buyer = l.buyer || st.buyer;
+      if ((l.style || '').split(', ').indexOf(st.style) < 0) l.style = l.style ? l.style + ', ' + st.style : st.style;
+      if ((l.color || '').split(', ').indexOf(st.color) < 0 && st.color) l.color = l.color ? l.color + ', ' + st.color : st.color;
+      l.status = st.status;
+      l.pro = (l.pro || 0) + pro; l.tgt = (l.tgt || 0) + tgt; l.mp = (l.mp || 0) + kpiNum_(x[7]); l.wip = (l.wip || 0) + st.wip;
       l.hours = (l.hours || TD_H.map(() => 0)).map((v, i) => v + h.hours[i]);
       l.hoursDone = Math.max(l.hoursDone || 0, h.done);
-      const rem = String(x[7] || '').trim(); if (rem && !/^(na|n\/a|-|0)$/i.test(rem)) l.remark = rem.slice(0, 120);
+      const rem = String(x[8] || '').trim(); if (rem && !/^(na|n\/a|-|0)$/i.test(rem)) l.remark = rem.slice(0, 120);
     });
   } catch (e) { errs.push('production: ' + e.message); }
   if (!isToday) {   // efficiency is in COT up to yesterday only
@@ -94,14 +98,47 @@ function drillLive_(unit, date, fresh) {
     const na = parseFloat(a.line), nb = parseFloat(b.line);
     return (isNaN(na) || isNaN(nb)) ? String(a.line).localeCompare(b.line) : (na - nb || String(a.line).localeCompare(b.line));
   });
-  // product-wise (buyer + style)
+  // product-wise (buyer + style), with colours
   const prod = {};
   list.forEach(l => (l.styles || []).forEach(s => {
     const k = s.buyer + '|' + s.style;
-    const p = prod[k] = prod[k] || { buyer: s.buyer, style: s.style, lines: [], pro: 0, tgt: 0 };
+    const p = prod[k] = prod[k] || { buyer: s.buyer, style: s.style, lines: [], pro: 0, tgt: 0, colors: {} };
     p.pro += s.pro; p.tgt += s.tgt; if (p.lines.indexOf(l.line) < 0) p.lines.push(l.line);
+    const ck = s.color || '-';
+    const c = p.colors[ck] = p.colors[ck] || { color: ck, lines: [], pro: 0, tgt: 0, order: 0, dprCum: 0, cumCut: 0, cumLoad: 0, wip: 0 };
+    c.pro += s.pro; c.tgt += s.tgt; c.dprCum += s.dprCum; c.wip += s.wip; if (c.lines.indexOf(l.line) < 0) c.lines.push(l.line);
+    c.order = Math.max(c.order, s.order); c.cumCut = Math.max(c.cumCut, s.cumCut); c.cumLoad = Math.max(c.cumLoad, s.cumLoad);
   }));
-  const products = Object.keys(prod).map(k => prod[k]).sort((a, b) => b.pro - a.pro);
+  // cumulative produced to date (sum of every day's output) for these styles - this unit and all units
+  const styleNames = Object.keys(prod).map(k => prod[k].style).filter((v, i, a) => v && a.indexOf(v) === i).slice(0, 25);
+  if (styleNames.length) {
+    try {
+      const cond = styleNames.map(n => "H = '" + n.replace(/'/g, "\\'") + "'").join(' or ');
+      const r = appCsv_(kpiSrc_('PROD'), "select D, H, I, sum(AK), min(C) where E = 'Sew' and C <= date '" + date + "' and (" + cond + ") group by D, H, I");
+      if (r.error) errs.push('cumulative: ' + r.error);
+      (r.rows || []).forEach(x => {
+        const u = String(x[0]).trim(), st = String(x[1] || '').trim(), col = String(x[2] || '').trim() || '-', n = kpiNum_(x[3]), first = kpiDate_(x[4]);
+        Object.keys(prod).forEach(k => {
+          const p = prod[k]; if (p.style !== st) return;
+          p.cumAll = (p.cumAll || 0) + n;
+          if (!p.unitsRun) p.unitsRun = []; if (p.unitsRun.indexOf(u) < 0) p.unitsRun.push(u);
+          if (u === unit) {
+            p.cumUnit = (p.cumUnit || 0) + n;
+            if (first && (!p.since || first < new Date(p.since))) p.since = kpiFmt_(first);
+            if (p.colors[col]) p.colors[col].cumUnit = (p.colors[col].cumUnit || 0) + n;
+          }
+        });
+      });
+    } catch (e) { errs.push('cumulative: ' + e.message); }
+  }
+  const products = Object.keys(prod).map(k => {
+    const p = prod[k];
+    p.colors = Object.keys(p.colors).map(c => p.colors[c]).sort((a, b) => b.pro - a.pro);
+    p.order = p.colors.reduce((a, c) => a + (c.order || 0), 0);
+    p.dprCum = p.colors.reduce((a, c) => a + (c.dprCum || 0), 0);
+    p.wip = p.colors.reduce((a, c) => a + (c.wip || 0), 0);
+    return p;
+  }).sort((a, b) => b.pro - a.pro);
   const out = { ok: true, unit: unit, date: date, live: isToday, time: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'HH:mm'), lines: list, products: products, errors: errs };
   try { cache.put(key, JSON.stringify(out), isToday ? 300 : 1800); } catch (e) {}
   return out;
