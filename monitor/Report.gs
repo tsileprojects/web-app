@@ -31,8 +31,9 @@ function reportRecipients_() {
   const n = sh.getLastRow() - 1;
   if (n < 1) return [];
   return sh.getRange(2, 1, n, 2).getValues()
-    .filter(r => /@/.test(r[0]) && String(r[1]).trim().toUpperCase() !== 'N')
-    .map(r => String(r[0]).trim());
+    .filter(r => String(r[1]).trim().toUpperCase() !== 'N')
+    .map(r => String(r[0]).replace(/[\s'"<>,;]/g, ''))
+    .filter(e => /^[^@]+@[^@]+\.[a-z]{2,}$/i.test(e));
 }
 
 /** Output vs target for the last COMPLETE day (before today). */
