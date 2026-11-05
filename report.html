@@ -139,7 +139,7 @@
 
   function renderSummary() {
     var k = R.k, tp = 0, tt = 0, live = isLive();
-    if (!live || PD) document.getElementById('dates').innerHTML = T('output') + ': ' + (live ? 'today ' + dmy(prodDate()) + ' as of ' + esc(PD.time) + '<span class="live">LIVE</span>' : dmy(prodDate())) + ' · ' + T('efficiency') + ': ' + dmy(k.effDate) + ' (last full day) · ' + T('quality') + ' month to date';
+    if (!live || PD) document.getElementById('dates').innerHTML = T('output') + ': ' + (live ? 'today ' + dmy(prodDate()) + ' as of ' + esc(PD.time) + '<span class="live">LIVE</span>' : dmy(prodDate())) + ' · ' + T('efficiency') + ': ' + dmy(k.effDate) + ' (last full day) · ' + T('quality');
     if (live && !PD) { document.getElementById('sum').innerHTML = '<div class="msg">' + T('loading') + '</div>'; return; }
     var rows = units().map(function (u) {
       var x = prodOf(u.unit), ach = x.tgt ? x.pro / x.tgt * 100 : null, t = (k.trend || {})[u.unit] || [], prev = t.length > 1 ? t[t.length - 2].eff : null;
