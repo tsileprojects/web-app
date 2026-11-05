@@ -1,18 +1,33 @@
-/* TSPL app: keeps the phone pages working without internet.
-   Pages are fetched fresh when online (network first) and served from
-   the phone when offline. Live data (Google) is never cached here. */
-const CACHE = 'tspl-app-v1';
-const SHELL = ['m.html', 'requests.html', 'report.html', 'tv.html', 'status.html', 'manifest.webmanifest',
+/* TSPL app: opens instantly from the phone's saved copy and updates in the
+   background (stale-while-revalidate). Live data from Google is never cached here.
+   Bump VERSION whenever app files change - the app then shows "New version". */
+const VERSION = 'tspl-app-v3';
+const SHELL = ['m.html', 'requests.html', 'report.html', 'status.html', 'tv.html', 'qr.html', 'manifest.webmanifest', 'programs.json',
   'js/tspl-config.js', 'js/tspl-app.js', 'js/i18n.js', 'img/app-192.png', 'img/tsilfaviconn.png'];
-self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
+
+self.addEventListener('install', e => {
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)));   // waits for the user to tap "Update"
+});
+self.addEventListener('message', e => { if (e.data === 'skipWaiting') self.skipWaiting(); });
 self.addEventListener('activate', e => {
-  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== VERSION).map(k => caches.delete(k)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
-  if (e.request.method !== 'GET' || u.origin !== location.origin) return;   // Google / CDN: not cached
-  e.respondWith(fetch(e.request).then(r => {
-    if (r.ok) { const copy = r.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); }
-    return r;
-  }).catch(() => caches.match(e.request, { ignoreSearch: true }).then(r => r || caches.match('m.html'))));
+  if (e.request.method !== 'GET' || u.origin !== location.origin) return;     // Google / CDN: straight to network
+  const base = location.pathname.replace(/sw\.js$/, '');
+  const rel = u.pathname.startsWith(base) ? u.pathname.slice(base.length) : u.pathname;
+  if (SHELL.indexOf(rel) < 0) return;                                          // portal pages: always fresh from the site
+  e.respondWith(caches.open(VERSION).then(c => c.match(e.request, { ignoreSearch: true }).then(hit => {
+    const net = fetch(e.request).then(r => { if (r.ok) c.put(e.request, r.clone()); return r; }).catch(() => null);
+    if (hit) { e.waitUntil(net); return hit; }                                   // instant from phone, refresh in background
+    return net.then(r => r || c.match('m.html'));
+  })));
+});
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window' }).then(ws => {
+    const w = ws.find(x => x.url.indexOf('m.html') > -1);
+    return w ? w.focus() : self.clients.openWindow(e.notification.data && e.notification.data.url || 'm.html');
+  }));
 });

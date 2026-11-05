@@ -84,6 +84,25 @@
     uid: function () { return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
   };
 
+  // Photo notes are too big for a link, so they are POSTed; the answer can't be read
+  // across sites, so we then ask whether that entry id was saved.
+  function postThenCheck(params, cb) {
+    if (!window.fetch) return cb(null);
+    fetch(window.TSPL_MONITOR_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(params) })
+      .then(function () {
+        var tries = 0;
+        (function check() {
+          jsonp({ action: 'cid_done', cid: params.cid }, function (r) {
+            if (!r) return cb(null);
+            if (r.done) return cb({ ok: true });
+            if (++tries >= 4) return cb({ ok: false, error: 'Photo not saved yet - will retry' });
+            setTimeout(check, 2500);
+          }, 20000);
+        })();
+      })
+      .catch(function () { cb(null); });
+  }
+
   // ---------- offline queue (IndexedDB, survives logout) ----------
   var DB = null;
   function db(cb) {
@@ -116,7 +135,8 @@
           if (i >= items.length) { Q.busy = false; Q.changed(); return cb && cb(); }
           var it = items[i++];
           var params = Object.assign({}, it.params, { token: A.token(), login: login(), page: PAGE });
-          jsonp(params, function (r) {
+          var send = params.action === 'note_photo' ? postThenCheck : jsonp;
+          send(params, function (r) {
             if (!r) { Q.busy = false; Q.changed(); return cb && cb(); }               // still offline - stop
             if (r.ok) { Q.remove(it.cid, next); if (Q.onSent) Q.onSent(it, r); }
             else if (r.error === 'signin') { Q.busy = false; Q.changed(); A.signIn(function () { Q.flush(cb); }); }

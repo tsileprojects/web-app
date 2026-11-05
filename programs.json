@@ -1,0 +1,846 @@
+{
+"built": "2026-11-05",
+"programs": [
+{
+"name": "MMR Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/9e1780c1-e6ec-4152-8a39-f06907767a79/page/bxz5D",
+"group": "",
+"portals": [
+"HO",
+"AP2",
+"FIPL",
+"TS2",
+"TS4",
+"TS9"
+]
+},
+{
+"name": "FIPL | KPI Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/7ff9d60c-dcee-4aa4-85c8-92c69836c519/page/bxz5D",
+"group": "GM's KPI Dashboard",
+"portals": [
+"HO"
+]
+},
+{
+"name": "TS2 | KPI Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/8fa73c26-d1ec-478b-aad2-0fe5f75e064b/page/bxz5D",
+"group": "GM's KPI Dashboard",
+"portals": [
+"HO",
+"AP2",
+"FIPL",
+"TS2",
+"TS4",
+"TS9"
+]
+},
+{
+"name": "TS4 | KPI Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/5864fb4d-7f15-47d0-b518-b8ed20a7cab6/page/bxz5D",
+"group": "GM's KPI Dashboard",
+"portals": [
+"HO"
+]
+},
+{
+"name": "TS9 | KPI Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/0aef57e6-7254-48f5-9371-5af19b3002ce/page/bxz5D",
+"group": "GM's KPI Dashboard",
+"portals": [
+"HO"
+]
+},
+{
+"name": "AP2 | KPI Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/f2e33545-a46d-4889-8371-cbad35d9881b/page/bxz5D",
+"group": "GM's KPI Dashboard",
+"portals": [
+"HO"
+]
+},
+{
+"name": "DPR Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/baa5aff7-93a2-437d-a6c4-65b2e54f1988/page/NBKSF",
+"group": "",
+"portals": [
+"HO"
+]
+},
+{
+"name": "TS2 DQR Qty Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbzux3r1mr0aZufgtwKCArEWyADdvvhhnDhuwY4mYqVrOkbyZ82Vf6vmPirCMB3tKmwh/exec",
+"group": "",
+"portals": [
+"HO",
+"FIPL",
+"TS2"
+]
+},
+{
+"name": "TS2 DQR Dft Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbzMWNysbF1-HflTVCfhmJKQERvhTKqc6vp1VXvMfs-BN3KHIKG1eucO7W2du1WOdssx/exec",
+"group": "",
+"portals": [
+"HO",
+"FIPL",
+"TS2"
+]
+},
+{
+"name": "AP2 DQR Qty Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbyB6LZhHpKlRVrVbHjK1-CtCERdvSP63YyuSO7jHHOQbIkqScDys73-bJkLlhUKNHMH/exec",
+"group": "",
+"portals": [
+"HO",
+"AP2"
+]
+},
+{
+"name": "AP2 DQR Dft Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbwwn9e9wNlUVP-lCFUiV9p75UG_9XvdKsZOweuiWFD8ZQ4M-BPQgOsL9rOM_wNQ0e88Zg/exec",
+"group": "",
+"portals": [
+"HO",
+"AP2"
+]
+},
+{
+"name": "COT Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/f1de0d36-43f8-4bc4-b150-f5664a1e3296/page/NBKSF",
+"group": "",
+"portals": [
+"HO",
+"AP2",
+"FIPL",
+"TS2",
+"TS4",
+"TS9",
+"GSD"
+]
+},
+{
+"name": "FSA Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/178858ac-9c38-4336-8604-3b16be286418/page/NgwQF",
+"group": "",
+"portals": [
+"HO",
+"TS2",
+"FSA"
+]
+},
+{
+"name": "GSD Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/91f7d058-22fa-4275-a2a1-d72265dd1aeb/page/p_r2f75v4t7c",
+"group": "",
+"portals": [
+"HO",
+"GSD"
+]
+},
+{
+"name": "FC Dashboard",
+"url": "https://datastudio.google.com/embed/reporting/311d20e8-9293-4a36-a164-0875583202be/page/B9OvF",
+"group": "",
+"portals": [
+"HO",
+"GSD FC"
+]
+},
+{
+"name": "CFT Files",
+"url": "https://script.google.com/macros/s/AKfycbyOzGGqkAHfCAGrzauAVW6KP2mLRLV2sasBpc8dlx-UST6FM93gDmC8tAuboLw0E38qEQ/exec",
+"group": "",
+"portals": [
+"HO",
+"AP2",
+"FIPL",
+"TS2",
+"TS4",
+"TS9",
+"EMB",
+"GSD",
+"QTY",
+"SMP"
+]
+},
+{
+"name": "Needle Stock & Track",
+"url": "https://lookerstudio.google.com/embed/reporting/3a8d0228-6c74-4232-85e8-980f41cc1d57/page/bbplF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"AP2",
+"FIPL",
+"TS2",
+"TS4",
+"TS9",
+"CMD"
+]
+},
+{
+"name": "FIPL | Needle Plan",
+"url": "https://lookerstudio.google.com/embed/reporting/14ca7b86-b64b-408f-b8ef-3c1145a3ee34/page/45GEF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"FIPL",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "FIPL | Needle Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/bdd5de74-5165-4481-8e15-d4e28653bc75/page/4jwFF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"FIPL",
+"CMD"
+]
+},
+{
+"name": "TS2 | Needle Plan",
+"url": "https://lookerstudio.google.com/embed/reporting/c6c6e171-1616-459a-b4bc-e052134cbf6d/page/45GEF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"TS2",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "TS2 | Needle Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/7769f687-1a4d-4607-bef2-aedbb412f4be/page/4jwFF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"TS2",
+"CMD"
+]
+},
+{
+"name": "TS4 | Needle Plan",
+"url": "https://lookerstudio.google.com/embed/reporting/068ff5c9-f91f-4943-a03c-54a27fe54791/page/45GEF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"TS4",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "TS4 | Needle Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/b9dd5f0d-bf39-43ab-acca-f76531bf3c53/page/p_w52apjfprd",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"TS2",
+"TS4",
+"CMD"
+]
+},
+{
+"name": "TS9 | Needle Plan",
+"url": "https://lookerstudio.google.com/embed/reporting/f792c7a8-3038-4b8e-8889-7ccad0f05582/page/45GEF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"TS9",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "TS9 | Needle Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/8e57ea8c-c440-4d80-998e-95a6d54c3963/page/4jwFF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"TS9",
+"CMD"
+]
+},
+{
+"name": "AP2 | Needle Plan",
+"url": "https://lookerstudio.google.com/embed/reporting/9772347c-cdda-4271-ae88-e0c8d976d01b/page/45GEF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"AP2",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "AP2 | Needle Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/11bf9247-a75a-43ac-99a7-96ff66851a3b/page/4jwFF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"AP2",
+"CMD"
+]
+},
+{
+"name": "EMB | Needle Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/af4f5145-bbf9-4b3b-880f-63a6fe9d3879/page/4jwFF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"CMD",
+"EMB"
+]
+},
+{
+"name": "Smp | Needle Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/2f635b90-f6d4-4a4d-9972-8817b4e4de4d/page/4jwFF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"CMD",
+"SMP"
+]
+},
+{
+"name": "CMD Needle Stock",
+"url": "https://lookerstudio.google.com/embed/reporting/859ada1e-b782-4583-b8d4-43e0b206a8bf/page/45GEF",
+"group": "Needle Inventory",
+"portals": [
+"HO",
+"CMD"
+]
+},
+{
+"name": "FIPL | Mc_Plan Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbylhFQwMx_IcXNIsnIAOe2webI_vTffdv-nYfrb1xGVydLFkrUruSzD-ev2bKAhwCLY8A/exec",
+"group": "Mc Plan Dashboard",
+"portals": [
+"HO",
+"FIPL",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "TS2 | Mc_Plan Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbzNvlf6JPvXATXFtyykEIxze18vNLzffg7gsS2xvtFRI_UKK5UMqrwHiCTTNwXRlK6l3A/exec",
+"group": "Mc Plan Dashboard",
+"portals": [
+"HO",
+"TS2",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "TS4 | Mc_Plan Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbzpr9KPEIzeWEB3ei7eOF5cDQ2wPxQz-QqyGFIDnfGocQ4v9GNACo6K2kxAfYPX8nUZ/exec",
+"group": "Mc Plan Dashboard",
+"portals": [
+"HO",
+"TS4",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "TS9 | Mc_Plan Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbyvBs4sqNp7INey5-ptmmYbgoPcT-savbqPJlsVSi0y3zSpYr9dcj-LFZjDmTDGrFPixA/exec",
+"group": "Mc Plan Dashboard",
+"portals": [
+"HO",
+"TS9",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "AP2 | Mc_Plan Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbw6G2Kla7HtX4t4FunWiNG4IsuMTO1w3GAh7EFoLYZGFyZQu06d8QUB3ByKyoiiDlM_Yg/exec",
+"group": "Mc Plan Dashboard",
+"portals": [
+"HO",
+"AP2",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "CMD | Mc_Plan Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbwrekvtGCtGfNl-vNmzMJAwEbtyXug_y13fA1KrlCuIdbPhNFwcewvPkp8f0AG9eAusdA/exec",
+"group": "Mc Plan Dashboard",
+"portals": [
+"HO",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "TSPL | Mc_Plan Dashboard",
+"url": "https://script.google.com/macros/s/AKfycbxqTIJeBcLIM9htFECSHBGp21-VgggM__0tyEi5IPLqTcZnyg9lGNXl0Rem3CcpKvw/exec",
+"group": "Mc Plan Dashboard",
+"portals": [
+"HO",
+"CMD",
+"GSD"
+]
+},
+{
+"name": "Needle Ref Doc",
+"url": "https://script.google.com/macros/s/AKfycbyqSELjqIkrCXfXEz1dI5vArD_kBatk4VvXs-nWLy5NIrPXGY0OrJlB1MSUpTY7tR4P9Q/exec",
+"group": "Ref Documents",
+"portals": [
+"HO",
+"AP2",
+"FIPL",
+"TS2",
+"TS4",
+"TS9",
+"CMP",
+"EMB",
+"SMP"
+]
+},
+{
+"name": "TSPL Process Document",
+"url": "https://script.google.com/macros/s/AKfycbwLEfrPJFzrSO7zbtauJhLrfx9QQXc4f2bSIeHUHvGCyx9QoKtOl4JA1F0IcIspuaX3/exec",
+"group": "Ref Documents",
+"portals": [
+"HO",
+"AP2",
+"FIPL",
+"TS2",
+"TS4",
+"TS9",
+"CMP",
+"EMB",
+"SMP"
+]
+},
+{
+"name": "TSPL Formats Library",
+"url": "https://script.google.com/macros/s/AKfycby7MUXzadNlhjDoZ475F--kpdu5qA0vr9hzh5gxWjTGf3myp_qvO7N8WnjIOnwBzLwF/exec",
+"group": "Ref Documents",
+"portals": [
+"HO"
+]
+},
+{
+"name": "Contact Me",
+"url": "https://lookerstudio.google.com/embed/reporting/72b4579b-c9df-4c3e-a280-34d564205d14/page/p_cvjd9osd8c",
+"group": "",
+"portals": [
+"HO",
+"AP2",
+"FIPL",
+"MRH",
+"TS2",
+"TS4",
+"TS9",
+"CMD",
+"CMP",
+"EMB",
+"FSA",
+"GSD",
+"GSD FC",
+"PPD",
+"QTY",
+"SMP"
+]
+},
+{
+"name": "DPR Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/9f82049a-6466-4605-b5b4-617e2fd957a6/page/NBKSF",
+"group": "",
+"portals": [
+"AP2"
+]
+},
+{
+"name": "FSA Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/e1b361dc-4a38-48c2-8689-7445fa9e9066/page/NgwQF",
+"group": "",
+"portals": [
+"AP2"
+]
+},
+{
+"name": "Plan Summary",
+"url": "https://lookerstudio.google.com/embed/reporting/4e6a0d10-2cd3-46e6-9033-3575da8bf3b9/page/p_x2awv5d1td",
+"group": "Line Plan",
+"portals": [
+"AP2",
+"FIPL",
+"TS2",
+"TS4",
+"TS9",
+"GSD",
+"PPD"
+]
+},
+{
+"name": "Needle Issue Form",
+"url": "ndl_form1.html",
+"group": "Needle Inventory",
+"portals": [
+"AP2",
+"FIPL",
+"TS2",
+"TS4",
+"TS9",
+"EMB",
+"SMP"
+]
+},
+{
+"name": "Needle Issued Report",
+"url": "https://script.google.com/macros/s/AKfycbyy5nZKZxxtHmhkaGYfDFDeF0IWzkA5hr37H_jzOvJDGWuLqRXJh8XCeAKk-rIXHjwL/exec",
+"group": "Needle Inventory",
+"portals": [
+"AP2",
+"FIPL",
+"TS2",
+"TS4",
+"TS9",
+"EMB",
+"SMP"
+]
+},
+{
+"name": "Needle Stock Day & Month",
+"url": "https://script.google.com/macros/s/AKfycbyyLZpXAvvR-hsSUSiKTtCatn5xPdrsa8w5GL8KuX8smeI_l7k55TkEncwKCq6ZWecS/exec",
+"group": "Needle Inventory",
+"portals": [
+"AP2",
+"CMD"
+]
+},
+{
+"name": "DPR Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/17b256fe-5a3c-43a3-a1f0-74abea266002/page/NBKSF",
+"group": "",
+"portals": [
+"FIPL"
+]
+},
+{
+"name": "FSA Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/945ee30d-5a6e-401b-a1ea-fe5401da1269/page/NgwQF",
+"group": "",
+"portals": [
+"FIPL"
+]
+},
+{
+"name": "Needle Stock Report",
+"url": "https://script.google.com/macros/s/AKfycbyMSjLjM7-LJhvat-Ir2vopafwZwc6WtfvfyUD__qf9Rgbwg7lZabkv7BAr1fxDrXFQXg/exec",
+"group": "Needle Inventory",
+"portals": [
+"FIPL",
+"CMD"
+]
+},
+{
+"name": "Smp Doc management",
+"url": "https://script.google.com/macros/s/AKfycbysPQqcI6kBavDbftlJIC-RiY5NyG2EV6AzMWP6_EOampUzlgn3URwKPKLwVWBSd47_/exec",
+"group": "",
+"portals": [
+"MRH",
+"SMP"
+]
+},
+{
+"name": "DPR Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/2ce90a05-cf76-4233-ab07-390780d93f61/page/NBKSF",
+"group": "",
+"portals": [
+"TS2"
+]
+},
+{
+"name": "Needle Stock Day & Month",
+"url": "https://script.google.com/macros/s/AKfycbz5T4GmdMeuUo8mb2ZBAXkC9DAv67oalfMx6Le3vQsh14MuEvAxFTpvQgh1p8PekcyT/exec",
+"group": "Needle Inventory",
+"portals": [
+"TS2",
+"CMD"
+]
+},
+{
+"name": "DPR Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/b59c6603-5e9d-4a1e-84a0-9d4d960e9ff5/page/NBKSF",
+"group": "",
+"portals": [
+"TS4"
+]
+},
+{
+"name": "DQR Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/e1478da6-7076-42af-b329-762a13e9dc3e/page/kCldF",
+"group": "",
+"portals": [
+"TS4"
+]
+},
+{
+"name": "FSA Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/8d1f5f41-3673-47d7-9437-59a75c6b3cf8/page/NgwQ",
+"group": "",
+"portals": [
+"TS4"
+]
+},
+{
+"name": "Needle Report",
+"url": "https://script.google.com/macros/s/AKfycbxDeNEHHIoTMlWKpVnnsx3VJG_KuHNh1HFkOY4lyQ4Drei767Mqp-AGapqZY_Bq_T3J/exec",
+"group": "Needle Inventory",
+"portals": [
+"TS4"
+]
+},
+{
+"name": "Needle Stock Day & Month",
+"url": "https://script.google.com/macros/s/AKfycbzxr665d-q3WnGYI8k-GnYTIEyKK79rJ1xzPz9G4YQ09jo5qklgcbNYO0m-HcJjsi46/exec",
+"group": "Needle Inventory",
+"portals": [
+"TS4",
+"CMD"
+]
+},
+{
+"name": "DPR Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/01f92185-1ef2-4e6a-a8de-6b67499e55e2/page/NBKSF",
+"group": "",
+"portals": [
+"TS9"
+]
+},
+{
+"name": "DQR Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/1bfd28d5-3ef1-486c-8b35-baedecc77263/page/kCldF",
+"group": "",
+"portals": [
+"TS9"
+]
+},
+{
+"name": "FSA Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/7ae5b3a1-c001-4836-9ca6-4f53b5950a41/page/NgwQF",
+"group": "",
+"portals": [
+"TS9"
+]
+},
+{
+"name": "Needle Stock Day & Month",
+"url": "https://script.google.com/macros/s/AKfycbxj2pja7CCU4DjYMMEqQDX4GF2PLhLohpBrbjU-QN-ikWZbQLN9DUw6S5RSsYfJYUHTYg/exec",
+"group": "Needle Inventory",
+"portals": [
+"TS9",
+"CMD"
+]
+},
+{
+"name": "CMD Needle Stock",
+"url": "https://script.google.com/macros/s/AKfycbyDZA__znxheniFnZ2vZjEQHVatpug4XCAYPp6J9kAcqFm9vKBn-tj9AiS0BGiMa_KL/exec",
+"group": "",
+"portals": [
+"CMD"
+]
+},
+{
+"name": "Ndl Delivery Challan",
+"url": "https://script.google.com/macros/s/AKfycbwPFbvAfR-0DtHMQUGPpzm0jvpRHHdsdhsDg4946FMe316CEWovgGfUCSppHFVt_u8TSw/exec",
+"group": "",
+"portals": [
+"CMD"
+]
+},
+{
+"name": "CMD Stock vs Plan",
+"url": "https://script.google.com/macros/s/AKfycbwSQPZyNVGIaqtkLeGa2gmi0lzFl9b5INTZQbcFuqzuihaM-OxdcT3i8hbGkH5XYfe6/exec",
+"group": "Needle Day Month Stock",
+"portals": [
+"CMD"
+]
+},
+{
+"name": "FIPL |Mc List & Line Plan",
+"url": "https://docs.google.com/spreadsheets/d/19Tp4xb4Gb0UfkXHDYIjjQET-8H2JnJJk7BwL0demTWE/edit?usp=sharing",
+"group": "Unit Line Plan",
+"portals": [
+"CMD",
+"GSD"
+]
+},
+{
+"name": "TS2 |Mc List & Line Plan",
+"url": "https://docs.google.com/spreadsheets/d/1U-SejE8qkwk9RuBSAUj1jWKlZQcy5uKm8EjCQqwJcZY/edit?usp=sharing",
+"group": "Unit Line Plan",
+"portals": [
+"CMD",
+"GSD"
+]
+},
+{
+"name": "TS4 |Mc List & Line Plan",
+"url": "https://docs.google.com/spreadsheets/d/1Gp5BWM-MB_U9NvywWSqWNFcpf7pppmSIYRwYlftKj28/edit?usp=sharing",
+"group": "Unit Line Plan",
+"portals": [
+"CMD",
+"GSD"
+]
+},
+{
+"name": "TS9 |Mc List & Line Plan",
+"url": "https://docs.google.com/spreadsheets/d/1-xvNlcODe6h03-BndxUCXU5psDFUnVYQ8aJFc1jQaG0/edit?usp=sharing",
+"group": "Unit Line Plan",
+"portals": [
+"CMD",
+"GSD"
+]
+},
+{
+"name": "AP2 |Mc List & Line Plan",
+"url": "https://docs.google.com/spreadsheets/d/1FYPDUDUo3pK2syfgmWqV0cNZCevrO7wfwX2uBcpPcJo/edit?usp=sharing",
+"group": "Unit Line Plan",
+"portals": [
+"CMD",
+"GSD"
+]
+},
+{
+"name": "CMD |Mc List & Line Plan",
+"url": "https://docs.google.com/spreadsheets/d/1PzUHCBWccYa6twGBMD8IFpR-vaVN6u4qhK-qUwf4W4Q/edit?usp=sharing",
+"group": "Unit Line Plan",
+"portals": [
+"CMD"
+]
+},
+{
+"name": "TSPL |Mc List & Line Plan",
+"url": "https://docs.google.com/spreadsheets/d/1nkCRjl3V2ZzUczFZj2kuF8Wd_fEuBQ-Vfz-g9Si3a2Q/edit?usp=sharing",
+"group": "Unit Line Plan",
+"portals": [
+"CMD",
+"GSD"
+]
+},
+{
+"name": "Sustainability Tracker",
+"url": "https://script.google.com/macros/s/AKfycbw-tFzWoWkqdNP2FqxMJLSzU72StqYrao9yDmUSZHBptACsgJ0PAG5hAjyhv4tOQwVh/exec",
+"group": "",
+"portals": [
+"CMP"
+]
+},
+{
+"name": "TSPL Doc Upload_App",
+"url": "https://script.google.com/macros/s/AKfycbz2JVbEKn2Hffg_mQNnWPDpDjx8kzD6l4dGKMPk_d5wAffgfs3nhLijJDCCBoW_Rorp/exec",
+"group": "",
+"portals": [
+"CMP"
+]
+},
+{
+"name": "TSPL Doc Library",
+"url": "https://script.google.com/macros/s/AKfycbzZUDHO_3ISE4geZIbyCNOQSDkKVGMSCLaflI1MxPE1FokhKKMJH7nXgmK40bUaVssv/exe",
+"group": "",
+"portals": [
+"CMP"
+]
+},
+{
+"name": "Emb Dashboard",
+"url": "https://lookerstudio.google.com/embed/reporting/3a5b7b63-a4b9-4b68-bb59-3a8434d1d405/page/NgwQF",
+"group": "",
+"portals": [
+"EMB",
+"SMP"
+]
+},
+{
+"name": "Register Form",
+"url": "https://docs.google.com/forms/d/e/1FAIpQLSc5yhwtMa5hgEQ8x4h7HJHVNORMAlbOzvAy1xtuwmczePyULw/viewform?embedded=true",
+"group": "",
+"portals": [
+"GSD"
+]
+},
+{
+"name": "CFT Report",
+"url": "https://docs.google.com/spreadsheets/d/1WCAkYqhp1Ab56ezY2baa8dbNNTMdGibKOZTzl9aFpnE/edit?usp=sharing",
+"group": "",
+"portals": [
+"QTY"
+]
+},
+{
+"name": "Package Files Data",
+"url": "https://docs.google.com/spreadsheets/d/1u6G9HfO-tdvCMYQeFe6aPvPWt421NWKxxa3y9C0ziFQ/edit?usp=sharing",
+"group": "",
+"portals": [
+"QTY"
+]
+},
+{
+"name": "COT Approvals",
+"url": "https://docs.google.com/spreadsheets/d/17rqWjNTT3JF-4oY0XfQhj7z1bpLUD6WTjV0Eql0RE9E/edit?usp=sharing",
+"group": "",
+"portals": [
+"QTY"
+]
+},
+{
+"name": "FSA Audit App Sheet",
+"url": "https://docs.google.com/spreadsheets/d/1_Vh36lZ_HhXbm5S6x-D8KSoFuL7kJEwXGYkEzqv-Vx8/edit?usp=sharing",
+"group": "",
+"portals": [
+"QTY"
+]
+},
+{
+"name": "Indent Status",
+"url": "https://script.google.com/macros/s/AKfycbzN_HJ9TltE8nHP2BAedZjFas5e2thjxLtqT_TuWig4TIBlaILwgmRQOmGtXw5LXHCy/exec",
+"group": "",
+"portals": [
+"SMP"
+]
+},
+{
+"name": "Indent Form",
+"url": "https://script.google.com/macros/s/AKfycbyKvRv8OLMW13CjtDStEcVqhjlWgMjiYo5uYKq54Q9c45mc6QykBB9e-s8c3lzvk1vY/exec",
+"group": "",
+"portals": [
+"SMP"
+]
+},
+{
+"name": "Indent Stages",
+"url": "https://script.google.com/macros/s/AKfycbwgvgxCJDjrXdhnSV-fmv0t_h2WtLaxqTD_T2jyj6VX40aIFs-IDEQxbdhLXj1SM4A7/exec",
+"group": "",
+"portals": [
+"SMP"
+]
+},
+{
+"name": "Indent Traker",
+"url": "https://script.google.com/macros/s/AKfycbyo7zItTFRlqQD-JiBa5W2DnCRxoO4zGvVbXFjVh1g7bt4p8kAVlwJXOttv7iP4I2k/exec",
+"group": "",
+"portals": [
+"SMP"
+]
+},
+{
+"name": "Needle Issued Report old",
+"url": "https://script.google.com/macros/s/AKfycbw4tl9I19BLsGCQWSPdsPXLFxLXmC_vPojNC6F9x7buwGHPAjE7ghr3IReLOud6MyYu/exec",
+"group": "Needle Inventory",
+"portals": [
+"SMP"
+]
+}
+]
+}

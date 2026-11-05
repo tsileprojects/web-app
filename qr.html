@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Needle QR labels</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<style>
+  body { margin:0; font-family:system-ui,Arial,sans-serif; background:#f4f7fb; color:#0f172a; }
+  header { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; padding:12px 20px; background:#fff; border-bottom:1px solid #e2e8f0; }
+  h1 { font-size:18px; margin:0; } h1 span { color:#2196f3; }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  input, select, button { font:inherit; font-size:14px; padding:7px 10px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; }
+  button { cursor:pointer; } button.p { background:#2196f3; color:#fff; border-color:#2196f3; }
+  .hint { padding:10px 20px; font-size:13px; color:#5b6577; }
+  .sheet { display:grid; grid-template-columns:repeat(auto-fill, 62mm); gap:4mm; padding:10px 20px 40px; }
+  .lab { width:62mm; height:32mm; background:#fff; border:1px dashed #94a3b8; border-radius:3mm; display:flex; align-items:center; gap:3mm; padding:2mm 3mm; box-sizing:border-box; overflow:hidden; }
+  .lab .q { width:27mm; height:27mm; flex:none; } .lab .q svg { width:100%; height:100%; }
+  .lab b { font-size:11pt; display:block; word-break:break-all; } .lab small { font-size:7.5pt; color:#475569; }
+  .lab label { display:flex; align-items:center; gap:4px; font-size:8pt; color:#64748b; }
+  .msg { padding:30px; text-align:center; color:#5b6577; }
+  @media print { header, .hint, .lab input { display:none !important; } body { background:#fff; } .sheet { padding:0; } .lab.off { display:none; } .lab { border:1px solid #cbd5e1; break-inside:avoid; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>TSPL | <span>Needle QR labels</span></h1>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Filter needle types…">
+    <label style="font-size:13px"><input type="checkbox" id="all" checked> select all shown</label>
+    <input id="extra" placeholder="Add a type not in the list" style="width:190px"><button id="add" type="button">Add</button>
+    <button class="p" id="print" type="button">Print labels</button>
+  </div>
+</header>
+<div class="hint">Print and stick one label on each needle box or bin. In the TSPL phone app, <b>Needle entry → Scan</b> reads the label and fills the needle type. Tick only the labels you want before printing.</div>
+<div class="sheet" id="sheet"><div class="msg">Loading needle types from the CMD stock sheet…</div></div>
+<script src="js/tspl-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+(function () {
+  'use strict';
+  var TYPES = [];
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function svg(text) { if (!window.qrcode) return ''; var q = qrcode(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({ cellSize: 4, margin: 0, scalable: true }); }
+  function render() {
+    var f = document.getElementById('q').value.trim().toLowerCase(), all = document.getElementById('all').checked;
+    var list = TYPES.filter(function (t) { return !f || t.type.toLowerCase().indexOf(f) > -1; });
+    document.getElementById('sheet').innerHTML = list.length ? list.map(function (t) {
+      var sys = t.type.split('|')[0];
+      return '<div class="lab' + (all ? '' : ' off') + '"><div class="q">' + svg('TSPL-NDL|' + t.type) + '</div><div><b>' + esc(sys) + '</b><small>' + esc(t.type) + '<br>TSPL needle</small>' +
+        '<label><input type="checkbox"' + (all ? ' checked' : '') + '> print</label></div></div>';
+    }).join('') : '<div class="msg">No needle types match.</div>';
+  }
+  document.getElementById('sheet').addEventListener('change', function (e) { if (e.target.type === 'checkbox') e.target.closest('.lab').classList.toggle('off', !e.target.checked); });
+  document.getElementById('q').addEventListener('input', render);
+  document.getElementById('all').addEventListener('change', render);
+  document.getElementById('add').onclick = function () { var v = document.getElementById('extra').value.trim(); if (v) { TYPES.unshift({ type: v }); document.getElementById('extra').value = ''; render(); } };
+  document.getElementById('print').onclick = function () { window.print(); };
+  var n = '__qr' + Date.now(), s = document.createElement('script');
+  window[n] = function (r) { TYPES = (r && r.ok && r.types) || []; render(); if (!TYPES.length) document.getElementById('sheet').innerHTML = '<div class="msg">Could not load needle types. You can still add types above.</div>'; };
+  s.src = window.TSPL_MONITOR_URL + '?action=needle_types&callback=' + n;
+  s.onerror = function () { window[n]({ ok: false }); };
+  document.body.appendChild(s);
+})();
+</script>
+</body>
+</html>
