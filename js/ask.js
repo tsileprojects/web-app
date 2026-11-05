@@ -107,7 +107,7 @@
     var act = b.getAttribute('data-act');
     if (act === 'close') toggle(false);
     if (act === 'new') { history = []; welcome(); input.focus(); }
-    if (act === 'deep') { var dq = input.value.trim() || (history.length ? history[history.length - 1].q : ''); window.open('analysis.html' + (dq ? '?q=' + encodeURIComponent(dq) : ''), '_blank'); }
+    if (act === 'deep') { var dq = input.value.trim() || (history.length ? history[history.length - 1].q : ''); var mf = document.getElementById('mainFrame'), url = 'analysis.html' + (dq ? '?q=' + encodeURIComponent(dq) : ''); if (mf) { mf.src = url; toggle(false); } else location.href = url; }
   }
 
   function add(html, cls) {

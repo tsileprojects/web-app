@@ -79,9 +79,9 @@
   <div class="top">
     <div><h1 id="hello">Welcome</h1><div class="sub" id="sub">Live from DPR, COT, DQR and FSA Datamasters</div></div>
     <div class="links">
-      <a class="btn pri" href="report.html" target="_blank" rel="noopener" id="lnkReport">&#128202; Daily report</a>
-      <a class="btn" href="tv.html" target="_blank" rel="noopener" id="lnkTv">&#128250; TV display</a>
-      <a class="btn" href="requests.html" target="_blank" rel="noopener">&#10004; Approvals</a>
+      <a class="btn pri" href="report.html" id="lnkReport">&#128202; Daily report</a>
+      <a class="btn" href="tv.html" id="lnkTv">&#128250; TV display</a>
+      <a class="btn" href="requests.html">&#10004; Approvals</a>
       <a class="btn" href="home_classic.html">Classic home</a>
     </div>
   </div>
@@ -100,7 +100,7 @@
         <div id="today"><div class="skel" style="height:110px"></div></div>
       </div>
       <div class="card">
-        <h2><span id="unitsTitle">Units</span><a id="unitsMore" href="report.html" target="_blank" rel="noopener">Line-wise detail &rsaquo;</a></h2>
+        <h2><span id="unitsTitle">Units</span><a id="unitsMore" href="report.html">Line-wise detail &rsaquo;</a></h2>
         <div class="units" id="units"><div class="unit skel" style="height:150px"></div><div class="unit skel" style="height:150px"></div><div class="unit skel" style="height:150px"></div></div>
       </div>
       <div class="card">
@@ -111,7 +111,7 @@
     </div>
     <div>
       <div class="card"><h2><span>Needs attention</span></h2><div id="ex"><div class="skel" style="height:90px"></div></div></div>
-      <div class="card"><h2><span>Notes from the floor</span><a href="report.html" target="_blank" rel="noopener">Add note &rsaquo;</a></h2><div id="notes" class="m">Loading…</div></div>
+      <div class="card"><h2><span>Notes from the floor</span><a href="report.html">Add note &rsaquo;</a></h2><div id="notes" class="m">Loading…</div></div>
     </div>
   </div>
 
@@ -179,7 +179,7 @@
       '<div class="kpi" id="k1" data-y="' + p1(ach) + ' (' + dmy(DATA.prodDate) + ')" style="--c:' + col(cls(ach, 98, 90)) + '"><div class="l">' + T('outputVsTarget') + ' · ' + dmy(DATA.prodDate) + '</div><div class="v ' + cls(ach, 98, 90) + '">' + p1(ach) + '</div><div class="n">' + n0(tp) + ' / ' + n0(tt) + ' ' + T('pcs') + '</div></div>' +
       '<div class="kpi" style="--c:' + col(cls(eff, 55, 45)) + '"><div class="l">' + T('efficiency') + ' · ' + dmy(DATA.effDate) + '</div><div class="v ' + cls(eff, 55, 45) + '">' + p1(eff) + '</div><div class="n">' + n0(te) + ' / ' + n0(ta) + ' min earned</div></div>' +
       '<div class="kpi" style="--c:' + col(cls(fsa, 85, 70)) + '"><div class="l">' + T('fsa') + '</div><div class="v ' + cls(fsa, 85, 70) + '">' + p1(fsa) + '</div><div class="n">' + fp + ' pass / ' + ff + ' fail this month</div></div>' +
-      '<div class="kpi" style="--c:' + (issues ? '#dc2626' : '#16a34a') + '"><div class="l">Programs</div><div class="v ' + (issues ? 'r' : 'g') + '">' + (issues ? issues + ' issue' + (issues > 1 ? 's' : '') : 'All OK') + '</div><div class="n"><a href="status.html" target="_blank" rel="noopener" style="color:inherit">Program status &rsaquo;</a></div></div>';
+      '<div class="kpi" style="--c:' + (issues ? '#dc2626' : '#16a34a') + '"><div class="l">Programs</div><div class="v ' + (issues ? 'r' : 'g') + '">' + (issues ? issues + ' issue' + (issues > 1 ? 's' : '') : 'All OK') + '</div><div class="n"><a href="status.html" style="color:inherit">Program status &rsaquo;</a></div></div>';
 
     document.getElementById('unitsTitle').textContent = (ONLY ? ONLY + ' - ' : '') + 'Last full day (' + dmy(DATA.prodDate) + ') - output & efficiency';
     document.getElementById('units').innerHTML = units.map(function (u) {
@@ -224,7 +224,7 @@
     });
     jsonp({ action: 'notes' }, function (r) { if (r && r.ok) { NOTES = r.notes || []; renderNotes(); } else document.getElementById('notes').textContent = '-'; }, 60000);
   }
-  document.getElementById('units').addEventListener('click', function (e) { var u = e.target.closest('[data-u]'); if (u) window.open('report.html?unit=' + u.getAttribute('data-u'), '_blank', 'noopener'); });
+  document.getElementById('units').addEventListener('click', function (e) { var u = e.target.closest('[data-u]'); if (u) location.href = 'report.html?unit=' + u.getAttribute('data-u'); });
 
 
   // ---------- today (live) ----------
@@ -256,7 +256,7 @@
   function loadToday() {
     jsonp({ action: 'today' }, function (r) { if (r) { TODAY = r; renderToday(); } }, 90000);
   }
-  document.getElementById('today').addEventListener('click', function (e) { var u = e.target.closest('[data-u]'); if (u) window.open('report.html?unit=' + u.getAttribute('data-u'), '_blank', 'noopener'); });
+  document.getElementById('today').addEventListener('click', function (e) { var u = e.target.closest('[data-u]'); if (u) location.href = 'report.html?unit=' + u.getAttribute('data-u'); });
   // ---------- quick launch (uses the menu of the page around this one) ----------
   var APPS = [];
   function collect() {

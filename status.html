@@ -66,7 +66,7 @@
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function when(v) { if (!v) return ''; var d = new Date(v); return isNaN(d) ? esc(v) : d.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
   function jsonp(cb) {
-    var name = '__st' + Date.now(), s = document.createElement('script'), done = false;
+    var name = '__st' + Date.now() + Math.floor(Math.random() * 1e6), s = document.createElement('script'), done = false;
     window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
     s.src = window.TSPL_MONITOR_URL + '?action=apps&callback=' + name + '&_=' + Date.now();
     s.onerror = function () { if (!done) cb(null); };
@@ -104,5 +104,6 @@
   load();
 })();
 </script>
+<script src="js/home-btn.js"></script>
 </body>
 </html>

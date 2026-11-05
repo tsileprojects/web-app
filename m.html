@@ -118,7 +118,7 @@
 
   <!-- REPORT -->
   <section class="view" id="v-report">
-    <div class="asof"><span id="repAsof"></span><a class="lnk" href="report.html" target="_blank" rel="noopener">Full report ↗</a></div>
+    <div class="asof"><span id="repAsof"></span><a class="lnk" href="report.html?from=app">Full report ›</a></div>
     <div id="repUnits"></div>
     <div class="card" id="drillCard" hidden><h2><span id="drillTitle"></span><button class="lnk" id="drillClose" type="button">Close</button></h2><div id="drill"></div></div>
   </section>
@@ -135,7 +135,7 @@
       <label>Quantity<input id="rQty" type="number" inputmode="numeric"></label>
       <button class="btn pri full" type="button" id="rSave">Send for approval</button><div class="flash" id="rFlash"></div>
     </div>
-    <p class="m" style="text-align:center;font-size:13px"><a class="lnk" href="requests.html" target="_blank" rel="noopener">Open full approvals page ↗</a></p>
+    <p class="m" style="text-align:center;font-size:13px"><a class="lnk" href="requests.html?from=app">Open full approvals page ›</a></p>
   </section>
 
   <!-- NEEDLES -->
@@ -177,7 +177,7 @@
       <div class="set"><span>Language</span><select id="setLang" style="width:auto;margin:0"><option value="en">English</option><option value="kn">ಕನ್ನಡ</option><option value="hi">हिंदी</option></select></div>
       <div class="set"><span>Dark mode</span><input type="checkbox" id="setDark" style="width:22px;height:22px;margin:0"></div>
       <div class="set"><span>Approval alerts on this phone<small class="m" style="display:block;font-size:12px">Shows a phone notice when something waits for you (while the app is open or in the background).</small></span><input type="checkbox" id="setAlert" style="width:22px;height:22px;margin:0;flex:none"></div>
-      <div class="set"><span>Other pages</span><span><a class="lnk" href="tv.html" target="_blank" rel="noopener">Live board</a> · <a class="lnk" href="status.html" target="_blank" rel="noopener">Status</a> · <a class="lnk" href="qr.html" target="_blank" rel="noopener">QR labels</a></span></div>
+      <div class="set"><span>Other pages</span><span><a class="lnk" href="tv.html?from=app">Live board</a> · <a class="lnk" href="status.html?from=app">Status</a> · <a class="lnk" href="qr.html?from=app">QR labels</a></span></div>
       <div class="set"><span>Install on this phone</span><button class="btn" type="button" id="install">Install</button></div>
       <div class="set"><span class="m" id="verTxt">App version</span><button class="btn" type="button" id="updBtn">Check for update</button></div>
     </div>
@@ -220,7 +220,7 @@
 <script>
 (function () {
   'use strict';
-  var VERSION = '3.1';
+  var VERSION = '3.2';
   var A = TSPL_APP, Q = TSPL_QUEUE, esc = A.esc, T = window.TSPL_T || function (k) { return k; };
   var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'];
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
@@ -363,14 +363,14 @@
   }
   function loadToday() {
     if (navigator.onLine === false) return renderToday();
-    A.jsonp({ action: 'today' }, function (r) { if (r) { TODAY = r; ls('tsplAppToday', JSON.stringify(r)); renderToday(); } }, 90000);
+    A.jsonp({ action: 'today' }, function (r) { if (r) { TODAY = r; ls('tsplAppToday', JSON.stringify(r)); renderToday(); if (VIEW === 'report') renderReport(); } }, 90000);
   }
 
   // ---------- report ----------
   function renderReport() {
     if (!HOME || !HOME.k) { $('repUnits').innerHTML = '<div class="skel"></div>'; return; }
     var k = HOME.k;
-    $('repAsof').textContent = 'Output ' + dmy(k.prodDate) + ' · efficiency ' + dmy(k.effDate);
+    $('repAsof').textContent = 'Live today' + (TODAY && TODAY.ok ? ' as of ' + TODAY.time : '') + ' · last full day ' + dmy(k.prodDate);
     $('repUnits').innerHTML = units().map(function (u) {
       var a = u.tgt ? u.pro / u.tgt * 100 : null, c = cls(a, 98, 90), t = (k.trend || {})[u.unit] || [], prev = t.length > 1 ? t[t.length - 2].eff : null;
       return '<div class="unit" data-u="' + u.unit + '"><div class="h"><b>' + u.unit + '</b><span class="tag ' + (a == null ? 'm' : c) + '">' + (a == null ? 'No data' : c === 'g' ? 'On target' : c === 'a' ? 'Watch' : 'Act now') + '</span></div>' +
@@ -378,23 +378,29 @@
         '<div class="u3"><div><small>' + T('output') + '</small><b class="' + c + '">' + p1(a) + '</b><small>' + n0(u.pro) + ' / ' + n0(u.tgt) + '</small></div>' +
         '<div><small>' + T('efficiency') + '</small><b class="' + cls(u.eff, 55, 45) + '">' + p1(u.eff) + '</b><small>' + delta(u.eff, prev) + ' day · ' + delta(u.effMtd, u.effPrevMonth) + ' mon</small></div>' +
         '<div><small>FTR · FSA</small><b>' + (u.ftr == null ? '-' : p1(u.ftr)) + '</b><small>FSA ' + p1(u.fsa) + '</small></div></div>' +
-        '<div class="m" style="font-size:12px;margin-top:6px">Tap for line-wise detail ›</div></div>';
+        (function () { var tu = TODAY && TODAY.ok ? TODAY.units.filter(function (x) { return x.unit === u.unit; })[0] : null; if (!tu) return '';
+          var e = tu.tgt && tu.hoursDone ? tu.tgt * tu.hoursDone / 9 : null, pc = e ? tu.pro / e * 100 : null;
+          return '<div style="margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--soft)"><span class="tag r">LIVE</span> <b>Today ' + n0(tu.pro) + '</b> / ' + n0(tu.tgt) + ' · ' + (pc == null ? 'not started' : 'pace <b class="' + cls(pc, 98, 90) + '">' + p1(pc) + '</b>') + ' · hour ' + (tu.hoursDone || 0) + '/9</div>'; })() +
+        '<div class="m" style="font-size:12px;margin-top:6px">Cards above: last full day (' + dmy(k.prodDate) + '). Tap for today\'s live line-wise & product-wise detail ›</div></div>';
     }).join('') || '<div class="empty">No data.</div>';
   }
   $('repUnits').addEventListener('click', function (e) {
     var c = e.target.closest('[data-u]'); if (!c) return;
-    var u = c.dataset.u, d = HOME.k.prodDate;
-    $('drillCard').hidden = false; $('drillTitle').textContent = u + ' · lines · ' + dmy(d); $('drill').innerHTML = '<div class="skel"></div>';
+    var u = c.dataset.u, d = (TODAY && TODAY.ok && TODAY.date) || iso(new Date());
+    $('drillCard').hidden = false; $('drillTitle').innerHTML = esc(u) + ' · today ' + dmy(d) + ' <span class="tag r">LIVE</span>'; $('drill').innerHTML = '<div class="skel"></div>';
     $('drillCard').scrollIntoView({ behavior: 'smooth' });
     A.jsonp({ action: 'drill', unit: u, date: d }, function (r) {
       if (!r || !r.ok) { $('drill').innerHTML = '<div class="empty">' + esc(r && r.error || 'No connection') + '</div>'; return; }
-      $('drill').innerHTML = (r.lines || []).map(function (l) {
-        var a = l.tgt ? l.pro / l.tgt * 100 : null;
+      var lines = (r.lines || []).map(function (l) {
+        var e = l.tgt && l.hoursDone ? l.tgt * l.hoursDone / 9 : null, pace = e ? l.pro / e * 100 : null;
         var rem = /^(na|n\/a|-|0)?$/i.test(String(l.remark || '').trim()) ? '' : l.remark;
-        return '<div class="line"><div class="top"><b>Line ' + esc(l.line) + '</b><span class="' + cls(a, 98, 90) + '">' + n0(l.pro) + ' / ' + n0(l.tgt) + ' · ' + p1(a) + '</span></div>' +
-          '<div class="sub">' + esc(l.buyer || '') + ' ' + esc(l.style || '') + '</div>' +
-          '<div class="sub">Eff <b class="' + cls(l.eff, 55, 45) + '">' + p1(l.eff) + '</b> · FTR ' + p1(l.ftr) + ' · ' + n0(l.mp) + ' ops' + (rem ? ' · ' + esc(rem) : '') + '</div></div>';
-      }).join('') || '<div class="empty">No lines for this day.</div>';
+        return '<div class="line"><div class="top"><b>Line ' + esc(l.line) + '</b><span class="' + cls(pace, 98, 90) + '">' + n0(l.pro) + ' / ' + n0(l.tgt) + (pace != null ? ' · pace ' + p1(pace) : '') + '</span></div>' +
+          '<div class="sub">' + esc(l.buyer || '') + ' ' + esc(l.style || '') + (l.status ? ' · ' + esc(l.status) : '') + '</div>' +
+          '<div class="sub">Hour ' + (l.hoursDone || 0) + '/9 · ' + (l.hours || []).filter(function (h) { return h; }).map(n0).join(' · ') + ' pcs/hr' + (l.ftr != null ? ' · FTR ' + p1(l.ftr) : '') + ' · ' + n0(l.mp) + ' ops' + (rem ? ' · ' + esc(rem) : '') + '</div></div>';
+      }).join('');
+      var prods = (r.products || []).map(function (x) { return '<div class="stk"><div><b>' + esc(x.style) + '</b><small>' + esc(x.buyer) + ' · lines ' + esc(x.lines.join(', ')) + '</small></div><b>' + n0(x.pro) + '<small style="font-weight:400"> / ' + n0(x.tgt) + '</small></b></div>'; }).join('');
+      $('drill').innerHTML = (lines ? '<div class="m" style="font-size:12px">Line-wise · as of ' + esc(r.time) + '</div>' + lines : '<div class="empty">No DPR lines entered for today yet.</div>') +
+        (prods ? '<h2 style="margin-top:14px">Product-wise (buyer & style)</h2>' + prods : '');
     }, 120000);
   });
   $('drillClose').onclick = function () { $('drillCard').hidden = true; };
@@ -607,7 +613,7 @@
     }, 150000);
   }
   $('askGo').onclick = ask;
-  $('deepGo').onclick = function () { var q = $('askQ').value.trim(); window.open('analysis.html' + (q ? '?q=' + encodeURIComponent(q) : ''), '_blank'); };
+  $('deepGo').onclick = function () { var q = $('askQ').value.trim(); location.href = 'analysis.html?from=app' + (q ? '&q=' + encodeURIComponent(q) : ''); };
   $('askAns').addEventListener('click', function (e) { var b = e.target.closest('[data-f]'); if (b) { $('askQ').value = b.textContent; ask(); } });
   // voice
   var Rec = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null;

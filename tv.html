@@ -64,7 +64,7 @@
   function dmy(s){ if (!s) return ''; var p = s.split('-'); return p[2] + '-' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1]-1]; }
 
   function jsonp(params, cb){
-    var name = '__tv' + Date.now(), s = document.createElement('script'), done = false;
+    var name = '__tv' + Date.now() + Math.floor(Math.random() * 1e6), s = document.createElement('script'), done = false;
     window[name] = function (r) { done = true; window[name] = function(){}; cb(r); };
     s.src = window.TSPL_MONITOR_URL + '?' + Object.keys(params).map(function(k){ return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
     s.onerror = function(){ if (!done) cb(null); };
@@ -187,5 +187,6 @@
   load();
 })();
 </script>
+<script src="js/home-btn.js"></script>
 </body>
 </html>

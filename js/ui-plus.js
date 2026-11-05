@@ -57,10 +57,14 @@
         dark.querySelector('i').className = 'las ' + (on ? 'la-sun' : 'la-moon');
       });
     var q = unit ? '?unit=' + unit.toUpperCase() : '';
-    var tv = btn('btnTv', 'la-tv', T('tipTv'), function () { window.open('tv.html' + q, '_blank', 'noopener'); });
-    var st = btn('btnStatus', 'la-heartbeat', T('tipStatus'), function () { window.open('status.html', '_blank', 'noopener'); });
-    var rp = btn('btnReport', 'la-file-download', T('tipReport'), function () { window.open('report.html' + q, '_blank', 'noopener'); });
-    var rq = btn('btnReq', 'la-check-circle', T('tipReq'), function () { window.open('requests.html', '_blank', 'noopener'); });
+    function openIn(url) {   // same window: show the page in the dashboard frame
+      var f = document.getElementById('mainFrame');
+      if (f) { f.src = url; document.querySelectorAll('.menu-link.active').forEach(function (a) { a.classList.remove('active'); }); } else location.href = url;
+    }
+    var tv = btn('btnTv', 'la-tv', T('tipTv'), function () { openIn('tv.html' + q); });
+    var st = btn('btnStatus', 'la-heartbeat', T('tipStatus'), function () { openIn('status.html'); });
+    var rp = btn('btnReport', 'la-file-download', T('tipReport'), function () { openIn('report.html' + q); });
+    var rq = btn('btnReq', 'la-check-circle', T('tipReq'), function () { openIn('requests.html'); });
     var langs = window.TSPL_I18N ? TSPL_I18N.langs : [['en', 'EN']];
     var cur = window.TSPL_I18N ? TSPL_I18N.lang() : 'en';
     var lg = btn('btnLang', 'la-language', T('tipLang'), function () {

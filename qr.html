@@ -56,12 +56,13 @@
   document.getElementById('all').addEventListener('change', render);
   document.getElementById('add').onclick = function () { var v = document.getElementById('extra').value.trim(); if (v) { TYPES.unshift({ type: v }); document.getElementById('extra').value = ''; render(); } };
   document.getElementById('print').onclick = function () { window.print(); };
-  var n = '__qr' + Date.now(), s = document.createElement('script');
+  var n = '__qr' + Date.now() + Math.floor(Math.random() * 1e6), s = document.createElement('script');
   window[n] = function (r) { TYPES = (r && r.ok && r.types) || []; render(); if (!TYPES.length) document.getElementById('sheet').innerHTML = '<div class="msg">Could not load needle types. You can still add types above.</div>'; };
   s.src = window.TSPL_MONITOR_URL + '?action=needle_types&callback=' + n;
   s.onerror = function () { window[n]({ ok: false }); };
   document.body.appendChild(s);
 })();
 </script>
+<script src="js/home-btn.js"></script>
 </body>
 </html>
