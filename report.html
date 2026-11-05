@@ -68,7 +68,7 @@
     <input type="date" id="day" hidden style="padding:6px 8px">
     <button type="button" id="btnXls"><i class="las la-file-excel"></i><span data-i18n="downloadXls">Download Excel</span></button>
     <button type="button" id="btnPdf"><i class="las la-print"></i><span data-i18n="printPdf">Print / PDF</span></button>
-    <button type="button" id="btnRe"><i class="las la-sync"></i><span data-i18n="refresh">Refresh</span></button>
+    <button type="button" id="btnRe" title="Read the latest hourly production from the DPR now"><i class="las la-sync"></i><span>Update now</span></button>
   </div>
 </header>
 <div class="wrap">
@@ -167,25 +167,47 @@
     }).join('') : '<li class="m">' + T('noNotes') + '</li>';
   }
 
-  function openDrill(unit, quiet) {
+  var HOURLY = false, OPENP = {};
+  function openDrill(unit, quiet, fresh) {
     var date = prodDate();
     var card = document.getElementById('drillCard');
     card.hidden = false;
     document.getElementById('drillTitle').textContent = unit + ' · line-wise & product-wise';
-    document.getElementById('drillSub').innerHTML = dmy(date) + (isLive() ? '<span class="live">LIVE</span>' : '');
     if (!quiet) document.getElementById('drill').innerHTML = '<div class="msg">' + T('loading') + '</div>';
-    DR = { unit: unit, date: date, lines: DR && DR.unit === unit ? DR.lines : null, products: null }; renderSummary();
+    if (!DR || DR.unit !== unit) OPENP = {};
+    DR = { unit: unit, date: date, lines: DR && DR.unit === unit ? DR.lines : null, products: DR && DR.unit === unit ? DR.products : null, r: DR && DR.unit === unit ? DR.r : null }; renderSummary();
     if (!quiet) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    jsonp({ action: 'drill', unit: unit, date: date }, function (r) {
+    var ub = document.getElementById('bUpd'); if (ub) { ub.disabled = true; ub.textContent = 'Updating…'; }
+    var params = { action: 'drill', unit: unit, date: date }; if (fresh) params.fresh = 1;
+    jsonp(params, function (r) {
       if (!r || !r.ok) { document.getElementById('drill').innerHTML = '<div class="msg">' + esc(r && r.error || T('tryAgain')) + '</div>'; return; }
-      var live = r.live;
-      DR.lines = r.lines || []; DR.products = r.products || [];
-      document.getElementById('drillSub').innerHTML = dmy(date) + (live ? '<span class="live">LIVE</span> as of ' + esc(r.time) : '');
-      var ln = notesFor(unit, date);
-      var tp = 0, tt = 0, te = 0, ta = 0, tex = 0, tpx = 0;
-      var head = '<table><thead><tr><th>' + T('line') + '</th><th class="l">' + T('buyer') + '</th><th class="l">' + T('style') + '</th><th class="l">Status</th><th>' + T('output') + '</th><th>' + T('target') + '</th><th>' + (live ? 'Of day target' : T('achieved')) + '</th>' +
+      DR.r = r; DR.lines = r.lines || []; DR.products = r.products || [];
+      renderDrill();
+    }, 120000);
+  }
+  function hcell(v) { return v ? n0(v) : '<span class="m">-</span>'; }
+  function renderDrill() {
+    var r = DR.r, unit = DR.unit, date = DR.date, live = r.live;
+    document.getElementById('drillSub').innerHTML = dmy(date) + (live ? '<span class="live">LIVE</span> as of ' + esc(r.time) : '');
+    var ln = notesFor(unit, date);
+    var tp = 0, tt = 0, te = 0, ta = 0, tex = 0, tpx = 0, hsum = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+    var tools = '<div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px">' +
+      '<button type="button" id="bUpd" title="Read the latest hourly production from the DPR now">&#8635; Update now</button>' +
+      '<button type="button" id="bHourly" class="' + (HOURLY ? 'pri' : '') + '" style="' + (HOURLY ? 'background:#2196f3;color:#fff;border-color:#2196f3' : '') + '">&#9201; Hourly view' + (HOURLY ? ' (on)' : '') + '</button>' +
+      '<span class="m" style="font-size:12px;align-self:center">' + (live ? 'Live as of ' + esc(r.time) + ' · auto-refresh every 5 min' : 'Day: ' + dmy(date)) + '</span></div>';
+    var head, body, tot;
+    if (HOURLY) {
+      head = '<table><thead><tr><th>' + T('line') + '</th><th class="l">' + T('style') + '</th>' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (h) { return '<th>H' + h + '</th>'; }).join('') + '<th>Total</th><th>' + T('target') + '</th><th>Of target</th></tr></thead><tbody>';
+      body = DR.lines.map(function (l) {
+        var hs = l.hours || []; hs.forEach(function (v, i) { hsum[i] += v || 0; }); tp += l.pro || 0; tt += l.tgt || 0;
+        return '<tr><td><b>' + esc(l.line) + '</b></td><td class="l">' + esc(l.style) + '</td>' + [0, 1, 2, 3, 4, 5, 6, 7, 8].map(function (i) { return '<td>' + hcell(hs[i]) + '</td>'; }).join('') +
+          '<td><b>' + n0(l.pro) + '</b></td><td>' + n0(l.tgt) + '</td><td>' + p1(l.tgt ? l.pro / l.tgt * 100 : null) + '</td></tr>';
+      }).join('');
+      tot = '<tr class="tot"><td>' + esc(unit) + '</td><td>pcs per hour</td>' + hsum.map(function (v) { return '<td>' + hcell(v) + '</td>'; }).join('') + '<td>' + n0(tp) + '</td><td>' + n0(tt) + '</td><td>' + p1(tt ? tp / tt * 100 : null) + '</td></tr></tbody></table>';
+    } else {
+      head = '<table><thead><tr><th>' + T('line') + '</th><th class="l">' + T('buyer') + '</th><th class="l">' + T('style') + '</th><th class="l">Status</th><th>' + T('output') + '</th><th>' + T('target') + '</th><th>' + (live ? 'Of day target' : T('achieved')) + '</th>' +
         (live ? '<th>Hour</th><th>Pace</th><th>Per hour</th>' : '<th>' + T('efficiency') + '</th>') + '<th>' + T('mp') + '</th><th>' + T('ftr') + '</th><th>' + T('dft') + '</th><th class="l">' + T('remark') + '</th></tr></thead><tbody>';
-      var body = DR.lines.map(function (l) {
+      body = DR.lines.map(function (l) {
         var ach = l.tgt ? l.pro / l.tgt * 100 : null; tp += l.pro || 0; tt += l.tgt || 0; te += l.earn || 0; ta += l.avail || 0;
         var exp = live && l.tgt && l.hoursDone ? l.tgt * l.hoursDone / 9 : null, pace = exp ? l.pro / exp * 100 : null; if (exp) { tex += exp; tpx += l.pro || 0; }
         var nts = ln.filter(function (n) { return n.line && String(n.line).toUpperCase() === String(l.line).toUpperCase(); }).map(function (n) { return n.text; });
@@ -194,16 +216,51 @@
           (live ? '<td>' + (l.hoursDone ? l.hoursDone + '/9' : '-') + '</td><td class="' + cls(pace, 98, 90) + '">' + p1(pace) + '</td><td>' + hbars(l.hours) + '</td>' : '<td class="' + cls(l.eff, 55, 45) + '">' + p1(l.eff) + '</td>') +
           '<td>' + n0(l.mp) + '</td><td class="' + cls(l.ftr, 95, 90) + '">' + p1(l.ftr) + '</td><td>' + p1(l.dft) + '</td><td class="wrapc">' + esc(rem) + '</td></tr>';
       }).join('');
-      var tot = '<tr class="tot"><td>' + esc(unit) + '</td><td></td><td></td><td></td><td>' + n0(tp) + '</td><td>' + n0(tt) + '</td><td>' + p1(tt ? tp / tt * 100 : null) + '</td>' +
+      tot = '<tr class="tot"><td>' + esc(unit) + '</td><td></td><td></td><td></td><td>' + n0(tp) + '</td><td>' + n0(tt) + '</td><td>' + p1(tt ? tp / tt * 100 : null) + '</td>' +
         (live ? '<td></td><td>' + p1(tex ? tpx / tex * 100 : null) + '</td><td></td>' : '<td>' + p1(ta ? te / ta * 100 : null) + '</td>') + '<td colspan="4"></td></tr></tbody></table>';
-      var prod = DR.products.length ? '<h3 class="sub2">Product-wise (buyer & style)</h3><table><thead><tr><th class="l">' + T('buyer') + '</th><th class="l">' + T('style') + '</th><th class="l">Lines</th><th>' + T('output') + '</th><th>' + T('target') + '</th><th>' + (live ? 'Of day target' : T('achieved')) + '</th><th>Share of unit output</th></tr></thead><tbody>' +
-        DR.products.map(function (x) { var a = x.tgt ? x.pro / x.tgt * 100 : null; return '<tr><td class="l">' + esc(x.buyer) + '</td><td class="l"><b>' + esc(x.style) + '</b></td><td class="l">' + esc(x.lines.join(', ')) + '</td><td>' + n0(x.pro) + '</td><td>' + n0(x.tgt) + '</td><td class="' + (live ? '' : cls(a, 98, 90)) + '">' + p1(a) + '</td><td>' + p1(tp ? x.pro / tp * 100 : null) + '</td></tr>'; }).join('') + '</tbody></table>' : '';
-      document.getElementById('drill').innerHTML = (DR.lines.length ? '<h3 class="sub2" style="margin-top:0">Line-wise</h3>' + head + body + tot : '<div class="msg">No DPR lines for ' + esc(unit) + ' on ' + dmy(date) + ' yet.</div>') + prod +
-        (live ? '<p class="hint">Pace = output so far vs target x hours entered / 9. Efficiency is not shown for today because the COT sheet is updated up to yesterday.</p>' : '') +
-        (r.errors && r.errors.length ? '<p class="hint">' + esc(r.errors.join('; ')) + '</p>' : '') +
-        '<p class="hint no-print"><a href="#" id="drillBack">' + T('back') + '</a></p>';
-      var bk = document.getElementById('drillBack'); if (bk) bk.onclick = function (e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
-    }, 120000);
+    }
+    // product-wise with + drop-down of its lines
+    var nCols = HOURLY ? 16 : 8;
+    var prod = DR.products.length ? '<h3 class="sub2">Product-wise (buyer & style) <span class="m" style="font-weight:400;font-size:12px">- click + to see the lines running a style</span></h3><table class="prodt"><thead><tr><th style="width:34px"></th><th class="l">' + T('buyer') + '</th><th class="l">' + T('style') + '</th><th class="l">Lines</th>' +
+      (HOURLY ? [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (h) { return '<th>H' + h + '</th>'; }).join('') : '') + '<th>' + T('output') + '</th><th>' + T('target') + '</th><th>' + (live ? 'Of day target' : T('achieved')) + '</th>' + (HOURLY ? '' : '<th>Share of unit output</th>') + '</tr></thead><tbody>' +
+      DR.products.map(function (x, pi) {
+        var a = x.tgt ? x.pro / x.tgt * 100 : null, key = x.buyer + '|' + x.style, open = !!OPENP[key];
+        var plines = DR.lines.filter(function (l) { return x.lines.indexOf(l.line) > -1; });
+        var ph = [0, 0, 0, 0, 0, 0, 0, 0, 0]; plines.forEach(function (l) { (l.hours || []).forEach(function (v, i) { ph[i] += v || 0; }); });
+        var row = '<tr class="prow" data-k="' + esc(key) + '" style="cursor:pointer"><td><button type="button" class="pbtn" aria-expanded="' + open + '" title="' + (open ? 'Hide' : 'Show') + ' lines" style="width:26px;height:26px;padding:0;justify-content:center;font-weight:800">' + (open ? '&minus;' : '+') + '</button></td>' +
+          '<td class="l">' + esc(x.buyer) + '</td><td class="l"><b>' + esc(x.style) + '</b></td><td class="l">' + x.lines.length + ' line' + (x.lines.length > 1 ? 's' : '') + ': ' + esc(x.lines.join(', ')) + '</td>' +
+          (HOURLY ? ph.map(function (v) { return '<td>' + hcell(v) + '</td>'; }).join('') : '') +
+          '<td><b>' + n0(x.pro) + '</b></td><td>' + n0(x.tgt) + '</td><td class="' + (live ? '' : cls(a, 98, 90)) + '">' + p1(a) + '</td>' + (HOURLY ? '' : '<td>' + p1(tp ? x.pro / tp * 100 : null) + '</td>') + '</tr>';
+        if (open) {
+          row += plines.map(function (l) {
+            var st = (l.styles || []).filter(function (s2) { return s2.buyer + '|' + s2.style === key; })[0] || { pro: l.pro, tgt: l.tgt };
+            var shared = (l.styles || []).length > 1;
+            var exp = live && st.tgt && l.hoursDone ? st.tgt * l.hoursDone / 9 : null, pace = exp ? st.pro / exp * 100 : null;
+            return '<tr style="background:rgba(33,150,243,.06)"><td></td><td class="l m">&nbsp;&nbsp;&#8627; Line</td><td class="l"><b>' + esc(l.line) + '</b>' + (l.status ? ' <span class="m">(' + esc(l.status) + ')</span>' : '') + (shared ? ' <span class="m" title="This line also runs another style">*shared</span>' : '') + '</td>' +
+              '<td class="l">' + n0(l.mp) + ' ops' + (live ? ' · hour ' + (l.hoursDone || 0) + '/9 · pace <b class="' + cls(pace, 98, 90) + '">' + p1(pace) + '</b>' : '') + '</td>' +
+              (HOURLY ? (l.hours || []).concat([0, 0, 0, 0, 0, 0, 0, 0, 0]).slice(0, 9).map(function (v) { return '<td>' + hcell(v) + '</td>'; }).join('') : '') +
+              '<td>' + n0(st.pro) + '</td><td>' + n0(st.tgt) + '</td><td>' + p1(st.tgt ? st.pro / st.tgt * 100 : null) + '</td>' + (HOURLY ? '' : '<td>' + (live ? hbars(l.hours) : '') + '</td>') + '</tr>';
+          }).join('');
+        }
+        return row;
+      }).join('') + '</tbody></table>' : '';
+    document.getElementById('drill').innerHTML = tools + (DR.lines.length ? '<h3 class="sub2" style="margin-top:0">Line-wise' + (HOURLY ? ' - hour by hour (pieces)' : '') + '</h3>' + head + body + tot : '<div class="msg">No DPR lines for ' + esc(unit) + ' on ' + dmy(date) + ' yet.</div>') + prod +
+      (live ? '<p class="hint">Pace = output so far vs target x hours entered / 9. H1-H9 = pieces in the 1st to 9th hour from the DPR. *shared = the line also runs another style; its hourly pieces are for the whole line. Efficiency is not shown for today because the COT sheet is updated up to yesterday.</p>' : '') +
+      (r.errors && r.errors.length ? '<p class="hint">' + esc(r.errors.join('; ')) + '</p>' : '') +
+      '<p class="hint no-print"><a href="#" id="drillBack">' + T('back') + '</a></p>';
+    document.getElementById('bUpd').onclick = function () { updateNow(); };
+    document.getElementById('bHourly').onclick = function () { HOURLY = !HOURLY; renderDrill(); };
+    var bk = document.getElementById('drillBack'); if (bk) bk.onclick = function (e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
+  }
+  document.getElementById('drill').addEventListener('click', function (e) {
+    var tr = e.target.closest('tr.prow'); if (!tr) return;
+    var k = tr.getAttribute('data-k'); OPENP[k] = !OPENP[k]; renderDrill();
+  });
+  function updateNow() {
+    var ub = document.getElementById('bUpd'); if (ub) { ub.disabled = true; ub.textContent = 'Updating…'; }
+    if (MODE === 'last') { if (DR) openDrill(DR.unit, true, true); return; }
+    var params = MODE === 'today' ? { action: 'today', fresh: 1 } : { action: 'prod_day', date: DAY, fresh: 1 };
+    jsonp(params, function (r) { if (r && r.ok) PD = r; if (R) renderSummary(); loadedAt = Date.now(); tick(); if (DR) openDrill(DR.unit, true, true); }, 100000);
   }
 
   function loadProd(cb) {
@@ -263,8 +320,8 @@
       Object.keys(k.trend || {}).forEach(function (u) { if (ONLY && u !== ONLY) return; k.trend[u].forEach(function (x) { tr.push([u, x.d, x.eff]); }); });
       XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(tr), 'Efficiency trend');
       if (DR && DR.lines) {
-        var dl = [['Unit', 'Date', 'Line', 'Buyer', 'Style', 'Output', 'Target', 'Achieved %', 'Operators', 'Efficiency %', 'FTR %', 'Defective %', 'Remark']];
-        DR.lines.forEach(function (l) { dl.push([DR.unit, DR.date, l.line, l.buyer || '', l.style || '', l.pro || 0, l.tgt || 0, l.tgt ? r1(l.pro / l.tgt * 100) : '', l.mp || '', r1(l.eff), r1(l.ftr), r1(l.dft), (/^(na|n\/a|-|0)$/i.test(String(l.remark || '').trim()) ? '' : l.remark || '')]); });
+        var dl = [['Unit', 'Date', 'Line', 'Buyer', 'Style', 'Output', 'Target', 'Achieved %', 'Operators', 'Efficiency %', 'FTR %', 'Defective %', 'Remark', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'H7', 'H8', 'H9']];
+        DR.lines.forEach(function (l) { dl.push([DR.unit, DR.date, l.line, l.buyer || '', l.style || '', l.pro || 0, l.tgt || 0, l.tgt ? r1(l.pro / l.tgt * 100) : '', l.mp || '', r1(l.eff), r1(l.ftr), r1(l.dft), (/^(na|n\/a|-|0)$/i.test(String(l.remark || '').trim()) ? '' : l.remark || '')].concat((l.hours || []).concat([0,0,0,0,0,0,0,0,0]).slice(0, 9))); });
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(dl), DR.unit + ' lines');
         if (DR.products && DR.products.length) { var pr = [['Unit', 'Date', 'Buyer', 'Style', 'Lines', 'Output', 'Target', 'Achieved %']]; DR.products.forEach(function (x) { pr.push([DR.unit, DR.date, x.buyer, x.style, x.lines.join(', '), x.pro, x.tgt, x.tgt ? r1(x.pro / x.tgt * 100) : '']); }); XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(pr), DR.unit + ' products'); }
       }
@@ -275,7 +332,7 @@
     });
   });
   document.getElementById('btnPdf').addEventListener('click', function () { window.print(); });
-  document.getElementById('btnRe').addEventListener('click', load);
+  document.getElementById('btnRe').addEventListener('click', function () { if (R) updateNow(); else load(); });
   document.getElementById('sum').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-u]'); if (tr) openDrill(tr.getAttribute('data-u')); });
 
   // ---------- Notes form ----------

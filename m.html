@@ -120,7 +120,7 @@
   <section class="view" id="v-report">
     <div class="asof"><span id="repAsof"></span><a class="lnk" href="report.html?from=app">Full report ›</a></div>
     <div id="repUnits"></div>
-    <div class="card" id="drillCard" hidden><h2><span id="drillTitle"></span><button class="lnk" id="drillClose" type="button">Close</button></h2><div id="drill"></div></div>
+    <div class="card" id="drillCard" hidden><h2><span id="drillTitle"></span><span><button class="lnk" id="drillUpd" type="button">&#8635; Update now</button> &nbsp; <button class="lnk" id="drillClose" type="button">Close</button></span></h2><div id="drill"></div></div>
   </section>
 
   <!-- APPROVALS -->
@@ -220,7 +220,7 @@
 <script>
 (function () {
   'use strict';
-  var VERSION = '3.2';
+  var VERSION = '3.3';
   var A = TSPL_APP, Q = TSPL_QUEUE, esc = A.esc, T = window.TSPL_T || function (k) { return k; };
   var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'];
   function ls(k, v) { try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch (e) { return null; } }
@@ -384,12 +384,14 @@
         '<div class="m" style="font-size:12px;margin-top:6px">Cards above: last full day (' + dmy(k.prodDate) + '). Tap for today\'s live line-wise & product-wise detail ›</div></div>';
     }).join('') || '<div class="empty">No data.</div>';
   }
-  $('repUnits').addEventListener('click', function (e) {
-    var c = e.target.closest('[data-u]'); if (!c) return;
-    var u = c.dataset.u, d = (TODAY && TODAY.ok && TODAY.date) || iso(new Date());
+  var DRILL_U = null;
+  $('repUnits').addEventListener('click', function (e) { var c = e.target.closest('[data-u]'); if (c) appDrill(c.dataset.u); });
+  function appDrill(u, fresh) {
+    DRILL_U = u; var d = (TODAY && TODAY.ok && TODAY.date) || iso(new Date());
     $('drillCard').hidden = false; $('drillTitle').innerHTML = esc(u) + ' · today ' + dmy(d) + ' <span class="tag r">LIVE</span>'; $('drill').innerHTML = '<div class="skel"></div>';
     $('drillCard').scrollIntoView({ behavior: 'smooth' });
-    A.jsonp({ action: 'drill', unit: u, date: d }, function (r) {
+    var dp = { action: 'drill', unit: u, date: d }; if (fresh) dp.fresh = 1;
+    A.jsonp(dp, function (r) {
       if (!r || !r.ok) { $('drill').innerHTML = '<div class="empty">' + esc(r && r.error || 'No connection') + '</div>'; return; }
       var lines = (r.lines || []).map(function (l) {
         var e = l.tgt && l.hoursDone ? l.tgt * l.hoursDone / 9 : null, pace = e ? l.pro / e * 100 : null;
@@ -398,12 +400,20 @@
           '<div class="sub">' + esc(l.buyer || '') + ' ' + esc(l.style || '') + (l.status ? ' · ' + esc(l.status) : '') + '</div>' +
           '<div class="sub">Hour ' + (l.hoursDone || 0) + '/9 · ' + (l.hours || []).filter(function (h) { return h; }).map(n0).join(' · ') + ' pcs/hr' + (l.ftr != null ? ' · FTR ' + p1(l.ftr) : '') + ' · ' + n0(l.mp) + ' ops' + (rem ? ' · ' + esc(rem) : '') + '</div></div>';
       }).join('');
-      var prods = (r.products || []).map(function (x) { return '<div class="stk"><div><b>' + esc(x.style) + '</b><small>' + esc(x.buyer) + ' · lines ' + esc(x.lines.join(', ')) + '</small></div><b>' + n0(x.pro) + '<small style="font-weight:400"> / ' + n0(x.tgt) + '</small></b></div>'; }).join('');
+      var prods = (r.products || []).map(function (x) {
+        var key = x.buyer + '|' + x.style;
+        var sub = (r.lines || []).filter(function (l) { return x.lines.indexOf(l.line) > -1; }).map(function (l) {
+          var st = (l.styles || []).filter(function (s2) { return s2.buyer + '|' + s2.style === key; })[0] || l, e2 = st.tgt && l.hoursDone ? st.tgt * l.hoursDone / 9 : null, pc = e2 ? st.pro / e2 * 100 : null;
+          return '<div class="stk" style="padding-left:14px"><div>↳ <b>Line ' + esc(l.line) + '</b><small>hour ' + (l.hoursDone || 0) + '/9 · ' + (l.hours || []).filter(function (h) { return h; }).map(n0).join(' · ') + ' pcs/hr</small></div><b class="' + cls(pc, 98, 90) + '">' + n0(st.pro) + '<small style="font-weight:400"> / ' + n0(st.tgt) + '</small></b></div>';
+        }).join('');
+        return '<details style="border-bottom:1px dashed var(--line)"><summary style="list-style:none;cursor:pointer;display:flex;justify-content:space-between;gap:8px;padding:8px 0"><span><span class="tag m" style="margin-right:6px">+ ' + x.lines.length + '</span><b>' + esc(x.style) + '</b><small class="m" style="display:block;font-size:11.5px">' + esc(x.buyer) + ' · lines ' + esc(x.lines.join(', ')) + '</small></span><b>' + n0(x.pro) + '<small style="font-weight:400"> / ' + n0(x.tgt) + '</small></b></summary>' + sub + '</details>';
+      }).join('');
       $('drill').innerHTML = (lines ? '<div class="m" style="font-size:12px">Line-wise · as of ' + esc(r.time) + '</div>' + lines : '<div class="empty">No DPR lines entered for today yet.</div>') +
-        (prods ? '<h2 style="margin-top:14px">Product-wise (buyer & style)</h2>' + prods : '');
+        (prods ? '<h2 style="margin-top:14px">Product-wise (buyer & style) <small class="m" style="font-size:11px;font-weight:400">tap + to see lines</small></h2>' + prods : '');
     }, 120000);
-  });
+  }
   $('drillClose').onclick = function () { $('drillCard').hidden = true; };
+  $('drillUpd').onclick = function () { if (DRILL_U) { appDrill(DRILL_U, true); A.jsonp({ action: 'today', fresh: 1 }, function (r) { if (r && r.ok) { TODAY = r; ls('tsplAppToday', JSON.stringify(r)); renderToday(); renderReport(); } }, 90000); } };
 
   // ---------- approvals ----------
   var AP_SEG = 'todo';
