@@ -62,7 +62,8 @@
     panel.setAttribute('aria-label', 'Ask TSPL');
     panel.innerHTML =
       '<div class="ask-head"><div><strong>Ask TSPL</strong><span>Answers from your live sheets</span></div>' +
-      '<div><button type="button" class="ask-icon" data-act="new" title="New chat"><i class="las la-redo-alt"></i></button>' +
+      '<div>' + (/main_ho/i.test(location.pathname) ? '<button type="button" class="ask-icon" data-act="deep" title="Deep analysis report with charts, PDF and Excel"><i class="las la-chart-pie"></i></button>' : '') +
+      '<button type="button" class="ask-icon" data-act="new" title="New chat"><i class="las la-redo-alt"></i></button>' +
       '<button type="button" class="ask-icon" data-act="close" aria-label="Close">&times;</button></div></div>' +
       '<div class="ask-log" id="askLog"></div>' +
       '<form class="ask-form" autocomplete="off"><textarea rows="2" placeholder="Ask about production, efficiency, quality, FSA, cutting, needles…" maxlength="500"></textarea>' +
@@ -106,6 +107,7 @@
     var act = b.getAttribute('data-act');
     if (act === 'close') toggle(false);
     if (act === 'new') { history = []; welcome(); input.focus(); }
+    if (act === 'deep') { var dq = input.value.trim() || (history.length ? history[history.length - 1].q : ''); window.open('analysis.html' + (dq ? '?q=' + encodeURIComponent(dq) : ''), '_blank'); }
   }
 
   function add(html, cls) {

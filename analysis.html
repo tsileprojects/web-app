@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ask TSPL | Analysis report</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<style>
+  :root { --bg:#f4f7fb; --card:#fff; --line:#e2e8f0; --text:#0f172a; --muted:#5b6577; --brand:#2196f3; --good:#15803d; --bad:#b91c1c; --soft:#f1f5f9; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); font-size:14px; }
+  header { position:sticky; top:0; z-index:5; background:#0b1630; color:#fff; padding:12px 20px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; }
+  header b { font-size:17px; } header b span { color:#60a5fa; }
+  .who { font-size:13px; color:#cbd5e1; display:flex; gap:8px; align-items:center; }
+  button, textarea { font:inherit; color:var(--text); }
+  .btn { font-size:13.5px; padding:8px 13px; border-radius:8px; border:1px solid var(--line); background:var(--card); cursor:pointer; display:inline-flex; gap:6px; align-items:center; }
+  .btn.pri { background:var(--brand); border-color:var(--brand); color:#fff; } .btn:disabled { opacity:.55; cursor:default; }
+  header .btn { background:transparent; color:#fff; border-color:rgba(255,255,255,.35); }
+  .wrap { max-width:1100px; margin:0 auto; padding:16px 20px 60px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:16px 18px; margin-bottom:14px; }
+  textarea { width:100%; min-height:70px; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:15px; resize:vertical; background:var(--card); }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; } .chips button { font-size:12.5px; padding:5px 10px; border-radius:16px; border:1px solid var(--line); background:var(--soft); cursor:pointer; }
+  .row { display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+  .prog li { list-style:none; padding:4px 0; font-size:13.5px; } .prog { margin:0; padding:0; }
+  .prog .st { display:inline-block; width:20px; }
+  .bar { height:6px; background:var(--soft); border-radius:4px; overflow:hidden; margin:10px 0 4px; } .bar i { display:block; height:100%; width:0; background:var(--brand); transition:width .4s; }
+  #report h1 { font-size:22px; margin:0 0 4px; } #report .meta { color:var(--muted); font-size:12.5px; }
+  #report h2 { font-size:16px; margin:0 0 8px; } #report h3 { font-size:15px; margin:0 0 6px; }
+  .sum li { margin:4px 0; line-height:1.45; }
+  .sec { break-inside:avoid; page-break-inside:avoid; }
+  .sec .src { font-size:11.5px; color:var(--muted); margin-top:6px; }
+  .chartbox { position:relative; height:300px; margin:8px 0; }
+  table { width:100%; border-collapse:collapse; font-size:12.5px; }
+  th, td { padding:5px 8px; border-bottom:1px solid var(--line); text-align:right; white-space:nowrap; }
+  th { background:var(--soft); color:var(--muted); font-size:11px; text-transform:uppercase; } th:first-child, td:first-child { text-align:left; }
+  tr.tot td { font-weight:700; background:var(--soft); }
+  .tw { overflow-x:auto; max-height:360px; overflow-y:auto; }
+  .err { color:var(--bad); } .m { color:var(--muted); }
+  .q { font-family:ui-monospace,Consolas,monospace; font-size:11px; color:var(--muted); word-break:break-all; }
+  .lock { font-size:12.5px; color:var(--muted); }
+  .pdfmode .tw { max-height:none; overflow:visible; } .pdfmode .chartbox { height:260px; }
+  @media print { header, #ask, #progCard, .noprint { display:none !important; } body { background:#fff; } .card { border:1px solid #ddd; } .tw { max-height:none; overflow:visible; } }
+</style>
+<script src="js/i18n.js"></script>
+</head>
+<body>
+<header>
+  <b>Ask TSPL <span>Analysis report</span></b>
+  <div class="who"><span id="who"></span>
+    <button class="btn" type="button" id="bPdf" hidden disabled>&#128196; Download PDF</button>
+    <button class="btn" type="button" id="bXls" hidden disabled>&#128202; Download Excel</button>
+  </div>
+</header>
+<div class="wrap">
+  <div class="card" id="ask">
+    <textarea id="q" maxlength="600" placeholder="Describe the analysis you need, e.g. 360° analysis of TS9 for October - production, efficiency, quality, FSA by buyer and style, week-wise trend"></textarea>
+    <div class="chips" id="ex"></div>
+    <div class="row"><button class="btn pri" type="button" id="go">&#9889; Create report</button><span class="lock" id="lock"></span></div>
+  </div>
+  <div class="card" id="progCard" hidden>
+    <b id="progTitle">Planning the report…</b>
+    <div class="bar"><i id="progBar"></i></div>
+    <ul class="prog" id="prog"></ul>
+  </div>
+  <div id="report"></div>
+</div>
+<script src="js/tspl-config.js"></script>
+<script src="js/tspl-app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = TSPL_APP, esc = A.esc;
+  var EX = ['360° analysis of TS9 for October 2026', 'Buyer-wise and style-wise FSA failures this month for all units',
+    'Efficiency by unit - month-wise for the last 6 months and week-wise for this month', 'Needle breakage analysis by unit and reason for October',
+    'AP2 production vs target day-wise this month with line-wise gaps', 'Cutting vs loading vs sewing output by unit this month'];
+  $('ex').innerHTML = EX.map(function (q) { return '<button type="button">' + esc(q) + '</button>'; }).join('');
+  function $(id) { return document.getElementById(id); }
+  var REP = null, CHARTS = [];
+
+  // ---------- who may download: HO portal session + HO/Admin user ----------
+  function hoPortal() { try { var s = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); return /main_ho/i.test(s.redirect || '') || /main_ho/i.test(document.referrer); } catch (e) { return false; } }
+  function canDownload() { var u = A.user(); return !!(u && (u.role === 'Admin' || String(u.unit).toUpperCase() === 'HO') && hoPortal()); }
+  function who() {
+    var u = A.user();
+    $('who').innerHTML = u ? esc(u.name) + ' · ' + esc(u.unit || u.role) + ' <button class="btn" type="button" id="out">Sign out</button>' : '<button class="btn" type="button" id="in">Sign in</button>';
+    var o = $('out'); if (o) o.onclick = function () { A.signOut(); who(); };
+    var i = $('in'); if (i) i.onclick = function () { A.signIn(who); };
+    var dl = canDownload();
+    $('bPdf').hidden = $('bXls').hidden = !dl;
+    $('lock').textContent = dl ? '' : (u ? 'Downloads are available to HO users from the HO portal.' : 'Sign in with your HO email to create reports.');
+  }
+
+  // ---------- pipeline ----------
+  $('ex').onclick = function (e) { var b = e.target.closest('button'); if (b) { $('q').value = b.textContent; start(); } };
+  $('go').onclick = start;
+  function prog(i, state, text) {
+    var li = $('p' + i); if (!li) { li = document.createElement('li'); li.id = 'p' + i; $('prog').appendChild(li); }
+    li.innerHTML = '<span class="st">' + ({ wait: '○', run: '⏳', ok: '✅', err: '⚠️' }[state]) + '</span>' + esc(text);
+  }
+  function start() {
+    var q = $('q').value.trim(); if (q.length < 5) { $('q').focus(); return; }
+    A.need(function () {
+      who();
+      $('go').disabled = true; $('bPdf').disabled = $('bXls').disabled = true;
+      $('report').innerHTML = ''; $('prog').innerHTML = ''; $('progCard').hidden = false; $('progTitle').textContent = 'Planning the report…'; $('progBar').style.width = '5%';
+      CHARTS.forEach(function (c) { c.destroy(); }); CHARTS = [];
+      A.call({ action: 'deep_plan', q: q }, function (r) {
+        if (!r || !r.ok) return fail(r ? r.error : 'No connection');
+        if (r.clarify) { $('go').disabled = false; $('progTitle').textContent = 'Ask TSPL needs more detail:'; $('prog').innerHTML = '<li>' + esc(r.clarify) + '</li>'; return; }
+        REP = { q: q, job: r.job, title: r.title, period: r.period, plan: r.sections, results: [], at: new Date(), by: (A.user() || {}).name };
+        $('progTitle').textContent = r.title + ' - reading live data (' + r.sections.length + ' sections)…';
+        r.sections.forEach(function (s, i) { prog(i, 'wait', s.section + ' · ' + s.source); });
+        runAll(r.sections.length);
+      }, 100000);
+    });
+  }
+  function runAll(n) {
+    var next = 0, done = 0, PAR = 3;
+    function one() {
+      if (next >= n) return;
+      var i = next++; prog(i, 'run', REP.plan[i].section + ' · ' + REP.plan[i].source);
+      A.call({ action: 'deep_run', job: REP.job, i: i }, function (r) {
+        REP.results[i] = r && r.ok ? r : { section: REP.plan[i].section, error: r ? r.error : 'No connection', headers: [], rows: [] };
+        prog(i, r && r.ok && !r.error ? 'ok' : 'err', REP.plan[i].section + (r && r.ok && !r.error ? ' · ' + (r.total || 0) + ' rows' : ' · ' + ((r && r.error) || 'failed')));
+        done++; $('progBar').style.width = (5 + done / n * 75) + '%';
+        if (done === n) write(); else one();
+      }, 100000);
+    }
+    for (var k = 0; k < PAR; k++) one();
+  }
+  function write() {
+    $('progTitle').textContent = 'Writing the findings…';
+    A.call({ action: 'deep_write', job: REP.job }, function (r) {
+      if (r && r.ok) REP.w = r; else REP.w = { summary: ['Findings could not be written (' + ((r && r.error) || 'no connection') + '). The numbers below are complete.'], sections: [], actions: [], watch: [] };
+      $('progBar').style.width = '100%'; $('progCard').hidden = true; $('go').disabled = false;
+      render();
+    }, 100000);
+  }
+  function fail(msg) { $('go').disabled = false; $('progTitle').innerHTML = '<span class="err">' + esc(msg === 'signin' ? 'Please sign in again.' : msg) + '</span>'; }
+
+  // ---------- render ----------
+  function md(s) { return esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
+  function num(v) { var n = parseFloat(String(v).replace(/[,%\s]/g, '')); return isNaN(n) ? null : n; }
+  var COLORS = ['#2563eb', '#16a34a', '#f59e0b', '#dc2626', '#8b5cf6', '#0d9488', '#db2777', '#64748b'];
+  function render() {
+    var w = REP.w, ins = {}; (w.sections || []).forEach(function (s) { ins[s.n] = s.insight; });
+    var h = '<div class="card"><h1>' + esc(REP.title) + '</h1><div class="meta">' + esc(REP.period || '') + ' · prepared ' + REP.at.toLocaleString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + (REP.by ? ' for ' + esc(REP.by) : '') + ' · Ask TSPL (live sheets)</div>' +
+      '<p class="m" style="margin:8px 0 0">Request: ' + esc(REP.q) + '</p></div>';
+    h += '<div class="card sec"><h2>Key findings</h2><ul class="sum">' + (w.summary || []).map(function (s) { return '<li>' + md(s) + '</li>'; }).join('') + '</ul></div>';
+    REP.results.forEach(function (r, i) {
+      h += '<div class="card sec"><h3>' + (i + 1) + '. ' + esc(r.section) + '</h3>' + (ins[i + 1] ? '<p style="margin:0 0 6px">' + md(ins[i + 1]) + '</p>' : '');
+      if (r.error) h += '<p class="err">Could not read this part: ' + esc(r.error) + '</p>';
+      else if (!r.rows.length) h += '<p class="m">No records for this filter.</p>';
+      else {
+        var ch = r.chart || {};
+        if (ch.type && ch.type !== 'none') h += '<div class="chartbox"><canvas id="c' + i + '"></canvas></div>';
+        h += '<div class="tw"><table><thead><tr>' + r.headers.map(function (x) { return '<th>' + esc(x) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+          r.rows.slice(0, 60).map(function (row) { return '<tr' + (row[0] === 'TOTAL' ? ' class="tot"' : '') + '>' + row.map(function (c) { var n = num(c); return '<td>' + esc(n != null && /^-?[\d.,]+$/.test(String(c)) && Math.abs(n) >= 1000 ? n.toLocaleString('en-IN') : c) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>' +
+          (r.rows.length > 60 ? '<div class="src">Showing 60 of ' + r.rows.length + ' rows - all rows are in the Excel file.</div>' : '');
+      }
+      h += '<div class="src">Source: ' + esc(r.source || '') + '</div></div>';
+    });
+    if ((w.actions || []).length) h += '<div class="card sec"><h2>Suggested actions</h2><ol class="sum">' + w.actions.map(function (s) { return '<li>' + md(s) + '</li>'; }).join('') + '</ol></div>';
+    if ((w.watch || []).length) h += '<div class="card sec"><h2>Watch / data gaps</h2><ul class="sum">' + w.watch.map(function (s) { return '<li>' + md(s) + '</li>'; }).join('') + '</ul></div>';
+    h += '<div class="card sec"><h2>How these numbers were read</h2>' + REP.results.map(function (r, i) { return '<div style="margin:6px 0"><b>' + (i + 1) + '.</b> ' + esc(r.source || '') + '<div class="q">' + esc(r.tq || '') + '</div></div>'; }).join('') +
+      '<p class="m" style="font-size:12px">Percentages, totals and weekly sums are calculated by the script from the sheet numbers; the AI only plans the queries and writes the text.</p></div>';
+    $('report').innerHTML = h;
+    REP.results.forEach(function (r, i) { var cv = $('c' + i); if (cv) draw(cv, r); });
+    var dl = canDownload(); $('bPdf').disabled = $('bXls').disabled = !dl;
+  }
+  function draw(cv, r) {
+    if (!window.Chart) return;
+    var ch = r.chart, x = ch.x || 0, ys = (ch.y || [1]).filter(function (y) { return y < r.headers.length; });
+    var rows = r.rows.filter(function (row) { return row[0] !== 'TOTAL'; });
+    if (ch.type === 'bar' || ch.type === 'pie') rows = rows.slice(0, 25);
+    var labels = rows.map(function (row) { return String(row[x]); });
+    var type = ch.type === 'pie' ? 'doughnut' : ch.type === 'line' ? 'line' : 'bar';
+    var ds = ys.map(function (y, k) {
+      return { label: r.headers[y], data: rows.map(function (row) { return num(row[y]); }), borderColor: COLORS[k % 8], backgroundColor: type === 'doughnut' ? rows.map(function (_, j) { return COLORS[j % 8]; }) : COLORS[k % 8] + (type === 'line' ? '22' : 'cc'), tension: .25, fill: type === 'line' && ys.length === 1, pointRadius: 2 };
+    });
+    // a % series next to big counts goes on its own axis
+    var pctIdx = ys.map(function (y) { return /%/.test(r.headers[y]); });
+    if (type !== 'doughnut' && pctIdx.some(Boolean) && pctIdx.some(function (p) { return !p; })) ds.forEach(function (d, k) { if (pctIdx[k]) { d.yAxisID = 'y1'; d.type = 'line'; d.borderColor = '#dc2626'; d.backgroundColor = '#dc2626'; d.fill = false; } });
+    CHARTS.push(new Chart(cv, { type: type, data: { labels: labels, datasets: ds }, options: { responsive: true, maintainAspectRatio: false, animation: false,
+      plugins: { legend: { display: ds.length > 1 || type === 'doughnut', position: 'bottom' } },
+      scales: type === 'doughnut' ? {} : { x: { ticks: { autoSkip: true, maxRotation: 50 } }, y: { beginAtZero: true }, y1: { display: ds.some(function (d) { return d.yAxisID === 'y1'; }), position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, ticks: { callback: function (v) { return v + '%'; } } } } } }));
+  }
+
+  // ---------- downloads (go to the user's Downloads folder) ----------
+  function fname(ext) { return ('TSPL_' + (REP.title || 'Report').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '_').slice(0, 60) + '_' + new Date().toISOString().slice(0, 10) + '.' + ext); }
+  function lib(src, test, cb) { if (test()) return cb(); var s = document.createElement('script'); s.src = src; s.onload = cb; s.onerror = function () { alert('Could not load the download tool. Check the internet connection.'); }; document.head.appendChild(s); }
+  $('bXls').onclick = function () {
+    if (!REP || !canDownload()) return;
+    lib('https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js', function () { return !!window.XLSX; }, function () {
+      var wb = XLSX.utils.book_new(), w = REP.w || {};
+      var s1 = [[REP.title], [REP.period || ''], ['Request', REP.q], ['Prepared', REP.at.toLocaleString('en-IN')], [], ['Key findings']].concat((w.summary || []).map(function (x) { return [x.replace(/\*\*/g, '')]; }))
+        .concat([[], ['Suggested actions']]).concat((w.actions || []).map(function (x) { return [x.replace(/\*\*/g, '')]; })).concat([[], ['Watch / data gaps']]).concat((w.watch || []).map(function (x) { return [x.replace(/\*\*/g, '')]; }));
+      var ws = XLSX.utils.aoa_to_sheet(s1); ws['!cols'] = [{ wch: 110 }]; XLSX.utils.book_append_sheet(wb, ws, 'Summary');
+      var used = {};
+      REP.results.forEach(function (r, i) {
+        var name = ((i + 1) + ' ' + (r.section || 'Section')).replace(/[\\\/\?\*\[\]:]/g, ' ').slice(0, 31); while (used[name]) name = name.slice(0, 28) + '_' + i; used[name] = 1;
+        var aoa = [[r.section], ['Source: ' + (r.source || '')], []].concat(r.error ? [['Error: ' + r.error]] : [r.headers].concat(r.rows.map(function (row) { return row.map(function (c) { var n = num(c); return n != null && /^-?[\d.,]+%?$/.test(String(c).trim()) && !/%$/.test(String(c)) ? n : c; }); })));
+        var s = XLSX.utils.aoa_to_sheet(aoa); s['!cols'] = (r.headers || []).map(function (h) { return { wch: Math.max(10, Math.min(30, String(h).length + 4)) }; }); XLSX.utils.book_append_sheet(wb, s, name);
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['#', 'Section', 'Source', 'Query']].concat(REP.results.map(function (r, i) { return [i + 1, r.section, r.source, r.tq]; }))), 'Queries used');
+      XLSX.writeFile(wb, fname('xlsx'));
+      A.call({ action: 'hit', detail: 'downloaded Excel: ' + REP.title }, function () {});
+    });
+  };
+  $('bPdf').onclick = function () {
+    if (!REP || !canDownload()) return;
+    var b = this; b.disabled = true; b.textContent = 'Preparing PDF…';
+    lib('https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js', function () { return !!window.html2pdf; }, function () {
+      document.body.classList.add('pdfmode');
+      CHARTS.forEach(function (c) { c.resize(); });
+      setTimeout(function () {
+        html2pdf().set({ margin: [8, 8, 10, 8], filename: fname('pdf'), image: { type: 'jpeg', quality: 0.92 }, html2canvas: { scale: 2, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'avoid-all'], avoid: '.sec' } })
+          .from($('report')).save().then(function () { document.body.classList.remove('pdfmode'); b.disabled = false; b.innerHTML = '&#128196; Download PDF'; A.call({ action: 'hit', detail: 'downloaded PDF: ' + REP.title }, function () {}); });
+      }, 300);
+    });
+  };
+
+  who();
+  var q0 = new URLSearchParams(location.search).get('q'); if (q0) { $('q').value = q0; if (A.user()) start(); }
+})();
+</script>
+</body>
+</html>

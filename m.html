@@ -161,6 +161,7 @@
     <div class="card" id="moAsk">
       <div style="display:flex;gap:8px"><textarea id="askQ" placeholder="e.g. TS4 efficiency yesterday? Top defects in TS9 this week?" style="min-height:56px;margin:0"></textarea><button class="btn mic" type="button" id="mic" title="Speak">&#127908;</button></div>
       <button class="btn pri full" type="button" id="askGo" style="margin-top:8px">Ask TSPL</button>
+      <button class="btn full" type="button" id="deepGo" style="margin-top:8px">&#128202; Deep report with charts (HO)</button>
       <div class="chips" id="askEx" style="margin-top:10px"></div>
       <div class="ans" id="askAns"></div>
     </div>
@@ -587,6 +588,7 @@
     }, 150000);
   }
   $('askGo').onclick = ask;
+  $('deepGo').onclick = function () { var q = $('askQ').value.trim(); window.open('analysis.html' + (q ? '?q=' + encodeURIComponent(q) : ''), '_blank'); };
   $('askAns').addEventListener('click', function (e) { var b = e.target.closest('[data-f]'); if (b) { $('askQ').value = b.textContent; ask(); } });
   // voice
   var Rec = window.SpeechRecognition || window.webkitSpeechRecognition, rec = null;

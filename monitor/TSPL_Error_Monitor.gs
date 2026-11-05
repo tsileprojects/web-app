@@ -372,6 +372,9 @@ function doGet(e) {
       case 'needle_stock': out = appNeedleStock_(p); break;
       case 'photo': out = appPhoto_(p); break;
       case 'cid_done': out = appCidDone_(p); break;
+      case 'deep_plan': out = deepPlan_(p); break;
+      case 'deep_run': out = deepRun_(p); break;
+      case 'deep_write': out = deepWrite_(p); break;
       default: out = { ok: true, service: 'TSPL Error Monitor', time: new Date() };
     }
   } catch (err) { out = { ok: false, error: String(err && err.message || err) }; }
