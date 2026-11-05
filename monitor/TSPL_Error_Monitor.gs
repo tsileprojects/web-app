@@ -367,6 +367,11 @@ function doGet(e) {
       case 'activity': out = axActivity_(p); break;
       case 'needle': out = axNeedle_(p); break;
       case 'needle_list': out = axNeedleList_(p); break;
+      case 'app_home': out = appHome_(p); break;
+      case 'needle_types': out = appNeedleTypes_(); break;
+      case 'needle_stock': out = appNeedleStock_(p); break;
+      case 'photo': out = appPhoto_(p); break;
+      case 'cid_done': out = appCidDone_(p); break;
       default: out = { ok: true, service: 'TSPL Error Monitor', time: new Date() };
     }
   } catch (err) { out = { ok: false, error: String(err && err.message || err) }; }
@@ -377,6 +382,7 @@ function doGet(e) {
 function doPost(e) {
   let body = {};
   try { body = JSON.parse(e.postData.contents || '{}'); } catch (x) { body = { message: e && e.postData && e.postData.contents }; }
+  if (body.action === 'note_photo') { try { return respond_(appNotePhoto_(body)); } catch (x) { return respond_({ ok: false, error: String(x.message || x) }); } }
   return respond_({ ok: true, id: logReport_(body) });
 }
 

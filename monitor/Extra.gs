@@ -71,9 +71,9 @@ function notes_() {
   const n = sh.getLastRow() - 1;
   if (n < 1) return { ok: true, notes: [] };
   const from = kpiFmt_(new Date(Date.now() - 31 * 86400000));
-  const rows = sh.getRange(2, 1, n, 7).getValues();
+  const rows = sh.getRange(2, 1, n, 8).getValues();
   const notes = rows.map(r => ({ id: String(r[0]), added: r[1], date: r[2] instanceof Date ? kpiFmt_(r[2]) : String(r[2]),
-      unit: String(r[3]), line: String(r[4]), text: String(r[5]), by: String(r[6]) }))
+      unit: String(r[3]), line: String(r[4]), text: String(r[5]), by: String(r[6]), photo: String(r[7] || '') }))
     .filter(x => x.date >= from && x.text).reverse().slice(0, 300);
   return { ok: true, notes: notes };
 }
