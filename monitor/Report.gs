@@ -15,6 +15,7 @@
  * ==============================================================
  */
 const REPORT_TAB = 'Report Recipients';
+const REPORT_OWNER = 'eprojectstsil@gmail.com';
 const REPORT_SITE = 'https://tsileprojects.github.io/web-app/';
 
 function reportRecipients_() {
@@ -23,9 +24,10 @@ function reportRecipients_() {
   if (!sh) {
     sh = ss.insertSheet(REPORT_TAB);
     sh.getRange(1, 1, 1, 3).setValues([['Email', 'Send (Y/N)', 'Name / role']]).setFontWeight('bold');
-    sh.getRange(2, 1, 1, 3).setValues([[Session.getEffectiveUser().getEmail(), 'Y', 'Owner (test)']]);
+    sh.getRange(2, 1, 1, 3).setValues([[REPORT_OWNER, 'Y', 'Owner (test)']]);
     sh.setFrozenRows(1); sh.setColumnWidth(1, 260); sh.setColumnWidth(3, 200);
   }
+  if (sh.getLastRow() < 2) sh.appendRow([REPORT_OWNER, 'Y', 'Owner (test)']);
   const n = sh.getLastRow() - 1;
   if (n < 1) return [];
   return sh.getRange(2, 1, n, 2).getValues()
