@@ -57,7 +57,7 @@ function drillLive_(unit, date, fresh) {
   date = String(date || '') || tdToday_();
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, error: 'Date must be YYYY-MM-DD' };
   const isToday = date === tdToday_();
-  const cache = CacheService.getScriptCache(), key = 'drill3_' + unit + '_' + date;
+  const cache = CacheService.getScriptCache(), key = 'drill4_' + unit + '_' + date;
   const hit = cache.get(key); if (hit && !tdFresh_(key, fresh)) return JSON.parse(hit);
   const lines = {}, errs = [];
   const L = no => { no = String(no == null ? '' : no).trim(); if (!no) return null; return lines[no] = lines[no] || { line: no, styles: [] }; };
