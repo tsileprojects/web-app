@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b1630">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TSPL">
+<title>TSPL App</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<link rel="apple-touch-icon" href="img/app-192.png">
+<style>
+  :root { --bg:#f4f7fb; --card:#fff; --line:#e2e8f0; --text:#0f172a; --muted:#5b6577; --brand:#2196f3; --good:#15803d; --bad:#b91c1c; }
+  html.tspl-dark { --bg:#0f172a; --card:#111c33; --line:#263552; --text:#e5e7eb; --muted:#9fb0c8; --good:#4ade80; --bad:#f87171; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); padding-bottom:env(safe-area-inset-bottom); }
+  header { background:#0b1630; color:#fff; padding:14px 16px calc(14px) ; padding-top:calc(14px + env(safe-area-inset-top)); display:flex; align-items:center; justify-content:space-between; gap:10px; position:sticky; top:0; z-index:3; }
+  header b { font-size:18px; } header b span { color:#60a5fa; }
+  .net { font-size:12px; padding:3px 8px; border-radius:10px; background:#16a34a; } .net.off { background:#dc2626; }
+  .wrap { padding:14px; max-width:640px; margin:0 auto; }
+  .who { font-size:13px; color:var(--muted); margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .who button { font-size:12px; }
+  .grid { display:grid; grid-template-columns: repeat(3, 1fr); gap:10px; margin-bottom:16px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px 6px; text-align:center; color:var(--text); text-decoration:none; font-size:13px; font-weight:600; display:flex; flex-direction:column; align-items:center; gap:6px; cursor:pointer; }
+  .tile .ic { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; margin-bottom:14px; }
+  h2 { font-size:16px; margin:0 0 10px; }
+  label { display:block; font-size:12px; color:var(--muted); margin-bottom:8px; }
+  input, select, textarea, button { font:inherit; font-size:16px; color:var(--text); background:var(--card); border:1px solid var(--line); border-radius:10px; }
+  input, select, textarea { width:100%; padding:10px 12px; margin-top:4px; }
+  textarea { min-height:80px; resize:vertical; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  button { padding:10px 14px; cursor:pointer; }
+  button.pri { background:var(--brand); color:#fff; border-color:var(--brand); width:100%; font-weight:600; }
+  .seg { display:flex; gap:6px; margin-top:4px; } .seg button { flex:1; font-size:14px; } .seg button.sel { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .flash { font-size:13px; margin-top:8px; min-height:18px; } .g { color:var(--good); } .r { color:var(--bad); }
+  .q li { font-size:13px; padding:6px 0; border-bottom:1px dashed var(--line); list-style:none; } .q { padding:0; margin:0; }
+  .muted { color:var(--muted); font-size:13px; }
+  .install { display:none; }
+</style>
+<script>try { if (localStorage.getItem('tsplTheme') === 'dark') document.documentElement.classList.add('tspl-dark'); } catch (e) {}</script>
+</head>
+<body>
+<header><b>TSPL <span>App</span></b><span class="net" id="net">Online</span></header>
+<div class="wrap">
+  <div class="who" id="who"></div>
+  <div class="grid">
+    <a class="tile" href="report.html"><span class="ic" style="background:#2563eb">&#128202;</span>Report</a>
+    <a class="tile" href="requests.html"><span class="ic" style="background:#16a34a">&#10004;</span>Approvals <span id="todoN" class="muted"></span></a>
+    <a class="tile" href="tv.html"><span class="ic" style="background:#0b1630">&#128250;</span>Live board</a>
+    <a class="tile" href="#note" data-go="note"><span class="ic" style="background:#f59e0b">&#128221;</span>Add note</a>
+    <a class="tile" href="#needle" data-go="needle"><span class="ic" style="background:#f97316">&#129697;</span>Needle entry</a>
+    <a class="tile" href="status.html"><span class="ic" style="background:#8b5cf6">&#128154;</span>Status</a>
+  </div>
+  <button class="pri install" id="install" type="button">Install TSPL app on this phone</button>
+
+  <div class="card" id="queueCard" hidden>
+    <h2>Waiting to send <span class="muted" id="qn"></span></h2>
+    <ul class="q" id="queue"></ul>
+    <button type="button" id="sendNow" style="margin-top:8px">Send now</button>
+  </div>
+
+  <div class="card" id="note">
+    <h2>&#128221; Add a note</h2>
+    <div class="row2">
+      <label>Unit<select id="nUnit"><option>AP2</option><option>FIPL</option><option>TS2</option><option>TS4</option><option>TS9</option><option value="TSPL">All units</option></select></label>
+      <label>Line<input id="nLine" maxlength="10" inputmode="text" placeholder="e.g. 4"></label>
+    </div>
+    <label>Date<input id="nDate" type="date"></label>
+    <label>Note<textarea id="nText" maxlength="300" placeholder="e.g. Line 4 down 2 hours - power cut"></textarea></label>
+    <button class="pri" type="button" id="nSave">Save note</button>
+    <div class="flash" id="nFlash"></div>
+  </div>
+
+  <div class="card" id="needle">
+    <h2>&#129697; Needle entry</h2>
+    <label>What<div class="seg" id="kSeg"><button type="button" data-k="issue" class="sel">Issue</button><button type="button" data-k="breakage">Breakage</button><button type="button" data-k="return">Return</button></div></label>
+    <div class="row2">
+      <label>Unit<select id="dUnit"><option>AP2</option><option>FIPL</option><option>TS2</option><option>TS4</option><option>TS9</option><option>SMP</option><option>EMB</option></select></label>
+      <label>Line<input id="dLine" maxlength="10" placeholder="e.g. 6"></label>
+    </div>
+    <div class="row2">
+      <label>Needle type<input id="dType" maxlength="60" list="ndlTypes" placeholder="e.g. DBx1 #11"></label>
+      <label>Quantity<input id="dQty" type="number" min="1" inputmode="numeric"></label>
+    </div>
+    <datalist id="ndlTypes"><option>DBx1 #9</option><option>DBx1 #11</option><option>DBx1 #14</option><option>DCx27 #11</option><option>DCx27 #14</option><option>UYx128 #9</option><option>UYx128 #11</option><option>TVx7 #11</option><option>DPx5 #14</option><option>DPx17 #16</option></datalist>
+    <label>Date<input id="dDate" type="date"></label>
+    <label>Reason / remark<input id="dRem" maxlength="300" placeholder="e.g. broken on heavy seam"></label>
+    <button class="pri" type="button" id="dSave">Save entry</button>
+    <div class="flash" id="dFlash"></div>
+    <div id="recent"></div>
+  </div>
+  <p class="muted" style="text-align:center">Entries are saved on the phone first and sent automatically when there is internet.</p>
+</div>
+<script src="js/tspl-config.js"></script>
+<script src="js/tspl-app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = TSPL_APP, Q = TSPL_QUEUE, esc = A.esc, KIND = 'issue';
+  var today = new Date(); function iso(d) { return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); }
+  document.getElementById('nDate').value = iso(today); document.getElementById('dDate').value = iso(today);
+
+  function net() { var on = navigator.onLine !== false, n = document.getElementById('net'); n.textContent = on ? 'Online' : 'Offline'; n.classList.toggle('off', !on); }
+  window.addEventListener('online', net); window.addEventListener('offline', net); net();
+
+  function who() {
+    var u = A.user();
+    document.getElementById('who').innerHTML = u ? '<span>&#128100; <b>' + esc(u.name) + '</b> · ' + esc(u.role) + (u.unit ? ' · ' + esc(u.unit) : '') + '</span><button type="button" id="out">Sign out</button>'
+      : '<span>Not signed in</span><button type="button" id="in" class="pri" style="width:auto">Sign in</button>';
+    var o = document.getElementById('out'); if (o) o.onclick = function () { A.signOut(); who(); };
+    var i = document.getElementById('in'); if (i) i.onclick = function () { A.signIn(function () { who(); after(); }); };
+    if (u && u.unit) { ['nUnit', 'dUnit'].forEach(function (id) { var s = document.getElementById(id); if ([].some.call(s.options, function (o) { return o.value === u.unit; })) s.value = u.unit; }); }
+  }
+
+  document.addEventListener('tspl-queue', function (e) {
+    var items = e.detail || [];
+    document.getElementById('queueCard').hidden = !items.length;
+    document.getElementById('qn').textContent = items.length ? '(' + items.length + ')' : '';
+    document.getElementById('queue').innerHTML = items.map(function (it) { return '<li>' + esc(it.label) + (it.error ? ' <span class="r">- ' + esc(it.error) + '</span>' : '') + '</li>'; }).join('');
+  });
+  document.getElementById('sendNow').onclick = function () { Q.flush(); };
+  Q.onSent = function () { recent(); };
+
+  function saved(fl, label) {
+    fl.className = 'flash g';
+    fl.textContent = navigator.onLine === false ? 'Saved on this phone. It will be sent when you are online.' : 'Saved: ' + label;
+  }
+  document.getElementById('nSave').onclick = function () {
+    var fl = document.getElementById('nFlash');
+    var p = { action: 'addnote', unit: document.getElementById('nUnit').value, line: document.getElementById('nLine').value.trim(), date: document.getElementById('nDate').value, text: document.getElementById('nText').value.trim() };
+    if (p.text.length < 3) { fl.className = 'flash r'; fl.textContent = 'Write the note.'; return; }
+    A.need(function (u) { p.by = u.name; Q.add(p, 'Note ' + p.unit + (p.line ? ' line ' + p.line : '') + ': ' + p.text.slice(0, 40), function () { saved(fl, 'note'); document.getElementById('nText').value = ''; document.getElementById('nLine').value = ''; }); });
+  };
+  document.getElementById('kSeg').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; KIND = b.dataset.k; this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('sel', x === b); }); };
+  document.getElementById('dSave').onclick = function () {
+    var fl = document.getElementById('dFlash');
+    var p = { action: 'needle', kind: KIND, unit: document.getElementById('dUnit').value, line: document.getElementById('dLine').value.trim(), ntype: document.getElementById('dType').value.trim(),
+      qty: document.getElementById('dQty').value, date: document.getElementById('dDate').value, remark: document.getElementById('dRem').value.trim() };
+    if (!(+p.qty > 0)) { fl.className = 'flash r'; fl.textContent = 'Enter the quantity.'; return; }
+    if (!p.ntype) { fl.className = 'flash r'; fl.textContent = 'Enter the needle type.'; return; }
+    A.need(function () { Q.add(p, 'Needle ' + KIND + ' ' + p.unit + ' line ' + p.line + ' ' + p.ntype + ' x' + p.qty, function () { saved(fl, 'needle ' + KIND); document.getElementById('dQty').value = ''; document.getElementById('dRem').value = ''; }); });
+  };
+
+  function recent() {
+    if (!A.user() || navigator.onLine === false) return;
+    A.call({ action: 'needle_list' }, function (r) {
+      if (!r || !r.ok || !r.rows.length) return;
+      document.getElementById('recent').innerHTML = '<p class="muted" style="margin:14px 0 4px">Recent needle entries</p><ul class="q">' + r.rows.slice(0, 8).map(function (x) {
+        return '<li>' + esc(x.date) + ' · <b>' + esc(x.unit) + ' L' + esc(x.line) + '</b> · ' + esc(x.kind) + ' · ' + esc(x.ntype) + ' x' + esc(x.qty) + '</li>'; }).join('') + '</ul>';
+    });
+  }
+  function after() {
+    recent();
+    if (navigator.onLine !== false && A.user()) A.call({ action: 'req_list' }, function (r) { if (r && r.ok) { var n = r.requests.filter(function (x) { return x.canApprove; }).length; document.getElementById('todoN').textContent = n ? '(' + n + ')' : ''; } });
+  }
+
+  // install prompt (Android / Chrome)
+  var deferred = null, ib = document.getElementById('install');
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; ib.style.display = 'block'; });
+  ib.onclick = function () { if (deferred) { deferred.prompt(); deferred = null; ib.style.display = 'none'; } };
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+
+  who(); Q.changed(); Q.flush(); after();
+})();
+</script>
+</body>
+</html>

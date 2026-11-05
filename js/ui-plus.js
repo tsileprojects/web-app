@@ -33,6 +33,7 @@
       sidebar();
       deptColours();
       skeleton();
+      activity();
     });
   });
 
@@ -59,6 +60,7 @@
     var tv = btn('btnTv', 'la-tv', T('tipTv'), function () { window.open('tv.html' + q, '_blank', 'noopener'); });
     var st = btn('btnStatus', 'la-heartbeat', T('tipStatus'), function () { window.open('status.html', '_blank', 'noopener'); });
     var rp = btn('btnReport', 'la-file-download', T('tipReport'), function () { window.open('report.html' + q, '_blank', 'noopener'); });
+    var rq = btn('btnReq', 'la-check-circle', T('tipReq'), function () { window.open('requests.html', '_blank', 'noopener'); });
     var langs = window.TSPL_I18N ? TSPL_I18N.langs : [['en', 'EN']];
     var cur = window.TSPL_I18N ? TSPL_I18N.lang() : 'en';
     var lg = btn('btnLang', 'la-language', T('tipLang'), function () {
@@ -67,7 +69,7 @@
     });
     lg.classList.add('uip-lang');
     lg.innerHTML = '<span>' + (langs.filter(function (x) { return x[0] === cur; })[0] || langs[0])[1] + '</span>';
-    [rp, st, tv, dark, lg].forEach(function (b) { bar.insertBefore(b, first); });
+    [rq, rp, st, tv, dark, lg].forEach(function (b) { bar.insertBefore(b, first); });
 
     // Help tips on the existing buttons
     var tips = { btnBell: T('tipBell'), btnAsk: T('tipAsk'), btnFullscreen: T('tipFull') };
@@ -200,6 +202,30 @@
       var d = deptOf(a.textContent);
       if (d) { a.style.setProperty('--dept', d[1]); a.classList.add('uip-dept-link'); }
     });
+  }
+
+  // ---------- Activity log: page opens and program opens ----------
+  function activity() {
+    function who() { try { var u = JSON.parse(localStorage.getItem('tsplUser') || 'null'); return u ? u.email : ''; } catch (e) { return ''; } }
+    function login() { try { return JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}').username || ''; } catch (e) { return ''; } }
+    function send(detail) {
+      var go = function () {
+        if (!window.TSPL_MONITOR_URL) return;
+        var n = '__hit' + Date.now() + Math.floor(Math.random() * 1000), s = document.createElement('script');
+        window[n] = function () { window[n] = function () {}; s.remove(); };
+        s.src = window.TSPL_MONITOR_URL + '?action=hit&page=' + encodeURIComponent(PAGE) + '&login=' + encodeURIComponent(login()) + '&who=' + encodeURIComponent(who()) + '&detail=' + encodeURIComponent(detail) + '&callback=' + n;
+        s.onerror = function () { window[n] = function () {}; };
+        document.body.appendChild(s);
+      };
+      if (window.TSPL_MONITOR_URL) go();
+      else { var c = document.createElement('script'); c.src = 'js/tspl-config.js'; c.onload = go; document.head.appendChild(c); }
+    }
+    send('page');
+    document.addEventListener('click', function (e) {
+      var a = e.target.closest && e.target.closest('aside.sidebar .menu-link');
+      if (!a || (e.target.closest('.uip-star'))) return;
+      var sp = a.querySelector('span'); send('program: ' + (sp ? sp.textContent : a.textContent).trim().slice(0, 80));
+    }, true);
   }
 
   // ---------- Loading placeholder ----------

@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b1630">
+<title>TSPL | Requests & Approvals</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+<style>
+  :root { --bg:#f4f7fb; --card:#fff; --line:#e2e8f0; --text:#0f172a; --muted:#5b6577; --brand:#2196f3; --good:#15803d; --warn:#b45309; --bad:#b91c1c; --head:#f1f5f9; }
+  html.tspl-dark { --bg:#0f172a; --card:#111c33; --line:#263552; --text:#e5e7eb; --muted:#9fb0c8; --head:#16223d; --good:#4ade80; --warn:#fbbf24; --bad:#f87171; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
+  header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:12px 20px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:3; }
+  h1 { font-size:18px; margin:0; } h1 span { color:var(--brand); }
+  .who { font-size:13px; color:var(--muted); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  button, select, input, textarea { font:inherit; font-size:14px; color:var(--text); background:var(--card); border:1px solid var(--line); border-radius:8px; }
+  button { padding:7px 12px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  button:hover { border-color:var(--brand); }
+  button.pri { background:var(--brand); color:#fff; border-color:var(--brand); }
+  button.ok { background:#16a34a; color:#fff; border-color:#16a34a; } button.no { background:#fff; color:var(--bad); border-color:#fecaca; }
+  .wrap { max-width:1100px; margin:0 auto; padding:16px 20px 48px; }
+  .tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+  .tabs button.sel { background:var(--brand); color:#fff; border-color:var(--brand); }
+  .badge { background:#dc2626; color:#fff; border-radius:10px; font-size:11px; padding:1px 6px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+  .req { display:grid; grid-template-columns: 1fr auto; gap:6px 14px; }
+  .req h3 { margin:0; font-size:15px; } .req .sub { font-size:12.5px; color:var(--muted); }
+  .req .det { grid-column:1 / -1; font-size:13.5px; white-space:pre-wrap; }
+  .pill { font-size:12px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap; align-self:start; }
+  .Pending { background:#fef3c7; color:#92400e; } .Approved { background:#dcfce7; color:#166534; } .Rejected { background:#fee2e2; color:#991b1b; } .Cancelled { background:#e2e8f0; color:#475569; }
+  .hist { grid-column:1 / -1; font-size:12.5px; color:var(--muted); border-top:1px dashed var(--line); padding-top:6px; }
+  .hist div { margin:2px 0; }
+  .acts { grid-column:1 / -1; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .acts input { flex:1; min-width:180px; padding:7px 10px; }
+  form.new { display:grid; gap:10px; grid-template-columns: 1fr 1fr 1fr; }
+  form.new label { font-size:12px; color:var(--muted); display:flex; flex-direction:column; gap:4px; }
+  form.new input, form.new select, form.new textarea { padding:8px 10px; }
+  form.new .full { grid-column:1 / -1; } form.new textarea { min-height:80px; resize:vertical; }
+  .msg { padding:30px; text-align:center; color:var(--muted); }
+  .flash { font-size:13px; } .g { color:var(--good); } .r { color:var(--bad); }
+  .search { width:100%; padding:8px 12px; margin-bottom:12px; }
+  @media (max-width:700px) { form.new { grid-template-columns:1fr; } header { padding:10px 14px; } .wrap { padding:12px 12px 40px; } }
+</style>
+<script>try { if (localStorage.getItem('tsplTheme') === 'dark') document.documentElement.classList.add('tspl-dark'); } catch (e) {}</script>
+</head>
+<body>
+<header>
+  <h1>TSPL | <span>Requests & Approvals</span></h1>
+  <div class="who" id="who"></div>
+</header>
+<div class="wrap">
+  <div class="tabs" id="tabs">
+    <button type="button" data-t="todo" class="sel"><i class="las la-check-double"></i>To approve <span class="badge" id="bTodo" hidden>0</span></button>
+    <button type="button" data-t="mine"><i class="las la-user"></i>My requests</button>
+    <button type="button" data-t="all"><i class="las la-list"></i>All</button>
+    <button type="button" data-t="new"><i class="las la-plus"></i>New request</button>
+  </div>
+  <div id="pNew" class="card" hidden>
+    <form class="new" id="fNew" autocomplete="off">
+      <label>Type<select id="nType" required></select></label>
+      <label>Unit<select id="nUnit"><option>AP2</option><option>FIPL</option><option>TS2</option><option>TS4</option><option>TS9</option><option>CMD</option><option>HO</option><option>SMP</option><option>EMB</option><option>GSD</option><option>FSA</option><option>PPD</option><option>QTY</option></select></label>
+      <label>Needed by<input id="nNeed" type="date"></label>
+      <label class="full">Title<input id="nTitle" maxlength="120" required placeholder="e.g. DBx1 #11 needles for line 6"></label>
+      <label class="full">Details<textarea id="nDet" maxlength="1000" placeholder="What is needed and why"></textarea></label>
+      <label>Quantity<input id="nQty" type="number" min="0" step="any"></label>
+      <div class="full" style="display:flex;gap:10px;align-items:center"><button class="pri" type="submit"><i class="las la-paper-plane"></i>Send for approval</button><span class="flash" id="nFlash"></span></div>
+    </form>
+  </div>
+  <div id="pList">
+    <input class="search" id="q" type="search" placeholder="Search requests…" aria-label="Search requests">
+    <div id="list"><div class="msg">Loading…</div></div>
+  </div>
+</div>
+<script src="js/tspl-config.js"></script>
+<script src="js/tspl-app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = TSPL_APP, Q = TSPL_QUEUE, esc = A.esc;
+  var DATA = [], USER = null, TAB = (location.hash || '#todo').slice(1);
+  function when(v) { if (!v) return ''; var d = new Date(v); return isNaN(d) ? esc(v) : d.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+
+  function renderWho() {
+    var u = A.user();
+    document.getElementById('who').innerHTML = u ? '<i class="las la-user-circle"></i><b>' + esc(u.name) + '</b> · ' + esc(u.role) + (u.unit ? ' · ' + esc(u.unit) : '') +
+      (u.role === 'Admin' ? ' <a href="activity.html"><button type="button"><i class="las la-history"></i>Activity log</button></a>' : '') +
+      ' <button type="button" id="bOut"><i class="las la-sign-out-alt"></i>Sign out</button>' : '<button class="pri" type="button" id="bIn"><i class="las la-sign-in-alt"></i>Sign in</button>';
+    var o = document.getElementById('bOut'); if (o) o.onclick = function () { A.signOut(); location.reload(); };
+    var i = document.getElementById('bIn'); if (i) i.onclick = function () { A.signIn(function () { renderWho(); load(); }); };
+  }
+
+  function setTab(t) {
+    TAB = t; location.hash = t;
+    document.querySelectorAll('#tabs button').forEach(function (b) { b.classList.toggle('sel', b.dataset.t === t); });
+    document.getElementById('pNew').hidden = t !== 'new';
+    document.getElementById('pList').hidden = t === 'new';
+    render();
+  }
+
+  function render() {
+    var todo = DATA.filter(function (r) { return r.canApprove; });
+    var b = document.getElementById('bTodo'); b.hidden = !todo.length; b.textContent = todo.length;
+    if (TAB === 'new') return;
+    var q = document.getElementById('q').value.trim().toLowerCase();
+    var list = TAB === 'todo' ? todo : TAB === 'mine' ? DATA.filter(function (r) { return r.mine; }) : DATA;
+    list = list.filter(function (r) { return !q || (r.id + ' ' + r.type + ' ' + r.unit + ' ' + r.title + ' ' + r.details + ' ' + r.byName + ' ' + r.status).toLowerCase().indexOf(q) > -1; });
+    var el = document.getElementById('list');
+    if (!USER) { el.innerHTML = '<div class="msg">Sign in to see and approve requests.</div>'; return; }
+    if (!list.length) { el.innerHTML = '<div class="msg">' + (TAB === 'todo' ? 'Nothing waiting for your approval.' : 'No requests yet.') + '</div>'; return; }
+    el.innerHTML = list.map(function (r) {
+      var stepTxt = r.status === 'Pending' && r.steps > 1 ? ' · step ' + r.step + ' of ' + r.steps + (r.stepName ? ' (' + esc(r.stepName) + ')' : '') : '';
+      return '<div class="card req" data-id="' + esc(r.id) + '"><div><h3>' + esc(r.title) + '</h3><div class="sub">' + esc(r.id) + ' · ' + esc(r.type) + ' · <b>' + esc(r.unit) + '</b> · ' + esc(r.byName) + ' · ' + when(r.created) +
+        (r.qty !== '' && r.qty != null ? ' · Qty ' + esc(r.qty) : '') + (r.needBy ? ' · needed by ' + esc(r.needBy) : '') + '</div></div>' +
+        '<span class="pill ' + esc(r.status) + '">' + esc(r.status) + stepTxt + '</span>' +
+        (r.details ? '<div class="det">' + esc(r.details) + '</div>' : '') +
+        '<div class="hist">' + (r.history || []).map(function (h) { return '<div>' + esc(h.t) + ' - <b>' + esc(h.a) + '</b> by ' + esc(h.who) + (h.c ? ': ' + esc(h.c) : '') + '</div>'; }).join('') + '</div>' +
+        (r.canApprove ? '<div class="acts"><input placeholder="Comment (needed to reject)" maxlength="400"><button type="button" class="ok" data-a="approve"><i class="las la-check"></i>Approve</button><button type="button" class="no" data-a="reject"><i class="las la-times"></i>Reject</button><span class="flash"></span></div>' : '') +
+        (r.mine && r.status === 'Pending' ? '<div class="acts"><button type="button" data-a="cancel"><i class="las la-ban"></i>Cancel request</button><span class="flash"></span></div>' : '') +
+        '</div>';
+    }).join('');
+  }
+
+  function load() {
+    if (!A.user()) { USER = null; render(); return; }
+    document.getElementById('list').innerHTML = '<div class="msg">Loading…</div>';
+    A.call({ action: 'req_list' }, function (r) {
+      if (!r) { document.getElementById('list').innerHTML = '<div class="msg">No connection. Showing nothing until back online.</div>'; return; }
+      if (!r.ok) { document.getElementById('list').innerHTML = '<div class="msg">' + esc(r.error) + '</div>'; return; }
+      USER = r.user; DATA = r.requests || [];
+      document.getElementById('nType').innerHTML = (r.types || []).map(function (t) { return '<option>' + esc(t) + '</option>'; }).join('');
+      if (USER.unit) document.getElementById('nUnit').value = USER.unit;
+      render();
+    }, 90000);
+  }
+
+  document.getElementById('tabs').addEventListener('click', function (e) { var b = e.target.closest('button[data-t]'); if (!b) return; if (b.dataset.t === 'new' && !A.user()) return A.signIn(function () { renderWho(); load(); setTab('new'); }); setTab(b.dataset.t); });
+  document.getElementById('q').addEventListener('input', render);
+  document.getElementById('list').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-a]'); if (!b) return;
+    var card = b.closest('.req'), id = card.dataset.id, a = b.dataset.a, inp = card.querySelector('.acts input'), fl = b.parentNode.querySelector('.flash');
+    if (a === 'reject' && (!inp || inp.value.trim().length < 3)) { fl.className = 'flash r'; fl.textContent = 'Write the reason for rejecting.'; return; }
+    if (a === 'cancel' && !confirm('Cancel this request?')) return;
+    b.disabled = true; fl.className = 'flash'; fl.textContent = 'Saving…';
+    A.call({ action: 'req_act', id: id, decision: a, comment: inp ? inp.value.trim() : '' }, function (r) {
+      b.disabled = false;
+      if (!r) { fl.className = 'flash r'; fl.textContent = 'No connection - try again when online.'; return; }
+      if (!r.ok) { fl.className = 'flash r'; fl.textContent = r.error; return; }
+      fl.className = 'flash g'; fl.textContent = 'Done: ' + r.status; setTimeout(load, 600);
+    });
+  });
+  document.getElementById('fNew').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var fl = document.getElementById('nFlash');
+    var p = { action: 'req_new', type: document.getElementById('nType').value, unit: document.getElementById('nUnit').value, needBy: document.getElementById('nNeed').value,
+      title: document.getElementById('nTitle').value.trim(), details: document.getElementById('nDet').value.trim(), qty: document.getElementById('nQty').value };
+    if (p.title.length < 3) { fl.className = 'flash r'; fl.textContent = 'Write a short title.'; return; }
+    Q.add(p, p.type + ': ' + p.title, function () {
+      fl.className = 'flash g'; fl.textContent = navigator.onLine === false ? 'Saved on this device - it will be sent when you are back online.' : 'Sent for approval.';
+      document.getElementById('fNew').reset(); if (USER && USER.unit) document.getElementById('nUnit').value = USER.unit;
+      setTimeout(function () { load(); setTab('mine'); }, 2500);
+    });
+  });
+  Q.onSent = function () { load(); };
+  renderWho();
+  if (A.user()) load(); else A.signIn(function () { renderWho(); load(); });
+  setTab(['todo', 'mine', 'all', 'new'].indexOf(TAB) > -1 ? TAB : 'todo');
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Activity Log</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<style>
+  :root { --bg:#f4f7fb; --card:#fff; --line:#e2e8f0; --text:#0f172a; --muted:#5b6577; --brand:#2196f3; --head:#f1f5f9; }
+  html.tspl-dark { --bg:#0f172a; --card:#111c33; --line:#263552; --text:#e5e7eb; --muted:#9fb0c8; --head:#16223d; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
+  header { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px; padding:12px 20px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:3; }
+  h1 { font-size:18px; margin:0; } h1 span { color:var(--brand); }
+  .bar { display:flex; gap:8px; flex-wrap:wrap; }
+  input, select, button { font:inherit; font-size:13.5px; color:var(--text); background:var(--card); border:1px solid var(--line); border-radius:8px; padding:7px 10px; }
+  button { cursor:pointer; }
+  .wrap { max-width:1280px; margin:0 auto; padding:16px 20px 40px; }
+  .sum { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:10px 14px; font-size:12px; color:var(--muted); }
+  .tile b { display:block; font-size:22px; color:var(--text); }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; font-size:13px; }
+  th, td { padding:7px 10px; border-bottom:1px solid var(--line); text-align:left; vertical-align:top; }
+  th { background:var(--head); font-size:11.5px; text-transform:uppercase; color:var(--muted); position:sticky; top:58px; }
+  td.t { white-space:nowrap; color:var(--muted); }
+  .msg { padding:30px; text-align:center; color:var(--muted); }
+</style>
+<script>try { if (localStorage.getItem('tsplTheme') === 'dark') document.documentElement.classList.add('tspl-dark'); } catch (e) {}</script>
+</head>
+<body>
+<header>
+  <h1>TSPL | <span>Activity Log</span></h1>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Search person, page, request…" aria-label="Search">
+    <select id="fa" aria-label="Action"><option value="">All actions</option></select>
+    <select id="fd" aria-label="Period"><option value="1">Today</option><option value="7" selected>Last 7 days</option><option value="31">Last 31 days</option><option value="0">Everything loaded</option></select>
+    <button type="button" id="re">Refresh</button>
+    <button type="button" id="csv">Download CSV</button>
+  </div>
+</header>
+<div class="wrap">
+  <div class="sum" id="sum"></div>
+  <div id="list"><div class="msg">Loading…</div></div>
+</div>
+<script src="js/tspl-config.js"></script>
+<script src="js/tspl-app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = TSPL_APP, esc = A.esc, ROWS = [];
+  function when(v) { var d = new Date(v); return isNaN(d) ? esc(v) : d.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  function filtered() {
+    var q = document.getElementById('q').value.trim().toLowerCase(), fa = document.getElementById('fa').value, days = +document.getElementById('fd').value;
+    var since = days ? (function () { var d = new Date(); d.setHours(0, 0, 0, 0); return d.getTime() - (days - 1) * 86400000; })() : 0;
+    return ROWS.filter(function (r) { return (!fa || r.action === fa) && (!since || new Date(r.t).getTime() >= since) && (!q || (r.who + ' ' + r.login + ' ' + r.action + ' ' + r.detail + ' ' + r.page).toLowerCase().indexOf(q) > -1); });
+  }
+  function render() {
+    var list = filtered(), people = {}, acts = {};
+    list.forEach(function (r) { people[r.who || r.login] = 1; acts[r.action] = (acts[r.action] || 0) + 1; });
+    document.getElementById('sum').innerHTML = '<div class="tile">Entries<b>' + list.length + '</b></div><div class="tile">People / logins<b>' + Object.keys(people).filter(Boolean).length + '</b></div>' +
+      Object.keys(acts).sort(function (a, b) { return acts[b] - acts[a]; }).slice(0, 5).map(function (a) { return '<div class="tile">' + esc(a) + '<b>' + acts[a] + '</b></div>'; }).join('');
+    document.getElementById('list').innerHTML = list.length ? '<table><thead><tr><th>Time</th><th>Who</th><th>Login</th><th>Action</th><th>Detail</th><th>Page</th></tr></thead><tbody>' +
+      list.slice(0, 1000).map(function (r) { return '<tr><td class="t">' + when(r.t) + '</td><td>' + esc(r.who) + '</td><td>' + esc(r.login) + '</td><td>' + esc(r.action) + '</td><td>' + esc(r.detail) + '</td><td>' + esc(r.page) + '</td></tr>'; }).join('') + '</tbody></table>' : '<div class="msg">Nothing for this filter.</div>';
+  }
+  function load() {
+    document.getElementById('list').innerHTML = '<div class="msg">Loading…</div>';
+    A.call({ action: 'activity' }, function (r) {
+      if (!r) { document.getElementById('list').innerHTML = '<div class="msg">No connection.</div>'; return; }
+      if (!r.ok) { document.getElementById('list').innerHTML = '<div class="msg">' + esc(r.error) + '</div>'; return; }
+      ROWS = r.rows || [];
+      var acts = {}; ROWS.forEach(function (x) { acts[x.action] = 1; });
+      var fa = document.getElementById('fa'), cur = fa.value;
+      fa.innerHTML = '<option value="">All actions</option>' + Object.keys(acts).sort().map(function (a) { return '<option' + (a === cur ? ' selected' : '') + '>' + esc(a) + '</option>'; }).join('');
+      render();
+    }, 90000);
+  }
+  ['q', 'fa', 'fd'].forEach(function (id) { document.getElementById(id).addEventListener('input', render); });
+  document.getElementById('re').onclick = load;
+  document.getElementById('csv').onclick = function () {
+    var rows = [['Time', 'Who', 'Login', 'Action', 'Detail', 'Page']].concat(filtered().map(function (r) { return [new Date(r.t).toLocaleString('en-IN'), r.who, r.login, r.action, r.detail, r.page]; }));
+    var csv = rows.map(function (r) { return r.map(function (c) { c = String(c == null ? '' : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\r\n');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['﻿' + csv], { type: 'text/csv' })); a.download = 'TSPL_Activity.csv'; a.click();
+  };
+  A.need(load);
+})();
+</script>
+</body>
+</html>
