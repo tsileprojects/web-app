@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Program Status</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+<style>
+  :root { --bg:#f4f7fb; --card:#fff; --line:#e2e8f0; --text:#0f172a; --muted:#5b6577; --ok:#16a34a; --down:#dc2626; --res:#d97706; --off:#94a3b8; --brand:#2196f3; }
+  html.tspl-dark { --bg:#0f172a; --card:#111c33; --line:#263552; --text:#e5e7eb; --muted:#9fb0c8; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,'Segoe UI',Roboto,Arial,sans-serif; background:var(--bg); color:var(--text); }
+  header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 24px; background:var(--card); border-bottom:1px solid var(--line); position:sticky; top:0; z-index:2; }
+  h1 { font-size:18px; margin:0; } h1 span { color:var(--brand); }
+  .meta { font-size:13px; color:var(--muted); }
+  button { font:inherit; font-size:13px; border:1px solid var(--line); background:var(--card); color:var(--text); border-radius:8px; padding:6px 12px; cursor:pointer; }
+  button:hover { border-color:var(--brand); }
+  .wrap { max-width:1100px; margin:0 auto; padding:20px 24px 40px; }
+  .sum { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+  .tile { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; cursor:pointer; }
+  .tile.sel { outline:2px solid var(--brand); }
+  .tile b { font-size:28px; display:block; } .tile small { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.5px; }
+  .bar { display:flex; gap:10px; align-items:center; margin-bottom:12px; }
+  .bar input { flex:1; height:34px; border:1px solid var(--line); border-radius:8px; padding:0 12px; background:var(--card); color:var(--text); font:inherit; font-size:14px; }
+  table { width:100%; border-collapse:collapse; background:var(--card); border:1px solid var(--line); border-radius:12px; overflow:hidden; font-size:13.5px; }
+  th, td { text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; background:rgba(148,163,184,.08); }
+  tr:last-child td { border-bottom:0; }
+  .pill { display:inline-flex; align-items:center; gap:6px; font-weight:600; font-size:12.5px; white-space:nowrap; }
+  .pill::before { content:''; width:9px; height:9px; border-radius:50%; background:currentColor; }
+  .ok { color:var(--ok); } .down { color:var(--down); } .restricted { color:var(--res); } .off, .unknown { color:var(--off); }
+  .sub { color:var(--muted); font-size:12px; margin-top:3px; }
+  .help { display:inline-flex; width:18px; height:18px; border-radius:50%; border:1px solid var(--line); align-items:center; justify-content:center; font-size:11px; color:var(--muted); cursor:help; position:relative; margin-left:4px; }
+  .help:hover::after { content:attr(data-tip); position:absolute; top:24px; left:-8px; width:260px; background:#0f172a; color:#fff; padding:8px 10px; border-radius:6px; font-size:12px; line-height:1.4; text-transform:none; letter-spacing:0; font-weight:400; z-index:5; }
+  .msg { padding:40px; text-align:center; color:var(--muted); }
+  @media (max-width:700px) { .sum { grid-template-columns:repeat(2,1fr); } th:nth-child(3), td:nth-child(3) { display:none; } }
+</style>
+<script>try { if (localStorage.getItem('tsplTheme') === 'dark') document.documentElement.classList.add('tspl-dark'); } catch (e) {}</script>
+</head>
+<body>
+<header>
+  <div><h1>TSPL | <span>Program Status</span></h1><div class="meta" id="meta">Loading…</div></div>
+  <div><button id="btnRe" type="button"><i class="las la-sync"></i> Refresh</button></div>
+</header>
+<div class="wrap">
+  <div class="sum" id="sum"></div>
+  <div class="bar"><input id="q" type="search" placeholder="Search program or page…" aria-label="Search"></div>
+  <div id="list"><div class="msg">Loading program status…</div></div>
+</div>
+<script src="js/tspl-config.js"></script>
+<script>
+(function () {
+  'use strict';
+  var data = [], filt = '', loadedAt = null;
+  var LABEL = { ok: 'Working', down: 'Problem', restricted: 'Login needed', off: 'Not monitored', unknown: 'Not checked' };
+  var TIP = {
+    ok: 'The monitor opened this program and it loaded normally.',
+    down: 'The program gave an error or did not load. Open the bell on the HO dashboard to see the details and re-check.',
+    restricted: 'The program loads but asks for a Google sign-in or permission. This is normal for private programs.',
+    off: 'Monitoring is switched off for this program in the Apps sheet.'
+  };
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function when(v) { if (!v) return ''; var d = new Date(v); return isNaN(d) ? esc(v) : d.toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }); }
+  function jsonp(cb) {
+    var name = '__st' + Date.now(), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = window.TSPL_MONITOR_URL + '?action=apps&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) cb(null); };
+    setTimeout(function () { if (!done) { window[name] = function () {}; cb(null); } }, 60000);
+    document.body.appendChild(s);
+  }
+  function render() {
+    var c = { ok: 0, down: 0, restricted: 0, off: 0 };
+    data.forEach(function (a) { c[a.state in c ? a.state : 'off']++; });
+    document.getElementById('sum').innerHTML = ['ok', 'down', 'restricted', 'off'].map(function (k) {
+      return '<div class="tile' + (filt === k ? ' sel' : '') + '" data-k="' + k + '"><small class="' + k + '">' + LABEL[k] + '<span class="help" data-tip="' + esc(TIP[k]) + '">?</span></small><b>' + c[k] + '</b></div>';
+    }).join('');
+    var q = document.getElementById('q').value.trim().toLowerCase();
+    var rows = data.filter(function (a) {
+      if (filt && (a.state === filt) === false && !(filt === 'off' && a.state === 'unknown')) return false;
+      return !q || (a.program + ' ' + a.page).toLowerCase().indexOf(q) > -1;
+    }).sort(function (a, b) { var o = { down: 0, restricted: 1, unknown: 2, off: 3, ok: 4 }; return o[a.state] - o[b.state] || String(a.program).localeCompare(b.program); });
+    document.getElementById('list').innerHTML = rows.length ? '<table><thead><tr><th>Program</th><th>Status</th><th>Last checked</th></tr></thead><tbody>' + rows.map(function (a) {
+      return '<tr><td><b>' + esc(a.program) + '</b><div class="sub">' + esc(a.page) + '</div></td><td><span class="pill ' + a.state + '">' + LABEL[a.state] + '</span>' +
+        (a.issue || (a.state === 'down' && a.status) ? '<div class="sub">' + esc(a.issue || a.status) + '</div>' : '') + '</td><td>' + when(a.checked) + '</td></tr>';
+    }).join('') + '</tbody></table>' : '<div class="msg">No programs match.</div>';
+  }
+  function load() {
+    document.getElementById('meta').textContent = 'Loading…';
+    jsonp(function (r) {
+      if (!r || !r.ok) { document.getElementById('meta').textContent = 'Could not reach the error monitor. Try Refresh in a minute.'; if (!data.length) document.getElementById('list').innerHTML = '<div class="msg">Status not available right now.</div>'; return; }
+      data = r.apps || []; loadedAt = Date.now(); tick(); render();
+    });
+  }
+  function tick() { if (!loadedAt) return; var m = Math.floor((Date.now() - loadedAt) / 60000); document.getElementById('meta').textContent = data.length + ' programs · updated ' + (m < 1 ? 'just now' : m + ' min ago') + ' · the monitor checks every program on its schedule'; }
+  document.getElementById('sum').addEventListener('click', function (e) { var t = e.target.closest('.tile'); if (!t) return; filt = filt === t.dataset.k ? '' : t.dataset.k; render(); });
+  document.getElementById('q').addEventListener('input', render);
+  document.getElementById('btnRe').addEventListener('click', load);
+  setInterval(tick, 30000); setInterval(load, 5 * 60000);
+  load();
+})();
+</script>
+</body>
+</html>

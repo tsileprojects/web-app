@@ -350,6 +350,8 @@ function doGet(e) {
       case 'runnow': out = { ok: true, result: runChecks() }; break;
       case 'log': out = { ok: true, id: logReport_(p) }; break;
       case 'ask': out = askTspl_(p.q, p.h); break;
+      case 'kpis': out = kpis_(); break;
+      case 'apps': out = appsStatus_(); break;
       default: out = { ok: true, service: 'TSPL Error Monitor', time: new Date() };
     }
   } catch (err) { out = { ok: false, error: String(err && err.message || err) }; }
