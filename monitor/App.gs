@@ -124,3 +124,6 @@ function appCidDone_(p) {
   const cid = String(p.cid || '');
   return { ok: true, done: !!(cid && CacheService.getScriptCache().get('cidok_' + cid)) };
 }
+
+/** Run once from the editor (approves Drive access and creates the private photo folder). */
+function setupPhotos() { const f = appFolder_(); Logger.log('Photo folder ready: ' + f.getName() + ' (' + f.getUrl() + ')'); return 'ok'; }
