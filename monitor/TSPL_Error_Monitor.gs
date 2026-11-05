@@ -353,7 +353,8 @@ function doGet(e) {
       case 'kpis': out = kpis_(); break;
       case 'apps': out = appsStatus_(); break;
       case 'report': out = reportData_(); break;
-      case 'drill': out = drill_(p.unit, p.date); break;
+      case 'drill': out = drillLive_(p.unit, p.date); break;
+      case 'prod_day': out = prodDay_(p.date); break;
       case 'notes': out = notes_(); break;
       case 'addnote': out = axNoteSigned_(p); break;
       case 'auth_start': out = axStart_(p); break;
