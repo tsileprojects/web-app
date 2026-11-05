@@ -205,7 +205,7 @@
       }).join('');
       tot = '<tr class="tot"><td>' + esc(unit) + '</td><td>pcs per hour</td>' + hsum.map(function (v) { return '<td>' + hcell(v) + '</td>'; }).join('') + '<td>' + n0(tp) + '</td><td>' + n0(tt) + '</td><td>' + p1(tt ? tp / tt * 100 : null) + '</td></tr></tbody></table>';
     } else {
-      head = '<table><thead><tr><th>' + T('line') + '</th><th class="l">' + T('buyer') + '</th><th class="l">' + T('style') + '</th><th class="l">Status</th><th>' + T('output') + '</th><th>' + T('target') + '</th><th>' + (live ? 'Of day target' : T('achieved')) + '</th>' +
+      head = '<table><thead><tr><th>' + T('line') + '</th><th class="l">' + T('buyer') + '</th><th class="l">' + T('style') + '</th><th class="l">Colour</th><th class="l">Status</th><th>' + T('output') + '</th><th>' + T('target') + '</th><th>' + (live ? 'Of day target' : T('achieved')) + '</th>' +
         (live ? '<th>Hour</th><th>Pace</th><th>Per hour</th>' : '<th>' + T('efficiency') + '</th>') + '<th>' + T('mp') + '</th><th>' + T('ftr') + '</th><th>' + T('dft') + '</th><th class="l">' + T('remark') + '</th></tr></thead><tbody>';
       body = DR.lines.map(function (l) {
         var ach = l.tgt ? l.pro / l.tgt * 100 : null; tp += l.pro || 0; tt += l.tgt || 0; te += l.earn || 0; ta += l.avail || 0;
