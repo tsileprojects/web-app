@@ -3,6 +3,7 @@
  *  NEEDLE CONTROL TOWER + LINE DEFECTS (part of TSPL Error Monitor)
  *   ?action=needle_tower            every unit + CMD: stock, days of cover, 14-day use, suggestions
  *   ?action=line_defects&unit=&date= defect counts by line and defect name (end-line QC; TS2, FIPL, AP2)
+ *  Use = column J (Total Issues). Negative stock in the sheets is treated as 0.
  *  Read-only. Reads the Live_Stock tables and the QC summary tabs only - never the
  *  needle entry file, so it cannot slow the Needle Issue Form. Cached 15 / 5 minutes.
  * ==============================================================
@@ -28,7 +29,7 @@ function twMonth_(v) {   // '2026-12-01', 'Dec-2026', 'December 2026', '12/2026'
 }
 
 function needleTower_() {
-  const c = CacheService.getScriptCache(), hit = c.get('ndl_tower_v1');
+  const c = CacheService.getScriptCache(), hit = c.get('ndl_tower_v2');
   if (hit) return JSON.parse(hit);
   const tables = kpiSrc_('NDLSTK').tables, tz = Session.getScriptTimeZone();
   const units = {}, trend = {}, errors = [];
@@ -39,20 +40,20 @@ function needleTower_() {
     if (!last) { errors.push(u + ': no stock date'); units[u] = { unit: u, date: null, types: [] }; return; }
     const from = new Date(last.getTime() - (TW_DAYS - 1) * 864e5);
     // per type: latest close, total issued to line in the window
-    const r = appCsv_(t, "select D, sum(G), max(B) where B >= date '" + kpiFmt_(from) + "' and B <= date '" + kpiFmt_(last) + "' group by D");
-    const now = appCsv_(t, "select D, sum(L), sum(G) where B = date '" + kpiFmt_(last) + "' group by D");
+    const r = appCsv_(t, "select D, sum(J), max(B) where B >= date '" + kpiFmt_(from) + "' and B <= date '" + kpiFmt_(last) + "' group by D");
+    const now = appCsv_(t, "select D, sum(L), sum(J) where B = date '" + kpiFmt_(last) + "' group by D");
     const per = {};
     (r.rows || []).forEach(x => { const k = String(x[0] || '').trim(); if (k) per[k] = { type: k, used14: kpiNum_(x[1]) }; });
     (now.rows || []).forEach(x => { const k = String(x[0] || '').trim(); if (!k) return; per[k] = per[k] || { type: k, used14: 0 }; per[k].stock = kpiNum_(x[1]); per[k].today = kpiNum_(x[2]); });
     const types = Object.keys(per).map(k => {
       const p = per[k]; p.stock = p.stock || 0; p.today = p.today || 0;
       p.avg = Math.round(p.used14 / TW_DAYS * 10) / 10;
-      p.cover = p.avg > 0 ? Math.round(p.stock / p.avg * 10) / 10 : null;
+      p.cover = p.avg > 0 ? Math.round(Math.max(p.stock, 0) / p.avg * 10) / 10 : null;
       return p;
     });
-    const d = appCsv_(t, "select B, sum(G) where B >= date '" + kpiFmt_(from) + "' group by B order by B");
+    const d = appCsv_(t, "select B, sum(J) where B >= date '" + kpiFmt_(from) + "' group by B order by B");
     (d.rows || []).forEach(x => { const dt = kpiDate_(x[0]); if (!dt) return; const k = kpiFmt_(dt); trend[k] = (trend[k] || 0) + (u === 'CMD' ? 0 : kpiNum_(x[1])); });
-    const stock = types.reduce((a, p) => a + p.stock, 0), avg = types.reduce((a, p) => a + p.avg, 0);
+    const stock = types.reduce((a, p) => a + Math.max(p.stock, 0), 0), avg = types.reduce((a, p) => a + p.avg, 0);
     units[u] = { unit: u, date: kpiFmt_(last), stock: stock, avg: Math.round(avg * 10) / 10,
       cover: avg > 0 ? Math.round(stock / avg * 10) / 10 : null, today: types.reduce((a, p) => a + p.today, 0), types: types };
   });
@@ -76,7 +77,7 @@ function needleTower_() {
     (units[u] ? units[u].types : []).forEach(p => {
       if (p.cover === null || p.cover >= TW_LOW) return;
       const key = p.type.toUpperCase();
-      let qty = twRound10_(Math.max(p.avg * TW_COVER_TARGET - p.stock, 10));
+      let qty = twRound10_(Math.max(p.avg * TW_COVER_TARGET - Math.max(p.stock, 0), 10));
       const s = { unit: u, type: p.type, stock: p.stock, avg: p.avg, cover: p.cover, need: need[u + '|' + key] || null, qty: qty };
       let donor = null;
       KPI_UNITS.forEach(v => {
@@ -102,7 +103,7 @@ function needleTower_() {
         low: (x.types || []).filter(p => p.cover !== null && p.cover < TW_LOW).length }; }),
     suggestions: sugg.slice(0, 40), top: top.slice(0, 10),
     trend: Object.keys(trend).sort().map(k => ({ date: k, used: trend[k] })), rules: { days: TW_DAYS, low: TW_LOW, surplus: TW_SURPLUS, target: TW_COVER_TARGET }, errors: errors };
-  try { c.put('ndl_tower_v1', JSON.stringify(out), 900); } catch (e) {}
+  try { c.put('ndl_tower_v2', JSON.stringify(out), 900); } catch (e) {}
   return out;
 }
 
