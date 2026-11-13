@@ -63,7 +63,10 @@
   function dmy(s) { if (!s) return '-'; var p = s.split('-'); return p[2] + '/' + p[1]; }
   function ago(s) { if (!s) return 99; return Math.round((new Date() - new Date(s + 'T00:00:00')) / 864e5); }
   function load() {
+    var m = A.mem('tower'); if (m && m.ok && !data) { data = m; try { render(); } catch (e) {} }
     A.jsonp({ action: 'needle_tower' }, function (r) {
+      if ((!r || !r.ok) && data) return;
+      if (r && r.ok) A.mem('tower', r);
       if (!r || !r.ok) { $('sugg').innerHTML = '<div class="empty">Could not load needle data. ' + esc(r && r.error || 'Please refresh.') + '</div>'; return; }
       data = r; render();
     }, 90000);

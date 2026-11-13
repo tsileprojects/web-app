@@ -28,9 +28,10 @@ function twMonth_(v) {   // '2026-12-01', 'Dec-2026', 'December 2026', '12/2026'
   const t2 = new Date(s); return isNaN(t2) ? null : t2;
 }
 
-function needleTower_() {
+function needleTower_(force) {
   const c = CacheService.getScriptCache(), hit = c.get('ndl_tower_v2');
-  if (hit) return JSON.parse(hit);
+  if (hit && !force) return JSON.parse(hit);
+  if (!force) { const old = c.get('ndl_tower_stale'); if (old) { const o = JSON.parse(old); if (Date.now() - (o._at || 0) < 2700000) return o; } }   // speed: last copy if under 45 min old
   const tables = kpiSrc_('NDLSTK').tables, tz = Session.getScriptTimeZone();
   const units = {}, trend = {}, errors = [];
   Object.keys(tables).forEach(u => {
@@ -103,7 +104,7 @@ function needleTower_() {
         low: (x.types || []).filter(p => p.cover !== null && p.cover < TW_LOW).length }; }),
     suggestions: sugg.slice(0, 40), top: top.slice(0, 10),
     trend: Object.keys(trend).sort().map(k => ({ date: k, used: trend[k] })), rules: { days: TW_DAYS, low: TW_LOW, surplus: TW_SURPLUS, target: TW_COVER_TARGET }, errors: errors };
-  try { c.put('ndl_tower_v2', JSON.stringify(out), 900); } catch (e) {}
+  try { c.put('ndl_tower_v2', JSON.stringify(out), 900); c.put('ndl_tower_stale', JSON.stringify(Object.assign({ _at: Date.now() }, out)), 21600); } catch (e) {}
   return out;
 }
 

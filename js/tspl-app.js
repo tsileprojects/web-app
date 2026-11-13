@@ -20,6 +20,8 @@
 
   var A = {
     esc: esc, jsonp: jsonp, login: login,
+    /** speed: remember the last good answer on this device so pages can show it instantly */
+    mem: function (k, v) { k = 'tsplMem_' + k; if (v === undefined) { try { return JSON.parse(ls(k) || 'null'); } catch (e) { return null; } } try { ls(k, JSON.stringify(v)); } catch (e) {} },
     token: function () { return ls(KEY_T); },
     user: function () { try { return JSON.parse(ls(KEY_U) || 'null'); } catch (e) { return null; } },
     /** call the monitor with the sign-in key; cb(result or null when offline) */

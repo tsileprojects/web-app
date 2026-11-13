@@ -39,6 +39,7 @@ function refreshKpis() {
     c.put('report_v2', JSON.stringify({ ok: true, k: k, p: p }), 1800);
     c.put('report_stale2', JSON.stringify({ ok: true, k: k, p: p }), 21600);
   } catch (e) {}
+  try { warmFeeds(); } catch (e) {}   // speed: rebuild needle tower + line data in the background
   return 'refreshed';
 }
 

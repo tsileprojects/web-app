@@ -100,12 +100,14 @@
   function rotate() { clearTimeout(rotT); rotT = setTimeout(function () { if (!fixed) { cur = UNITS[(UNITS.indexOf(cur) + 1) % UNITS.length]; markUnit(); load(); } rotate(); }, ROT); }
 
   function load() {
-    var u = cur, day = today(), got = {}, need = 3;
-    function done() { if (--need === 0 && u === cur) render(u, got); }
+    var u = cur, day = today(), got = {}, need = 3, m = A.mem('floor_' + u + day);
+    if (m && m.drill && m.drill.ok) { try { render(u, m); } catch (e) {} }
+    if (!tower) { var mt = A.mem('tower'); if (mt && mt.ok) tower = mt; }
+    function done() { if (--need === 0 && u === cur) { if (got.drill && got.drill.ok) A.mem('floor_' + u + day, got); else if (m && m.drill && m.drill.ok) return; render(u, got); } }
     A.jsonp({ action: 'drill', unit: u, date: day }, function (r) { got.drill = r; done(); }, 45000);
     A.jsonp({ action: 'line_defects', unit: u, date: day }, function (r) { got.def = r; done(); }, 45000);
     A.jsonp({ action: 'dt_list', unit: u, date: day }, function (r) { got.dt = r; done(); }, 45000);
-    if (Date.now() - towerAt > 10 * 60000) A.jsonp({ action: 'needle_tower' }, function (r) { if (r && r.ok) { tower = r; towerAt = Date.now(); } }, 60000);
+    if (Date.now() - towerAt > 10 * 60000) A.jsonp({ action: 'needle_tower' }, function (r) { if (r && r.ok) { tower = r; towerAt = Date.now(); A.mem('tower', r); } }, 60000);
   }
 
   function render(u, g) {
