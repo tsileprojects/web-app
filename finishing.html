@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Finishing live</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/pro.css">
+<style>
+  .pro-main{max-width:1180px}
+  form{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+  form .w2{grid-column:span 2} form .full{grid-column:1/-1}
+  form input,form select{height:46px;border-radius:12px;border:1px solid #d5dce8;padding:0 12px;font:500 15px Inter,Arial;color:var(--text);background:#fff;min-width:0}
+  form input[type=number]{font-weight:700;font-size:17px}
+  .grp{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--blue-d);text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
+  .flash{font-size:14px;font-weight:600}
+  .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+  .hrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px}
+  .hrs div{background:#f5f7fb;border-radius:10px;padding:8px;text-align:center} .hrs b{display:block;font-size:18px} .hrs small{color:var(--muted);font-size:11px}
+  .hrs div.on{background:#e8f0fe}
+  .row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #f0f3f8;font-size:13.5px}
+  @media (max-width:760px){form{grid-template-columns:1fr 1fr}form .w2{grid-column:1/-1}}
+</style>
+</head>
+<body class="pro">
+<header class="pro-top">
+  <div class="brand">TSPL<span> Finishing</span></div>
+  <div class="sp">
+    <select class="pro-sel" id="selUnit" aria-label="Unit"><option>AP2</option><option>FIPL</option><option>TS2</option><option>TS4</option><option>TS9</option></select>
+    <span class="small" id="who" style="color:#a9b8d0"></span>
+  </div>
+</header>
+<main class="pro-main">
+  <section class="pro-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Finishing today - <span id="kUnit"></span></h2><span class="small muted" id="kAt"></span></div>
+    <div class="kp" id="kpis" style="margin-top:12px"><div class="skel" style="height:70px"></div></div>
+    <div class="hrs" id="hrs" style="margin-top:14px"></div>
+  </section>
+
+  <section class="pro-card">
+    <h2>Enter finishing for one hour</h2>
+    <form id="f" autocomplete="off">
+      <label>Hour<select id="fHour"></select></label>
+      <label>Table / line (optional)<input id="fTable" maxlength="20" placeholder="e.g. Table 3"></label>
+      <label class="w2">Style<input id="fStyle" list="styles" required maxlength="60" placeholder="Pick from today's sewing or type"></label>
+      <datalist id="styles"></datalist>
+      <label class="w2">Buyer<input id="fBuyer" maxlength="40"></label>
+      <label class="w2">Colour<input id="fColour" maxlength="40"></label>
+      <div class="grp">Quantities done in this hour (pcs)</div>
+      <label>Ironed<input id="q_iron" type="number" min="0" inputmode="numeric"></label>
+      <label>Checked<input id="q_chk" type="number" min="0" inputmode="numeric"></label>
+      <label>Passed<input id="q_pass" type="number" min="0" inputmode="numeric"></label>
+      <label>Alter<input id="q_alt" type="number" min="0" inputmode="numeric"></label>
+      <label>Reject<input id="q_rej" type="number" min="0" inputmode="numeric"></label>
+      <label>Packed<input id="q_pack" type="number" min="0" inputmode="numeric"></label>
+      <label>Cartons<input id="q_ctn" type="number" min="0" inputmode="numeric"></label>
+      <label>Note (optional)<input id="fNote" maxlength="200"></label>
+      <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="pro-btn primary" type="submit" id="btnSave" style="height:48px;padding:0 22px">Save hour</button><span class="flash" id="flash"></span></div>
+    </form>
+  </section>
+
+  <section class="pro-card">
+    <h2>By style and colour</h2>
+    <div class="tbl-wrap"><table><thead><tr><th>Style</th><th>Colour</th><th class="r">Ironed</th><th class="r">Checked</th><th class="r">Pass %</th><th class="r">Alter</th><th class="r">Reject</th><th class="r">Packed</th><th class="r">Cartons</th></tr></thead><tbody id="styleT"></tbody></table></div>
+  </section>
+
+  <section class="pro-card">
+    <h2>Latest entries</h2>
+    <div id="list"><div class="skel" style="height:50px"></div></div>
+  </section>
+</main>
+<script src="js/tspl-config.js"></script>
+<script src="js/tspl-app.js"></script>
+<script src="js/home-btn.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.TSPL_APP, esc = A.esc, P = new URLSearchParams(location.search), STY = {}, sewn = null;
+  var Q = ['iron', 'chk', 'pass', 'alt', 'rej', 'pack', 'ctn'];
+  function $(id) { return document.getElementById(id); }
+  function fmt(n) { return n == null ? '-' : Math.round(n).toLocaleString('en-IN'); }
+  function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  var u = A.user();
+  $('who').textContent = u ? (u.name || u.email) : 'Sign in needed to save';
+  var unit = (P.get('unit') || (u && u.unit) || 'TS2').toUpperCase(); if (!/^(AP2|FIPL|TS2|TS4|TS9)$/.test(unit)) unit = 'TS2';
+  $('selUnit').value = unit;
+  var nowH = Math.min(9, Math.max(1, new Date().getHours() - 8));
+  $('fHour').innerHTML = [1,2,3,4,5,6,7,8,9,10,11,12].map(function (h) { return '<option value="' + h + '"' + (h === nowH ? ' selected' : '') + '>Hour ' + h + (h > 9 ? ' (OT)' : '') + '</option>'; }).join('');
+  $('selUnit').onchange = function () { unit = this.value; history.replaceState(null, '', '?unit=' + unit); sewn = null; window.__fin = null; loadSew(); load(); };
+
+  /* today's sewing styles -> pick list, and sewn total for the gap */
+  function loadSew() {
+    A.jsonp({ action: 'drill', unit: unit, date: today() }, function (r) {
+      if (!r || !r.ok) return;
+      STY = {}; sewn = 0;
+      (r.lines || []).forEach(function (l) { sewn += l.pro || 0; if (l.style) STY[String(l.style).replace(/^#\s*/, '').trim() + (l.color ? ' · ' + l.color : '')] = { style: String(l.style).replace(/^#\s*/, '').trim(), buyer: l.buyer || '', colour: l.color || '' }; });
+      $('styles').innerHTML = Object.keys(STY).map(function (k) { return '<option value="' + esc(k) + '">'; }).join('');
+      if (window.__fin) render(window.__fin);
+    }, 60000);
+  }
+  $('fStyle').addEventListener('change', function () { var s = STY[this.value]; if (s) { this.value = s.style; $('fBuyer').value = s.buyer; $('fColour').value = s.colour; } });
+
+  function flash(t, ok) { $('flash').textContent = t; $('flash').style.color = ok ? 'var(--good)' : 'var(--bad)'; }
+  $('f').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var p = { action: 'fin_add', unit: unit, hour: $('fHour').value, table: $('fTable').value.trim(), buyer: $('fBuyer').value.trim(), style: $('fStyle').value.trim(), colour: $('fColour').value.trim(), note: $('fNote').value.trim() };
+    var any = false; Q.forEach(function (k) { p[k] = $('q_' + k).value; if (+p[k] > 0) any = true; });
+    if (!any) return flash('Enter at least one quantity.', false);
+    if (+p.chk && (+p.pass || 0) + (+p.alt || 0) + (+p.rej || 0) > +p.chk) return flash('Passed + alter + reject cannot be more than checked.', false);
+    $('btnSave').disabled = true; flash('Saving…', true);
+    A.call(p, function (r) {
+      $('btnSave').disabled = false;
+      if (!r) return flash('No connection - please try again.', false);
+      if (!r.ok) return flash(r.error || 'Could not save', false);
+      flash('Saved. It now shows on the finishing and floor screens.', true);
+      Q.forEach(function (k) { $('q_' + k).value = ''; }); $('fNote').value = '';
+      load();
+    });
+  });
+
+  function load() {
+    $('kUnit').textContent = unit;
+    var m = A.mem('fin_' + unit + today()); if (m && m.ok && !window.__fin) render(m);
+    A.jsonp({ action: 'fin_list', unit: unit, date: today() }, function (r) {
+      if (!r || !r.ok) { if (!window.__fin) $('kpis').innerHTML = '<div class="empty">Could not load finishing data. ' + esc(r && r.error || '') + '</div>'; return; }
+      A.mem('fin_' + unit + today(), r); render(r);
+    }, 60000);
+  }
+  function render(r) {
+    window.__fin = r;
+    var t = r.total, gap = sewn == null ? null : sewn - t.pack;
+    var K = [
+      { l: 'Sewn today', v: fmt(sewn), n: 'from the hourly DPR' },
+      { l: 'Ironed', v: fmt(t.iron), n: '' },
+      { l: 'Checked', v: fmt(t.chk), n: fmt(t.alt) + ' alter · ' + fmt(t.rej) + ' reject' },
+      { l: 'Pass %', v: t.passPct == null ? '-' : t.passPct + '%', n: fmt(t.pass) + ' passed', c: t.passPct == null ? '' : t.passPct >= 95 ? 'good' : t.passPct >= 90 ? 'warn' : 'bad' },
+      { l: 'Packed', v: fmt(t.pack), n: fmt(t.ctn) + ' cartons' },
+      { l: 'Sewn not yet packed', v: fmt(gap), n: 'today only', c: gap == null ? '' : gap > 500 ? 'warn' : 'good' }
+    ];
+    $('kpis').innerHTML = K.map(function (k) { return '<div class="pro-card kpi" style="box-shadow:0 0 0 1px var(--line);padding:12px 14px"><div class="l">' + esc(k.l) + '</div><div class="v"' + (k.c ? ' style="color:var(--' + k.c + ')"' : '') + '>' + esc(k.v) + '</div><div class="n muted">' + esc(k.n) + '</div></div>'; }).join('');
+    $('hrs').innerHTML = r.byHour.map(function (h) { return '<div class="' + (h.hour === r.lastHour ? 'on' : '') + '"><small>H' + h.hour + '</small><b>' + fmt(h.pack) + '</b><small>packed · ' + fmt(h.chk) + ' chk</small></div>'; }).join('');
+    $('kAt').textContent = r.entries ? r.entries + ' entries today' : 'No entries yet today';
+    $('styleT').innerHTML = r.styles.length ? r.styles.map(function (s) {
+      return '<tr><td><b>' + esc(s.style) + '</b><div class="small muted">' + esc(s.buyer || '') + '</div></td><td>' + esc(s.colour || '') + '</td><td class="r">' + fmt(s.iron) + '</td><td class="r">' + fmt(s.chk) + '</td><td class="r">' + (s.passPct == null ? '-' : s.passPct + '%') + '</td><td class="r">' + fmt(s.alt) + '</td><td class="r">' + fmt(s.rej) + '</td><td class="r"><b>' + fmt(s.pack) + '</b></td><td class="r">' + fmt(s.ctn) + '</td></tr>';
+    }).join('') : '<tr><td colspan="9" class="empty">No finishing entered yet today.</td></tr>';
+    var me = u ? (u.name || u.email) : '';
+    $('list').innerHTML = r.list.length ? r.list.map(function (x) {
+      var parts = []; Q.forEach(function (k) { if (+x[k]) parts.push({ iron: 'ironed', chk: 'checked', pass: 'passed', alt: 'alter', rej: 'reject', pack: 'packed', ctn: 'cartons' }[k] + ' ' + x[k]); });
+      return '<div class="row"><div><b>H' + esc(x.hour) + ' · ' + esc(x.style) + '</b>' + (x.colour ? ' · ' + esc(x.colour) : '') + (x.table ? ' · ' + esc(x.table) : '') +
+        '<div class="small muted">' + esc(parts.join(', ')) + (x.note ? ' · ' + esc(x.note) : '') + ' · ' + esc(x.at) + ' by ' + esc(x.by) + '</div></div>' +
+        (me && x.by === me ? '<button class="pro-btn" type="button" data-void="' + esc(x.id) + '">Mistake - remove</button>' : '') + '</div>';
+    }).join('') : '<div class="empty">No entries yet today.</div>';
+  }
+  $('list').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-void]'); if (!b) return;
+    if (!window.confirm('Remove this entry from today\'s totals? It stays in the sheet marked as a mistake.')) return;
+    b.disabled = true; b.textContent = 'Removing…';
+    A.call({ action: 'fin_void', id: b.dataset.void }, function (r) { if (!r || !r.ok) { b.disabled = false; b.textContent = (r && r.error) || 'Try again'; return; } load(); });
+  });
+  loadSew(); load(); setInterval(load, 60000); setInterval(loadSew, 300000);
+})();
+</script>
+</body>
+</html>

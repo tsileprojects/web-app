@@ -85,6 +85,7 @@
       <a class="btn" href="line.html" id="lnkLine">&#128200; Line detail</a>
       <a class="btn" href="needle.html">&#128204; Needle tower</a>
       <a class="btn" href="downtime.html" id="lnkDt">&#9201; Log downtime</a>
+      <a class="btn" href="finishing.html" id="lnkFin">&#128085; Finishing</a>
       <a class="btn" href="masters.html">&#128197; Ship dates &amp; skills</a>
       <a class="btn" href="requests.html">&#10004; Approvals</a>
       <a class="btn" href="home_classic.html">Classic home</a>
@@ -140,7 +141,7 @@
   var PPAGE = '';
   try { PPAGE = (window.parent.location.pathname.split('/').pop() || '').replace('.html', ''); } catch (e) {}
   var ONLY = ((PPAGE.match(/^unit_(ap2|fipl|ts2|ts4|ts9)$/) || [])[1] || new URLSearchParams(location.search).get('unit') || '').toUpperCase();
-  if (ONLY) { ['lnkReport', 'lnkTv', 'unitsMore', 'lnkFloor', 'lnkLine', 'lnkDt'].forEach(function (id) { var a = document.getElementById(id); a.href += '?unit=' + ONLY; }); }
+  if (ONLY) { ['lnkReport', 'lnkTv', 'unitsMore', 'lnkFloor', 'lnkLine', 'lnkDt', 'lnkFin'].forEach(function (id) { var a = document.getElementById(id); a.href += '?unit=' + ONLY; }); }
   var DATA = null, NOTES = [], loadedAt = null, TODAY = null;
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }

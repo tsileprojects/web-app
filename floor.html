@@ -43,6 +43,8 @@
   footer b{color:#8fb4ff}
   .msg{flex:1;display:flex;align-items:center;justify-content:center;color:#8a9bb5;font-size:2vh;text-align:center}
   .none{color:#8a9bb5;font-size:1.5vh}
+  .fin{display:grid;grid-template-columns:1fr 1fr;gap:.8vh .8vw} .fin div{background:#0a1220;border:1px solid #1d2b44;border-radius:1vh;padding:.8vh .7vw}
+  .fin small{display:block;font-size:1.15vh;color:#8a9bb5;text-transform:uppercase;letter-spacing:.5px} .fin b{font-size:2.6vh;font-weight:800;letter-spacing:-.5px}
 </style>
 </head>
 <body>
@@ -67,6 +69,7 @@
     </section>
     <aside>
       <section class="panel andon"><h2>Andon - needs action now</h2><div id="andon" style="display:flex;flex-direction:column;gap:.9vh"></div></section>
+      <section class="panel"><h2>Finishing today</h2><div class="fin" id="fin"><div class="none">Loading…</div></div></section>
       <section class="panel" style="flex:1"><h2 id="dfTtl">Top defects today</h2><div id="defects" style="display:flex;flex-direction:column;gap:1.1vh"></div></section>
     </aside>
   </div>
@@ -100,13 +103,14 @@
   function rotate() { clearTimeout(rotT); rotT = setTimeout(function () { if (!fixed) { cur = UNITS[(UNITS.indexOf(cur) + 1) % UNITS.length]; markUnit(); load(); } rotate(); }, ROT); }
 
   function load() {
-    var u = cur, day = today(), got = {}, need = 3, m = A.mem('floor_' + u + day);
+    var u = cur, day = today(), got = {}, need = 4, m = A.mem('floor_' + u + day);
     if (m && m.drill && m.drill.ok) { try { render(u, m); } catch (e) {} }
     if (!tower) { var mt = A.mem('tower'); if (mt && mt.ok) tower = mt; }
     function done() { if (--need === 0 && u === cur) { if (got.drill && got.drill.ok) A.mem('floor_' + u + day, got); else if (m && m.drill && m.drill.ok) return; render(u, got); } }
     A.jsonp({ action: 'drill', unit: u, date: day }, function (r) { got.drill = r; done(); }, 45000);
     A.jsonp({ action: 'line_defects', unit: u, date: day }, function (r) { got.def = r; done(); }, 45000);
     A.jsonp({ action: 'dt_list', unit: u, date: day }, function (r) { got.dt = r; done(); }, 45000);
+    A.jsonp({ action: 'fin_list', unit: u, date: day }, function (r) { got.fin = r; done(); }, 45000);
     if (Date.now() - towerAt > 10 * 60000) A.jsonp({ action: 'needle_tower' }, function (r) { if (r && r.ok) { tower = r; towerAt = Date.now(); A.mem('tower', r); } }, 60000);
   }
 
@@ -159,6 +163,12 @@
     $('andon').innerHTML = al.length ? al.slice(0, 5).map(function (a) { return '<div class="al"><b style="background:' + a.bg + '">' + a.tag + '</b><div><div class="t1">' + esc(a.t1) + '</div><div class="t2">' + esc(a.t2) + '</div></div></div>'; }).join('')
       : '<div class="none">Nothing needs action right now.</div>';
 
+    var fn = g.fin;
+    if (fn && fn.ok && fn.entries) {
+      var ft = fn.total, gap = pro - ft.pack;
+      $('fin').innerHTML = '<div><small>Packed</small><b>' + fmt(ft.pack) + '</b></div><div><small>Pass % (' + fmt(ft.chk) + ' chk)</small><b style="color:' + (ft.passPct == null ? '#fff' : ft.passPct >= 95 ? '#7ee2b8' : '#ffd27a') + '">' + (ft.passPct == null ? '-' : ft.passPct + '%') + '</b></div>' +
+        '<div><small>Ironed</small><b>' + fmt(ft.iron) + '</b></div><div><small>Sewn, not packed</small><b style="color:' + (gap > 500 ? '#ffd27a' : '#7ee2b8') + '">' + fmt(gap) + '</b></div>';
+    } else $('fin').innerHTML = '<div class="none" style="grid-column:1/-1;background:none;border:0;padding:0">' + (fn && fn.ok ? 'No finishing entered yet today.' : 'Finishing data not available.') + '</div>';
     var df = g.def;
     if (df && df.ok && df.available && (df.total || []).length) {
       var mx = df.total[0].n;
