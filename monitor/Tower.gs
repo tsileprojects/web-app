@@ -116,14 +116,12 @@ function lineDefects_(unit, date) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { ok: false, error: 'Date must be YYYY-MM-DD' };
   const c = CacheService.getScriptCache(), key = 'ldef_' + unit + '_' + date, hit = c.get(key);
   if (hit) return JSON.parse(hit);
-  const r = appCsv_(t, 'select *');
+  // A is a real date column: filter in the query (the CSV shows it as dd-MM-yyyy)
+  const r = appCsv_(t, "select * where A = date '" + date + "' and B = '" + unit + "'");
   if (r.error) return { ok: false, error: r.error };
-  const head = r.headers.map(h => String(h).trim()), want = Utilities.formatDate(new Date(date + 'T00:00:00'), Session.getScriptTimeZone(), 'dd-MMM-yyyy');
+  const head = r.headers.map(h => String(h).trim());
   const lines = {}, total = {};
   r.rows.forEach(x => {
-    const d = kpiDate_(x[0]); const ds = d ? kpiFmt_(d) : String(x[0]).trim();
-    if (ds !== date && String(x[0]).trim() !== want) return;
-    if (String(x[1]).trim().toUpperCase() !== unit) return;
     const ln = String(x[2]).trim(); const L = lines[ln] = lines[ln] || { line: ln, total: 0, defects: {} };
     for (let i = 7; i < head.length; i++) {
       const n = kpiNum_(x[i]); if (!n || !head[i]) continue;
