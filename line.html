@@ -75,7 +75,19 @@
   $('selLine').onchange = function () { st.line = this.value; go(true); };
   $('selDate').onchange = function () { st.date = this.value || today(); go(); };
   $('btnPrint').onclick = function () { window.print(); };
-  var cache = {};
+  var cache = {}, SHIPS = null;
+  A.jsonp({ action: 'ship_list' }, function (r) { SHIPS = (r && r.ok) ? r.list : []; if (cache[st.unit + st.date]) render(cache[st.unit + st.date]); });
+  function sk(x) { return String(x || '').replace(/^#\s*/, '').trim().toUpperCase(); }
+  function shipFor(style, colour) {
+    if (!SHIPS) return null;
+    var m = SHIPS.filter(function (s) { return sk(s.style) === sk(style) && (sk(s.colour) === sk(colour) || !s.colour); });
+    m.sort(function (a, b) { return (b.colour ? 1 : 0) - (a.colour ? 1 : 0); });
+    return m[0] || null;
+  }
+  function workDays(to) {   // working days from tomorrow to the ship date, Sundays off
+    var d = new Date(); d.setHours(0, 0, 0, 0); var end = new Date(to + 'T00:00:00'), n = 0;
+    while (d < end) { d.setDate(d.getDate() + 1); if (d.getDay() !== 0) n++; } return n;
+  }
   function go(sameData) {
     history.replaceState(null, '', '?unit=' + st.unit + (st.line ? '&line=' + encodeURIComponent(st.line) : '') + (st.date !== today() ? '&date=' + st.date : ''));
     $('cUnit').textContent = st.unit; $('lnkDt').href = 'downtime.html?unit=' + st.unit + (st.line ? '&line=' + encodeURIComponent(st.line) : '');
@@ -129,18 +141,34 @@
       $('pareto').innerHTML = ql.defects.slice(0, 8).map(function (x) { return '<div class="par"><span>' + esc(x.name) + '</span><b style="text-align:right">' + x.n + '</b><div class="bar"><i style="width:' + Math.round(x.n / m * 100) + '%"></i></div></div>'; }).join('') +
         '<p class="muted small" style="margin:6px 0 0">Top 2 defects are ' + Math.round(top2 / ql.total * 100) + '% of all ' + ql.total + ' defects on this line.</p>';
     } else $('pareto').innerHTML = '<div class="empty">' + esc(q && q.available === false ? q.note : 'No defects entered for this line.') + '</div>';
+    var pace = function (c) { return d.live && h ? c.pro / h * 9 : c.pro; };
+    var risk = function (x) {
+      var sh = shipFor(x.p.style, x.c.color); if (!sh) return null;
+      var order = x.c.order || sh.qty || 0, sewn = x.c.cumUnit || x.c.dprCum || 0, bal = Math.max(0, order - sewn), wd = workDays(sh.ship), pd = pace(x.c);
+      var needDay = wd > 0 ? Math.ceil(bal / wd) : bal, daysNeeded = pd > 0 ? Math.ceil(bal / pd) : null;
+      return { ship: sh.ship, bal: bal, wd: wd, needDay: needDay, pd: Math.round(pd), late: bal > 0 && (wd <= 0 || daysNeeded === null || daysNeeded > wd) };
+    };
+    var shipCell = function (x) {
+      var r = risk(x); if (!r) return '<a class="small" href="masters.html">add date</a>';
+      var p = r.ship.split('-'); var dd = p[2] + '/' + p[1];
+      return r.bal === 0 ? '<span class="chip good">' + dd + ' · done</span>' : '<span class="chip ' + (r.late ? 'bad' : 'good') + '" title="Needs ' + r.needDay + ' pcs/day for ' + r.wd + ' working days; today\'s pace ' + r.pd + '">' + dd + ' · ' + (r.late ? 'at risk' : 'on track') + '</span>';
+    };
     var cols = [];
     (d.products || []).forEach(function (p) { (p.colors || []).forEach(function (c) { if ((c.lines || []).map(String).indexOf(st.line) > -1) cols.push({ p: p, c: c }); }); });
-    $('colours').innerHTML = cols.length ? '<table><thead><tr><th>Style · colour</th><th class="r">Order</th><th class="r">Cut</th><th class="r">Sewn to date</th><th class="r">WIP</th><th style="width:30%">Progress</th></tr></thead><tbody>' +
+    $('colours').innerHTML = cols.length ? '<table><thead><tr><th>Style · colour</th><th class="r">Order</th><th class="r">Cut</th><th class="r">Sewn to date</th><th class="r">WIP</th><th style="width:24%">Progress</th><th>Ship</th></tr></thead><tbody>' +
       cols.map(function (x) { var sewn = x.c.cumUnit || x.c.dprCum || 0, pc = x.c.order ? Math.min(100, Math.round(sewn / x.c.order * 100)) : null;
         return '<tr><td><b>' + esc(x.p.style) + '</b> · ' + esc(x.c.color) + '</td><td class="r">' + fmt(x.c.order) + '</td><td class="r">' + fmt(x.c.cumCut) + '</td><td class="r"><b>' + fmt(sewn) + '</b></td><td class="r">' + fmt(x.c.wip) + '</td><td>' +
-          (pc == null ? '<span class="muted small">no order qty</span>' : '<div style="display:flex;align-items:center;gap:8px"><div class="bar" style="flex:1"><i style="width:' + pc + '%"></i></div><b class="small" style="width:38px;text-align:right">' + pc + '%</b></div>') + '</td></tr>'; }).join('') + '</tbody></table>'
+          (pc == null ? '<span class="muted small">no order qty</span>' : '<div style="display:flex;align-items:center;gap:8px"><div class="bar" style="flex:1"><i style="width:' + pc + '%"></i></div><b class="small" style="width:38px;text-align:right">' + pc + '%</b></div>') + '</td><td>' + shipCell(x) + '</td></tr>'; }).join('') + '</tbody></table>'
       : '<div class="empty">No colour detail in DPR for this line.</div>';
     var ins = [];
     if (h >= 2 && per) { var best = 0, worst = 0; l.hours.slice(0, h).forEach(function (v, i) { if (v > l.hours[best]) best = i; if (v < l.hours[worst]) worst = i; });
       ins.push('Best hour was H' + (best + 1) + ' (' + l.hours[best] + ' pcs), weakest H' + (worst + 1) + ' (' + l.hours[worst] + ' pcs).'); }
     if (h && h < 9 && l.tgt) { var need = Math.max(0, Math.round((l.tgt - l.pro) / (9 - h))); ins.push('To finish today\'s target the line needs ' + need + ' pcs/hour for the remaining ' + (9 - h) + ' hours' + (per ? ' (' + Math.round(need / per * 100) + '% of the hourly target).' : '.')); }
-    cols.forEach(function (x) { var sewn = x.c.cumUnit || x.c.dprCum || 0, bal = (x.c.order || 0) - sewn; if (x.c.order && bal > 0 && x.c.pro > 0) ins.push(esc(x.c.color) + ': ' + fmt(bal) + ' pcs left - about ' + Math.ceil(bal / x.c.pro) + ' more working days at today\'s pace.'); });
+    cols.forEach(function (x) {
+      var r = risk(x), sewn = x.c.cumUnit || x.c.dprCum || 0, bal = (x.c.order || 0) - sewn;
+      if (r && r.bal > 0) ins.push(esc(x.c.color) + ': ' + fmt(r.bal) + ' pcs left for the ' + r.ship.split('-').reverse().slice(0, 2).join('/') + ' ship date - needs ' + fmt(r.needDay) + ' pcs/day for ' + r.wd + ' working days; today\'s pace is about ' + fmt(r.pd) + (r.late ? '. <b>At risk</b> - plan overtime or add a line.' : '. On track.'));
+      else if (x.c.order && bal > 0 && x.c.pro > 0) ins.push(esc(x.c.color) + ': ' + fmt(bal) + ' pcs left - about ' + Math.ceil(bal / pace(x.c)) + ' more working days at today\'s pace (add the ship date on the Masters page to see the risk).');
+    });
     if (dtMin) ins.push(dtMin + ' minutes of downtime logged today' + (dtl[0] ? ', mostly "' + esc(dtl[0].reason) + '".' : '.'));
     if (ql && ql.defects[0]) ins.push('Most common defect: ' + esc(ql.defects[0].name) + ' (' + ql.defects[0].n + ').');
     $('insight').innerHTML = ins.length ? ins.map(function (s) { return '<p>' + s + '</p>'; }).join('') : '<p>Not enough entries yet today to say more.</p>';

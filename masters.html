@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Ship dates & operator skills</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/pro.css">
+<style>
+  .tabs{display:flex;gap:8px} .tabs button{height:40px;padding:0 16px;border-radius:999px;border:1px solid #2a3d5e;background:var(--navy2);color:#cfd9ea;font:600 14px Inter,Arial;cursor:pointer}
+  .tabs button.on{background:#fff;color:var(--navy);border-color:#fff}
+  form.add{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;align-items:end}
+  form.add label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:600;color:var(--muted)}
+  form.add input,form.add select{height:42px;border-radius:10px;border:1px solid #d5dce8;padding:0 10px;font:500 14px Inter,Arial;color:var(--text)}
+  .lv{display:inline-flex;gap:3px} .lv i{width:12px;height:12px;border-radius:3px;background:#e4e9f2} .lv i.on{background:var(--blue)}
+  .x{border:0;background:none;color:var(--bad);cursor:pointer;font:600 13px Inter,Arial;padding:6px}
+  .mx th,.mx td{text-align:center} .mx td:first-child,.mx th:first-child{text-align:left}
+  .flash{font-size:13px;font-weight:600}
+</style>
+</head>
+<body class="pro">
+<header class="pro-top">
+  <div class="brand">TSPL<span> Masters</span></div>
+  <div class="tabs" role="tablist"><button type="button" role="tab" data-t="ship" class="on">Ship dates</button><button type="button" role="tab" data-t="skill">Operator skills</button></div>
+  <div class="sp"><span class="small" id="who" style="color:#a9b8d0"></span></div>
+</header>
+<main class="pro-main">
+  <section id="pShip" style="display:flex;flex-direction:column;gap:18px">
+    <section class="pro-card">
+      <h2>Add or change a ship date</h2>
+      <p class="muted small" style="margin:-6px 0 12px">The line page uses these to warn when a colour will not finish in time at the current pace. Same style + colour again = the date is updated.</p>
+      <form class="add" id="fShip">
+        <label>Buyer<input id="sBuyer" maxlength="60" placeholder="e.g. PRIMARK"></label>
+        <label>Style (as in DPR)<input id="sStyle" maxlength="80" required placeholder="e.g. 2241-YG"></label>
+        <label>Colour<input id="sColour" maxlength="60" placeholder="blank = all colours"></label>
+        <label>Ship date<input id="sShip" type="date" required></label>
+        <label>Order qty (optional)<input id="sQty" type="number" min="0"></label>
+        <div style="display:flex;gap:10px;align-items:center"><button class="pro-btn primary" type="submit">Save</button><span class="flash" id="sFlash"></span></div>
+      </form>
+    </section>
+    <section class="pro-card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px"><h2 style="margin:0">Ship dates</h2><input class="pro-btn" id="sFind" type="search" placeholder="Search style or buyer" aria-label="Search ship dates" style="width:240px"></div><div class="tbl-wrap" id="sList"><div class="skel" style="height:80px"></div></div></section>
+  </section>
+
+  <section id="pSkill" style="display:none;flex-direction:column;gap:18px">
+    <section class="pro-card">
+      <h2>Add or change an operator skill</h2>
+      <p class="muted small" style="margin:-6px 0 12px">Level 1 = learning, 2 = can do with help, 3 = good, 4 = expert / can train others. One row per operator per operation.</p>
+      <form class="add" id="fSkill">
+        <label>Unit<select id="kUnit"><option>AP2</option><option>FIPL</option><option>TS2</option><option>TS4</option><option>TS9</option></select></label>
+        <label>Line<input id="kLine" maxlength="10" placeholder="e.g. 6"></label>
+        <label>Operator ID<input id="kId" maxlength="30" required></label>
+        <label>Name<input id="kName" maxlength="60"></label>
+        <label>Operation<input id="kOp" maxlength="60" required list="opList" placeholder="e.g. Side seam"><datalist id="opList"></datalist></label>
+        <label>Level<select id="kLv"><option value="1">1 - learning</option><option value="2">2 - with help</option><option value="3" selected>3 - good</option><option value="4">4 - expert</option></select></label>
+        <label>Efficiency % (optional)<input id="kEff" type="number" min="0" max="200"></label>
+        <div style="display:flex;gap:10px;align-items:center"><button class="pro-btn primary" type="submit">Save</button><span class="flash" id="kFlash"></span></div>
+      </form>
+    </section>
+    <section class="pro-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+        <h2 style="margin:0">Skill matrix - <span id="kU">AP2</span></h2>
+        <span class="muted small">Find who can cover an operation when someone is absent</span>
+      </div>
+      <div class="tbl-wrap" id="kList"><div class="skel" style="height:80px"></div></div>
+    </section>
+  </section>
+</main>
+<script src="js/tspl-config.js"></script>
+<script src="js/tspl-app.js"></script>
+<script src="js/home-btn.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.TSPL_APP, esc = A.esc, ships = [];
+  function $(id) { return document.getElementById(id); }
+  function dmy(s) { if (!s) return '-'; var p = s.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+  function flash(id, t, ok) { $(id).textContent = t; $(id).style.color = ok ? 'var(--good)' : 'var(--bad)'; }
+  var u = A.user(); $('who').textContent = u ? (u.name || u.email) : 'Sign in to save changes';
+  if (u && /^(AP2|FIPL|TS2|TS4|TS9)$/.test(u.unit || '')) $('kUnit').value = u.unit;
+  document.querySelector('.tabs').addEventListener('click', function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    [].forEach.call(this.children, function (x) { x.classList.toggle('on', x === b); });
+    $('pShip').style.display = b.dataset.t === 'ship' ? 'flex' : 'none'; $('pSkill').style.display = b.dataset.t === 'skill' ? 'flex' : 'none';
+    if (b.dataset.t === 'skill') loadSkills();
+  });
+  function loadShips() { A.jsonp({ action: 'ship_list' }, function (r) { if (!r || !r.ok) { $('sList').innerHTML = '<div class="empty">Could not load.</div>'; return; } ships = r.list; drawShips(); }); }
+  function drawShips() {
+    var q = $('sFind').value.trim().toLowerCase(), now = new Date(); now.setHours(0, 0, 0, 0);
+    var list = ships.filter(function (s) { return !q || (s.style + ' ' + s.buyer + ' ' + s.colour).toLowerCase().indexOf(q) > -1; })
+      .sort(function (a, b) { return a.ship < b.ship ? -1 : 1; });
+    $('sList').innerHTML = list.length ? '<table><thead><tr><th>Ship date</th><th>Buyer</th><th>Style</th><th>Colour</th><th class="r">Order qty</th><th>Updated</th><th></th></tr></thead><tbody>' + list.map(function (s) {
+      var d = Math.round((new Date(s.ship + 'T00:00:00') - now) / 864e5), cls = d < 0 ? 'bad' : d <= 7 ? 'warn' : 'info';
+      return '<tr><td><span class="chip ' + cls + '">' + dmy(s.ship) + (d < 0 ? ' · passed' : ' · ' + d + ' d') + '</span></td><td>' + esc(s.buyer) + '</td><td><b>' + esc(s.style) + '</b></td><td>' + esc(s.colour || 'all') + '</td><td class="r">' + (s.qty == null ? '-' : s.qty.toLocaleString('en-IN')) + '</td><td class="small muted">' + esc(s.by) + '</td>' +
+        '<td class="r"><button class="x" type="button" data-del="1" data-s="' + esc(s.style) + '" data-c="' + esc(s.colour) + '" aria-label="Delete ' + esc(s.style + ' ' + s.colour) + '">Delete</button></td></tr>'; }).join('') + '</tbody></table>'
+      : '<div class="empty">' + (ships.length ? 'Nothing matches.' : 'No ship dates yet - add the first one above.') + '</div>';
+  }
+  $('sFind').addEventListener('input', drawShips);
+  $('fShip').addEventListener('submit', function (e) {
+    e.preventDefault(); flash('sFlash', 'Saving…', true);
+    A.call({ action: 'ship_set', buyer: $('sBuyer').value.trim(), style: $('sStyle').value.trim(), colour: $('sColour').value.trim(), ship: $('sShip').value, qty: $('sQty').value }, function (r) {
+      if (!r || !r.ok) return flash('sFlash', (r && r.error) || 'No connection', false);
+      flash('sFlash', 'Saved', true); $('sColour').value = ''; $('sQty').value = ''; loadShips();
+    });
+  });
+  $('sList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-del]'); if (!b) return;
+    if (!confirm('Delete the ship date for ' + b.dataset.s + ' ' + (b.dataset.c || '') + '?')) return;
+    A.call({ action: 'ship_del', style: b.dataset.s, colour: b.dataset.c }, function (r) { if (r && r.ok) loadShips(); else alert((r && r.error) || 'Could not delete'); });
+  });
+  function loadSkills() {
+    var un = $('kUnit').value; $('kU').textContent = un;
+    A.jsonp({ action: 'skill_list', unit: un }, function (r) {
+      if (!r || !r.ok) { $('kList').innerHTML = '<div class="empty">Could not load.</div>'; return; }
+      $('opList').innerHTML = r.operations.map(function (o) { return '<option value="' + esc(o) + '">'; }).join('');
+      if (!r.list.length) { $('kList').innerHTML = '<div class="empty">No skills recorded for ' + un + ' yet.</div>'; return; }
+      var ops = r.operations, people = {};
+      r.list.forEach(function (x) { var p = people[x.opid] = people[x.opid] || { opid: x.opid, name: x.name, line: x.line, s: {} }; p.s[x.operation] = x; });
+      var lv = function (n) { var h = '<span class="lv" aria-label="Level ' + n + '">'; for (var i = 1; i <= 4; i++) h += '<i class="' + (i <= n ? 'on' : '') + '"></i>'; return h + '</span>'; };
+      $('kList').innerHTML = '<table class="mx"><thead><tr><th>Operator</th><th>Line</th>' + ops.map(function (o) { return '<th>' + esc(o) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+        Object.keys(people).sort().map(function (k) { var p = people[k];
+          return '<tr><td><b>' + esc(p.name || p.opid) + '</b><div class="small muted">' + esc(p.opid) + '</div></td><td>' + esc(p.line) + '</td>' + ops.map(function (o) { var x = p.s[o];
+            return '<td>' + (x ? lv(x.level) + (x.eff != null ? '<div class="small muted">' + x.eff + '%</div>' : '') + '<button class="x" type="button" data-sk="1" data-id="' + esc(p.opid) + '" data-op="' + esc(o) + '" aria-label="Remove ' + esc(o) + ' for ' + esc(p.opid) + '">×</button>' : '<span class="muted">-</span>') + '</td>'; }).join('') + '</tr>'; }).join('') +
+        '<tr><td><b>People who can do it</b></td><td></td>' + ops.map(function (o) { var n = r.list.filter(function (x) { return x.operation === o && x.level >= 3; }).length;
+          return '<td><span class="chip ' + (n < 2 ? 'bad' : n < 4 ? 'warn' : 'good') + '">' + n + '</span></td>'; }).join('') + '</tr></tbody></table>' +
+        '<p class="muted small">Bottom row counts operators at level 3 or 4. Red = fewer than 2 people can cover that operation.</p>';
+    });
+  }
+  $('kUnit').addEventListener('change', loadSkills);
+  $('fSkill').addEventListener('submit', function (e) {
+    e.preventDefault(); flash('kFlash', 'Saving…', true);
+    A.call({ action: 'skill_set', unit: $('kUnit').value, line: $('kLine').value.trim(), opid: $('kId').value.trim(), name: $('kName').value.trim(), operation: $('kOp').value.trim(), level: $('kLv').value, eff: $('kEff').value }, function (r) {
+      if (!r || !r.ok) return flash('kFlash', (r && r.error) || 'No connection', false);
+      flash('kFlash', 'Saved', true); $('kOp').value = ''; $('kEff').value = ''; loadSkills();
+    });
+  });
+  $('kList').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-sk]'); if (!b) return;
+    if (!confirm('Remove ' + b.dataset.op + ' for operator ' + b.dataset.id + '?')) return;
+    A.call({ action: 'skill_del', unit: $('kUnit').value, opid: b.dataset.id, operation: b.dataset.op }, function (r) { if (r && r.ok) loadSkills(); else alert((r && r.error) || 'Could not remove'); });
+  });
+  loadShips();
+  if (location.hash === '#skills') document.querySelector('.tabs button[data-t="skill"]').click();
+})();
+</script>
+</body>
+</html>
