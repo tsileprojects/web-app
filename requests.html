@@ -132,10 +132,23 @@
       USER = r.user; DATA = r.requests || [];
       document.getElementById('nType').innerHTML = (r.types || []).map(function (t) { return '<option>' + esc(t) + '</option>'; }).join('');
       if (USER.unit) document.getElementById('nUnit').value = USER.unit;
+      prefill();
       render();
     }, 90000);
   }
 
+  // Opened from the needle control tower: ?type=needle&unit=TS2&item=SAN10-DBX1-12|80&qty=40&from=TS4
+  var PF = new URLSearchParams(location.search), pfDone = false;
+  function prefill() {
+    if (pfDone || !PF.get('item')) return; pfDone = true;
+    var tSel = document.getElementById('nType'), want = (PF.get('type') || '').toLowerCase();
+    [].some.call(tSel.options, function (o) { if (want && o.value.toLowerCase().indexOf(want) > -1) { tSel.value = o.value; return true; } return false; });
+    if (PF.get('unit')) document.getElementById('nUnit').value = PF.get('unit');
+    var from = PF.get('from');
+    document.getElementById('nTitle').value = (from && from !== 'CMD' ? 'Transfer from ' + from + ': ' : from === 'CMD' ? 'Issue from CMD: ' : 'Buy: ') + PF.get('item');
+    if (PF.get('qty')) document.getElementById('nQty').value = PF.get('qty');
+    setTab('new');
+  }
   document.getElementById('tabs').addEventListener('click', function (e) { var b = e.target.closest('button[data-t]'); if (!b) return; if (b.dataset.t === 'new' && !A.user()) return A.signIn(function () { renderWho(); load(); setTab('new'); }); setTab(b.dataset.t); });
   document.getElementById('q').addEventListener('input', render);
   document.getElementById('list').addEventListener('click', function (e) {

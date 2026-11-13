@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Line detail</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/pro.css">
+<style>
+  .chart{position:relative;height:260px;display:grid;grid-template-columns:repeat(9,1fr);gap:12px;align-items:end;border-bottom:1px solid var(--line);padding-top:10px}
+  .chart .tg{position:absolute;left:0;right:0;border-top:2px dashed #9aa8bf}
+  .chart .col{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .chart .col b{font-size:13px} .chart .col i{display:block;width:100%;max-width:54px;border-radius:8px 8px 0 0}
+  .hx{display:grid;grid-template-columns:repeat(9,1fr);gap:12px;text-align:center;font-size:13px;color:var(--muted);margin-top:8px}
+  .par{display:grid;grid-template-columns:1fr 48px;gap:4px 10px;align-items:center;margin-bottom:10px}
+  .par .bar{grid-column:1/-1} .par .bar i{background:var(--orange)}
+  .insight{background:var(--navy);color:#fff} .insight h2{color:#fff} .insight p{margin:0 0 10px;font-size:15px;line-height:1.55;color:#d6e0f0}
+  .dtrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid #f0f3f8;font-size:14px}
+  h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.6px}
+  .eyebrow{font-size:13px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.8px}
+</style>
+</head>
+<body class="pro">
+<header class="pro-top">
+  <div class="brand">TSPL<span> Insight</span></div>
+  <nav class="crumb" aria-label="Breadcrumb"><a href="report.html">Production</a><span aria-hidden="true">/</span><span id="cUnit">-</span><span aria-hidden="true">/</span><b id="cLine">Line</b></nav>
+  <div class="sp">
+    <label class="sr" for="selUnit">Unit</label><select class="pro-sel" id="selUnit"></select>
+    <label class="sr" for="selLine">Line</label><select class="pro-sel" id="selLine"></select>
+    <label class="sr" for="selDate">Date</label><input class="pro-sel" type="date" id="selDate">
+    <button class="pro-btn primary" type="button" id="btnPrint">Print / PDF</button>
+  </div>
+</header>
+<main class="pro-main">
+  <section style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;justify-content:space-between">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span class="eyebrow" id="eyebrow">Loading…</span>
+      <h1 id="title">&nbsp;</h1>
+      <span class="muted" id="subtitle"></span>
+    </div>
+    <div id="chips" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+  </section>
+  <section class="pro-grid" id="kpis"><div class="pro-card skel" style="height:96px"></div><div class="pro-card skel" style="height:96px"></div><div class="pro-card skel" style="height:96px"></div><div class="pro-card skel" style="height:96px"></div></section>
+  <div class="pro-row">
+    <section class="pro-card wide">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px"><h2 style="margin:0">Hourly output vs target</h2><span class="muted small" id="tgtNote"></span></div>
+      <div class="chart" id="chart"></div><div class="hx">H1</div>
+    </section>
+    <section class="pro-card side"><h2>Defects by type</h2><div id="pareto"></div></section>
+  </div>
+  <div class="pro-row">
+    <section class="pro-card wide"><h2>Colour-wise order progress</h2><div class="tbl-wrap" id="colours"></div></section>
+    <section class="pro-card side insight"><h2>What the numbers say</h2><div id="insight"></div></section>
+  </div>
+  <section class="pro-card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h2 style="margin:0">Downtime on this line</h2><a class="pro-btn" id="lnkDt" href="downtime.html">Log a stop</a></div><div id="dt" style="margin-top:8px"></div></section>
+</main>
+<script src="js/tspl-config.js"></script>
+<script src="js/tspl-app.js"></script>
+<script src="js/home-btn.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.TSPL_APP, esc = A.esc, UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'];
+  var P = new URLSearchParams(location.search);
+  function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  var st = { unit: (P.get('unit') || 'TS2').toUpperCase(), line: P.get('line') || '', date: P.get('date') || today() };
+  if (UNITS.indexOf(st.unit) < 0) st.unit = 'TS2';
+  function $(id) { return document.getElementById(id); }
+  function fmt(n) { return n == null ? '-' : Math.round(n).toLocaleString('en-IN'); }
+  $('selUnit').innerHTML = UNITS.map(function (u) { return '<option' + (u === st.unit ? ' selected' : '') + '>' + u + '</option>'; }).join('');
+  $('selDate').value = st.date; $('selDate').max = today();
+  $('selUnit').onchange = function () { st.unit = this.value; st.line = ''; go(); };
+  $('selLine').onchange = function () { st.line = this.value; go(true); };
+  $('selDate').onchange = function () { st.date = this.value || today(); go(); };
+  $('btnPrint').onclick = function () { window.print(); };
+  var cache = {};
+  function go(sameData) {
+    history.replaceState(null, '', '?unit=' + st.unit + (st.line ? '&line=' + encodeURIComponent(st.line) : '') + (st.date !== today() ? '&date=' + st.date : ''));
+    $('cUnit').textContent = st.unit; $('lnkDt').href = 'downtime.html?unit=' + st.unit + (st.line ? '&line=' + encodeURIComponent(st.line) : '');
+    var k = st.unit + st.date;
+    if (sameData && cache[k]) return render(cache[k]);
+    $('eyebrow').textContent = 'Loading ' + st.unit + '…';
+    var got = {}, need = 3;
+    function done() { if (--need) return; cache[k] = got; render(got); }
+    A.jsonp({ action: 'drill', unit: st.unit, date: st.date }, function (r) { got.d = r; done(); });
+    A.jsonp({ action: 'line_defects', unit: st.unit, date: st.date }, function (r) { got.q = r; done(); });
+    A.jsonp({ action: 'dt_list', unit: st.unit, date: st.date }, function (r) { got.t = r; done(); });
+  }
+  function render(g) {
+    var d = g.d;
+    if (!d || !d.ok) { $('eyebrow').textContent = 'Could not load data'; $('title').textContent = (d && d.error) || 'Please try again'; return; }
+    var lines = (d.lines || []).filter(function (l) { return l.hours || l.tgt; });
+    $('selLine').innerHTML = lines.map(function (l) { return '<option value="' + esc(l.line) + '">Line ' + esc(l.line) + '</option>'; }).join('');
+    if (!lines.length) { $('eyebrow').textContent = st.unit + ' · ' + st.date; $('title').textContent = 'No DPR entries for this day yet'; ['kpis','chart','pareto','colours','insight','dt'].forEach(function (i) { $(i).innerHTML = ''; }); return; }
+    var l = lines.filter(function (x) { return String(x.line) === String(st.line); })[0] || lines[0];
+    st.line = String(l.line); $('selLine').value = st.line; $('cLine').textContent = 'Line ' + st.line;
+    l.hours = l.hours || [0,0,0,0,0,0,0,0,0];
+    var h = l.hoursDone || 0, per = (l.tgt || 0) / 9, tgtSoFar = per * h, ach = tgtSoFar ? l.pro / tgtSoFar : null;
+    $('eyebrow').textContent = st.unit + ' · Line ' + st.line + (d.live ? ' · live ' + (d.time || '') : ' · ' + st.date);
+    $('title').textContent = [l.buyer, l.style].filter(Boolean).join(' ') + (l.color ? ' · ' + l.color : '');
+    $('subtitle').textContent = [l.mp ? fmt(l.mp) + ' operators' : '', l.tgt ? 'Day target ' + fmt(l.tgt) + ' pcs' : '', l.status || ''].filter(Boolean).join(' · ');
+    var chips = [];
+    if (ach != null) chips.push(ach >= 1 ? '<span class="chip good">On target</span>' : '<span class="chip ' + (ach >= .85 ? 'warn' : 'bad') + '">Behind by ' + fmt(tgtSoFar - l.pro) + ' pcs</span>');
+    if (l.ftr != null) chips.push('<span class="chip ' + (l.ftr >= 95 ? 'good' : 'warn') + '">FTR ' + l.ftr + '%</span>');
+    $('chips').innerHTML = chips.join('');
+    var dtl = ((g.t && g.t.ok && g.t.list) || []).filter(function (x) { return String(x.line) === st.line; });
+    var dtMin = dtl.reduce(function (a, x) { return a + (+x.mins || 0); }, 0);
+    var K = [
+      { l: 'Output', v: fmt(l.pro), n: h ? 'target ' + fmt(tgtSoFar) + ' to H' + h : 'no hourly entries yet', c: ach == null ? 'var(--muted)' : ach >= 1 ? 'var(--good)' : ach >= .85 ? 'var(--warn)' : 'var(--bad)' },
+      { l: 'Achievement', v: ach == null ? '-' : Math.round(ach * 100) + '%', n: 'of target so far', c: 'var(--muted)' },
+      { l: 'Efficiency', v: l.eff != null ? l.eff + '%' : '-', n: l.eff != null ? 'from COT' : 'COT is ready the next day', c: 'var(--muted)' },
+      { l: 'FTR', v: l.ftr != null ? l.ftr + '%' : '-', n: l.chk ? fmt(l.chk) + ' checked · defect ' + (l.dft != null ? l.dft + '%' : '-') : 'no QC entries', c: 'var(--muted)' },
+      { l: 'Downtime', v: fmt(dtMin) + ' min', n: dtl.length + ' stop(s) logged', c: dtMin ? 'var(--bad)' : 'var(--good)' },
+      { l: 'WIP', v: fmt(l.wip), n: 'pcs in line', c: 'var(--muted)' }
+    ];
+    $('kpis').innerHTML = K.map(function (k) { return '<div class="pro-card kpi"><div class="l">' + esc(k.l) + '</div><div class="v">' + esc(k.v) + '</div><div class="n" style="color:' + k.c + '">' + esc(k.n) + '</div></div>'; }).join('');
+    var mx = Math.max(per * 1.2, Math.max.apply(null, l.hours.concat([1])));
+    $('tgtNote').textContent = per ? 'Target ' + Math.round(per) + ' pcs/hour · dashed line' : 'No target in DPR';
+    $('chart').innerHTML = (per ? '<div class="tg" style="bottom:' + Math.round(per / mx * 210) + 'px"></div>' : '') + l.hours.map(function (v, i) {
+      if (i >= h) return '<div class="col"><b></b><i style="height:6px;background:#e4e9f2"></i></div>';
+      var c = !per ? 'var(--blue)' : v >= per ? 'var(--blue)' : v >= per * .85 ? '#e0a12a' : '#d64545';
+      return '<div class="col"><b>' + v + '</b><i style="height:' + Math.max(4, Math.round(v / mx * 210)) + 'px;background:' + c + '"></i></div>'; }).join('');
+    document.querySelector('.hx').innerHTML = [1,2,3,4,5,6,7,8,9].map(function (i) { return '<span>H' + i + '</span>'; }).join('');
+    var q = g.q, ql = q && q.ok && q.available ? (q.lines || []).filter(function (x) { return String(x.line) === st.line; })[0] : null;
+    if (ql && ql.defects.length) {
+      var m = ql.defects[0].n, top2 = ql.defects.slice(0, 2).reduce(function (a, x) { return a + x.n; }, 0);
+      $('pareto').innerHTML = ql.defects.slice(0, 8).map(function (x) { return '<div class="par"><span>' + esc(x.name) + '</span><b style="text-align:right">' + x.n + '</b><div class="bar"><i style="width:' + Math.round(x.n / m * 100) + '%"></i></div></div>'; }).join('') +
+        '<p class="muted small" style="margin:6px 0 0">Top 2 defects are ' + Math.round(top2 / ql.total * 100) + '% of all ' + ql.total + ' defects on this line.</p>';
+    } else $('pareto').innerHTML = '<div class="empty">' + esc(q && q.available === false ? q.note : 'No defects entered for this line.') + '</div>';
+    var cols = [];
+    (d.products || []).forEach(function (p) { (p.colors || []).forEach(function (c) { if ((c.lines || []).map(String).indexOf(st.line) > -1) cols.push({ p: p, c: c }); }); });
+    $('colours').innerHTML = cols.length ? '<table><thead><tr><th>Style · colour</th><th class="r">Order</th><th class="r">Cut</th><th class="r">Sewn to date</th><th class="r">WIP</th><th style="width:30%">Progress</th></tr></thead><tbody>' +
+      cols.map(function (x) { var sewn = x.c.cumUnit || x.c.dprCum || 0, pc = x.c.order ? Math.min(100, Math.round(sewn / x.c.order * 100)) : null;
+        return '<tr><td><b>' + esc(x.p.style) + '</b> · ' + esc(x.c.color) + '</td><td class="r">' + fmt(x.c.order) + '</td><td class="r">' + fmt(x.c.cumCut) + '</td><td class="r"><b>' + fmt(sewn) + '</b></td><td class="r">' + fmt(x.c.wip) + '</td><td>' +
+          (pc == null ? '<span class="muted small">no order qty</span>' : '<div style="display:flex;align-items:center;gap:8px"><div class="bar" style="flex:1"><i style="width:' + pc + '%"></i></div><b class="small" style="width:38px;text-align:right">' + pc + '%</b></div>') + '</td></tr>'; }).join('') + '</tbody></table>'
+      : '<div class="empty">No colour detail in DPR for this line.</div>';
+    var ins = [];
+    if (h >= 2 && per) { var best = 0, worst = 0; l.hours.slice(0, h).forEach(function (v, i) { if (v > l.hours[best]) best = i; if (v < l.hours[worst]) worst = i; });
+      ins.push('Best hour was H' + (best + 1) + ' (' + l.hours[best] + ' pcs), weakest H' + (worst + 1) + ' (' + l.hours[worst] + ' pcs).'); }
+    if (h && h < 9 && l.tgt) { var need = Math.max(0, Math.round((l.tgt - l.pro) / (9 - h))); ins.push('To finish today\'s target the line needs ' + need + ' pcs/hour for the remaining ' + (9 - h) + ' hours' + (per ? ' (' + Math.round(need / per * 100) + '% of the hourly target).' : '.')); }
+    cols.forEach(function (x) { var sewn = x.c.cumUnit || x.c.dprCum || 0, bal = (x.c.order || 0) - sewn; if (x.c.order && bal > 0 && x.c.pro > 0) ins.push(esc(x.c.color) + ': ' + fmt(bal) + ' pcs left - about ' + Math.ceil(bal / x.c.pro) + ' more working days at today\'s pace.'); });
+    if (dtMin) ins.push(dtMin + ' minutes of downtime logged today' + (dtl[0] ? ', mostly "' + esc(dtl[0].reason) + '".' : '.'));
+    if (ql && ql.defects[0]) ins.push('Most common defect: ' + esc(ql.defects[0].name) + ' (' + ql.defects[0].n + ').');
+    $('insight').innerHTML = ins.length ? ins.map(function (s) { return '<p>' + s + '</p>'; }).join('') : '<p>Not enough entries yet today to say more.</p>';
+    $('dt').innerHTML = dtl.length ? dtl.map(function (x) { return '<div class="dtrow"><span><b>' + esc(x.start) + (x.end ? '-' + esc(x.end) : ' (still open)') + '</b> · ' + esc(x.reason) + (x.machine ? ' · ' + esc(x.machine) : '') + (x.note ? ' <span class="muted">- ' + esc(x.note) + '</span>' : '') + '</span><span class="chip ' + (x.open ? 'bad' : 'warn') + '">' + (x.mins || 0) + ' min</span></div>'; }).join('')
+      : '<div class="empty">No stops logged on this line' + (st.date === today() ? ' today' : '') + '.</div>';
+  }
+  go();
+  setInterval(function () { if (st.date === today()) { delete cache[st.unit + st.date]; go(); } }, 120000);
+})();
+</script>
+</body>
+</html>

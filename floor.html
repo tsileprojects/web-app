@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Factory floor live</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#0a1220;color:#e6edf7;font-family:Inter,Arial,sans-serif;overflow:hidden}
+  .wrap{height:100%;display:flex;flex-direction:column;gap:1.8vh;padding:2.4vh 1.9vw}
+  header{display:flex;align-items:center;gap:1.3vw}
+  .logo{width:4.4vh;height:4.4vh;border-radius:1.1vh;background:#2f6fed;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.7vh;color:#fff}
+  .ttl{font-size:2.5vh;font-weight:700;letter-spacing:-.3px} .sub{font-size:1.45vh;color:#8a9bb5}
+  .right{margin-left:auto;display:flex;align-items:center;gap:1vw}
+  .live{display:flex;align-items:center;gap:.5vw;font-size:1.4vh;color:#7ee2b8;background:#0f2a22;border:1px solid #1d5a45;padding:.7vh .8vw;border-radius:999px}
+  .live i{width:.9vh;height:.9vh;border-radius:50%;background:#2fd18f}
+  .live.stale{color:#ffd27a;background:#2a2410;border-color:#5a4a1d} .live.stale i{background:#e0a12a}
+  .clock{font-family:'JetBrains Mono',monospace;font-size:3.8vh;font-weight:700}
+  .units{display:flex;gap:.4vw} .units button{background:#111c2e;border:1px solid #1d2b44;color:#b8c5d9;font:600 1.4vh Inter,Arial;padding:.7vh .8vw;border-radius:.8vh;cursor:pointer}
+  .units button.on{background:#2f6fed;border-color:#2f6fed;color:#fff}
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:.9vw}
+  .k{background:#111c2e;border:1px solid #1d2b44;border-radius:1.7vh;padding:1.8vh 1.2vw;display:flex;flex-direction:column;gap:.7vh}
+  .k .l{font-size:1.3vh;color:#8a9bb5;text-transform:uppercase;letter-spacing:.8px} .k .v{font-size:5vh;font-weight:800;letter-spacing:-1.5px;line-height:1} .k .n{font-size:1.4vh;color:#b8c5d9}
+  .body{display:flex;gap:1vw;flex:1;min-height:0}
+  .panel{background:#111c2e;border:1px solid #1d2b44;border-radius:1.7vh;padding:1.8vh 1.2vw;display:flex;flex-direction:column;gap:1.2vh;min-height:0}
+  .panel h2{margin:0;font-size:2vh;font-weight:700}
+  .grid{flex:1 1 auto} .legend{display:flex;gap:.8vw;font-size:1.2vh;color:#8a9bb5} .legend span{display:flex;align-items:center;gap:.3vw} .legend i{width:1.3vh;height:1.3vh;border-radius:.4vh}
+  .hm{display:grid;grid-template-columns:5.5vw repeat(9,1fr) 7vw;gap:.4vh .35vw;align-content:start;overflow:hidden}
+  .hm .h{font-size:1.2vh;color:#8a9bb5;text-align:center} .hm .h.l{text-align:left}
+  .hm .ln{font-size:1.75vh;font-weight:700;display:flex;align-items:center;white-space:nowrap;overflow:hidden}
+  .hm .c{height:3.9vh;border-radius:.7vh;color:#fff;font-family:'JetBrains Mono',monospace;font-size:1.45vh;font-weight:700;display:flex;align-items:center;justify-content:center}
+  .hm .t{height:3.9vh;border-radius:.7vh;background:#0a1220;border:1px solid #1d2b44;font-size:1.5vh;font-weight:700;display:flex;align-items:center;justify-content:center}
+  aside{width:24vw;flex:none;display:flex;flex-direction:column;gap:1.6vh;min-height:0}
+  .andon{background:#1a1014;border-color:#4a1f27} .andon h2{color:#ffb4b4}
+  .al{display:flex;gap:.7vw;align-items:flex-start;background:#24141a;border-radius:1.1vh;padding:1.1vh .8vw}
+  .al b{flex:none;font-size:1.1vh;font-weight:700;padding:.4vh .5vw;border-radius:.6vh;color:#fff} .al .t1{font-size:1.6vh;font-weight:600;color:#fff} .al .t2{font-size:1.3vh;color:#c9a9b0}
+  .df{display:flex;flex-direction:column;gap:.5vh} .df .r{display:flex;justify-content:space-between;font-size:1.5vh} .df .r b{font-family:'JetBrains Mono',monospace}
+  .df .b{height:.9vh;background:#1d2b44;border-radius:.5vh;overflow:hidden} .df .b i{display:block;height:100%;background:#e0803a;border-radius:.5vh}
+  footer{display:flex;align-items:center;gap:1vw;background:#0f1a2b;border:1px solid #1d2b44;border-radius:1.3vh;padding:1vh 1vw;font-size:1.5vh;color:#b8c5d9}
+  footer b{color:#8fb4ff}
+  .msg{flex:1;display:flex;align-items:center;justify-content:center;color:#8a9bb5;font-size:2vh;text-align:center}
+  .none{color:#8a9bb5;font-size:1.5vh}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">TS</div>
+    <div><div class="ttl" id="ttl">Sewing floor live</div><div class="sub" id="sub">Connecting…</div></div>
+    <div class="right">
+      <div class="units" id="units" role="group" aria-label="Choose unit"></div>
+      <span class="live" id="live"><i></i>LIVE</span>
+      <div class="clock" id="clk">--:--</div>
+    </div>
+  </header>
+  <section class="kpis" id="kpis"></section>
+  <div class="body">
+    <section class="panel grid">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:1vw">
+        <h2>Hourly output vs target - every line</h2>
+        <div class="legend"><span><i style="background:#1f9d6b"></i>≥ 100%</span><span><i style="background:#c98a12"></i>85-99%</span><span><i style="background:#c43d3d"></i>&lt; 85%</span><span><i style="background:#1d2b44"></i>Not yet</span></div>
+      </div>
+      <div class="hm" id="hm"><div class="msg">Loading…</div></div>
+    </section>
+    <aside>
+      <section class="panel andon"><h2>Andon - needs action now</h2><div id="andon" style="display:flex;flex-direction:column;gap:.9vh"></div></section>
+      <section class="panel" style="flex:1"><h2 id="dfTtl">Top defects today</h2><div id="defects" style="display:flex;flex-direction:column;gap:1.1vh"></div></section>
+    </aside>
+  </div>
+  <footer><b>NOTE</b><span id="foot">Output comes from the hourly DPR entries. Hourly target = day target ÷ 9.</span></footer>
+</div>
+<script src="js/tspl-config.js"></script>
+<script src="js/tspl-app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.TSPL_APP, esc = A.esc;
+  var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'];
+  var P = new URLSearchParams(location.search);
+  var fixed = (P.get('unit') || '').toUpperCase(); if (UNITS.indexOf(fixed) < 0) fixed = '';
+  var ROT = (+P.get('sec') || 45) * 1000;
+  var cur = fixed || 'TS2', tower = null, towerAt = 0, lastOk = 0, rotT = null;
+  var G = '#1f9d6b', AM = '#c98a12', R = '#c43d3d', N = '#1d2b44';
+  function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function fmt(n) { return Math.round(n || 0).toLocaleString('en-IN'); }
+  function tone(p) { return p >= 1 ? G : p >= 0.85 ? AM : R; }
+  function $(id) { return document.getElementById(id); }
+
+  $('units').innerHTML = UNITS.map(function (u) { return '<button type="button" data-u="' + u + '">' + u + '</button>'; }).join('');
+  $('units').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; fixed = b.dataset.u; show(fixed); });
+  function markUnit() { [].forEach.call($('units').children, function (b) { b.classList.toggle('on', b.dataset.u === cur); }); }
+
+  setInterval(function () { var d = new Date(); $('clk').textContent = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+    var stale = Date.now() - lastOk > 4 * 60000; $('live').className = 'live' + (stale ? ' stale' : ''); $('live').lastChild.textContent = stale ? 'RECONNECTING' : 'LIVE'; }, 1000);
+
+  function show(u) { cur = u; markUnit(); load(); }
+  function rotate() { clearTimeout(rotT); rotT = setTimeout(function () { if (!fixed) { cur = UNITS[(UNITS.indexOf(cur) + 1) % UNITS.length]; markUnit(); load(); } rotate(); }, ROT); }
+
+  function load() {
+    var u = cur, day = today(), got = {}, need = 3;
+    function done() { if (--need === 0 && u === cur) render(u, got); }
+    A.jsonp({ action: 'drill', unit: u, date: day }, function (r) { got.drill = r; done(); }, 45000);
+    A.jsonp({ action: 'line_defects', unit: u, date: day }, function (r) { got.def = r; done(); }, 45000);
+    A.jsonp({ action: 'dt_list', unit: u, date: day }, function (r) { got.dt = r; done(); }, 45000);
+    if (Date.now() - towerAt > 10 * 60000) A.jsonp({ action: 'needle_tower' }, function (r) { if (r && r.ok) { tower = r; towerAt = Date.now(); } }, 60000);
+  }
+
+  function render(u, g) {
+    var d = g.drill;
+    $('ttl').textContent = u + ' · Sewing floor live';
+    if (!d || !d.ok) { $('sub').textContent = 'Could not load live data - retrying'; return; }
+    lastOk = Date.now();
+    var lines = (d.lines || []).filter(function (l) { return l.hours || l.tgt; }), hNow = 0;
+    lines.forEach(function (l) { l.hours = l.hours || [0,0,0,0,0,0,0,0,0]; l.pro = l.pro || 0; l.tgt = l.tgt || 0; });
+    var pro = 0, tgtSoFar = 0, chk = 0, pass = 0;
+    lines.forEach(function (l) { hNow = Math.max(hNow, l.hoursDone || 0); });
+    lines.forEach(function (l) { pro += l.pro || 0; tgtSoFar += (l.tgt || 0) / 9 * hNow; if (l.chk) { chk += l.chk; pass += l.chk * (l.ftr || 0) / 100; } });
+    var ach = tgtSoFar ? pro / tgtSoFar : null, ftr = chk ? pass / chk * 100 : null;
+    var dt = (g.dt && g.dt.ok) ? g.dt : { list: [], total: 0, byLine: {} };
+    var low = lines.filter(function (l) { var h = l.hoursDone || 0, per = (l.tgt || 0) / 9; return h && per && l.hours[h - 1] / per < 0.85; });
+    $('sub').textContent = (lines.length ? lines.length + ' lines · ' : '') + (hNow ? 'Hour ' + hNow + ' of 9 entered' : 'No hourly entries yet today') + ' · updated ' + (d.time || '');
+    var restPerHr = hNow < 9 && tgtSoFar ? Math.max(0, Math.round((lines.reduce(function (a, l) { return a + (l.tgt || 0); }, 0) - pro) / (9 - hNow))) : null;
+    var K = [
+      { l: 'Output so far', v: fmt(pro), n: 'of ' + fmt(tgtSoFar) + ' target to H' + hNow, c: '#ffffff' },
+      { l: 'Achievement', v: ach == null ? '-' : Math.round(ach * 100) + '%', n: restPerHr != null ? 'needs ' + fmt(restPerHr) + ' pcs/hr to close the day' : '', c: ach == null ? '#fff' : ach >= 1 ? '#7ee2b8' : ach >= .85 ? '#ffd27a' : '#ff9b9b' },
+      { l: 'FTR today', v: ftr == null ? '-' : ftr.toFixed(1) + '%', n: chk ? fmt(chk) + ' pcs checked' : 'no QC entries yet', c: ftr == null ? '#fff' : ftr >= 95 ? '#7ee2b8' : '#ffd27a' },
+      { l: 'Lines below 85% (last hour)', v: String(low.length), n: low.slice(0, 5).map(function (l) { return 'L' + l.line; }).join(', ') || 'none', c: low.length ? '#ff9b9b' : '#7ee2b8' },
+      { l: 'Downtime today', v: fmt(dt.total) + ' min', n: dt.list.filter(function (x) { return x.open; }).length + ' stop(s) still open', c: dt.total ? '#ffd27a' : '#7ee2b8' }
+    ];
+    $('kpis').innerHTML = K.map(function (k) { return '<div class="k"><div class="l">' + esc(k.l) + '</div><div class="v" style="color:' + k.c + '">' + esc(k.v) + '</div><div class="n">' + esc(k.n) + '</div></div>'; }).join('');
+
+    var hm = '<div class="h l">Line</div>' + [1,2,3,4,5,6,7,8,9].map(function (i) { return '<div class="h">H' + i + '</div>'; }).join('') + '<div class="h">Total</div>';
+    var maxRows = Math.max(6, Math.floor((window.innerHeight * 0.52) / (window.innerHeight * 0.043)));
+    lines.slice(0, maxRows).forEach(function (l) {
+      var per = (l.tgt || 0) / 9, h = l.hoursDone || 0;
+      hm += '<div class="ln" title="' + esc(l.style || '') + '">L' + esc(l.line) + '</div>';
+      for (var i = 0; i < 9; i++) {
+        if (i >= h) { hm += '<div class="c" style="background:' + N + '">-</div>'; continue; }
+        var v = l.hours[i] || 0; hm += '<div class="c" style="background:' + (per ? tone(v / per) : N) + '">' + v + '</div>';
+      }
+      var p = per && h ? Math.round(l.pro / (per * h) * 100) : null;
+      hm += '<div class="t" style="color:' + (p == null ? '#b8c5d9' : p >= 100 ? '#7ee2b8' : p >= 85 ? '#ffd27a' : '#ff9b9b') + '">' + fmt(l.pro) + (p == null ? '' : ' · ' + p + '%') + '</div>';
+    });
+    if (!lines.length) hm = '<div class="msg" style="grid-column:1/-1">No DPR lines for ' + u + ' today yet.</div>';
+    else if (lines.length > maxRows) hm += '<div class="none" style="grid-column:1/-1">+ ' + (lines.length - maxRows) + ' more lines - open the line page for all</div>';
+    $('hm').innerHTML = hm;
+
+    var al = [];
+    dt.list.filter(function (x) { return x.open; }).forEach(function (x) { al.push({ tag: 'DOWNTIME', bg: '#b4552a', t1: 'L' + x.line + ' stopped ' + x.mins + ' min', t2: x.reason + (x.machine ? ' · ' + x.machine : '') }); });
+    low.forEach(function (l) { var h = l.hoursDone, per = l.tgt / 9; al.push({ tag: 'OUTPUT', bg: '#c43d3d', t1: 'L' + l.line + ' at ' + Math.round(l.hours[h - 1] / per * 100) + '% in H' + h, t2: (l.remark || l.style || '').slice(0, 60) }); });
+    if (tower) (tower.suggestions || []).filter(function (s) { return s.unit === u; }).slice(0, 3).forEach(function (s) {
+      al.push({ tag: 'NEEDLE', bg: '#8a5a12', t1: s.type + ' - ' + Math.max(s.stock, 0) + ' pcs left', t2: s.text + ' (' + (s.cover == null ? '-' : s.cover) + ' days cover)' }); });
+    if (!lines.some(function (l) { return l.pro > 0; }) && new Date().getHours() >= 11) al.unshift({ tag: 'DPR', bg: '#3b4a66', t1: 'No DPR output entered yet', t2: 'Ask the unit IE to update the hourly DPR' });
+    $('andon').innerHTML = al.length ? al.slice(0, 5).map(function (a) { return '<div class="al"><b style="background:' + a.bg + '">' + a.tag + '</b><div><div class="t1">' + esc(a.t1) + '</div><div class="t2">' + esc(a.t2) + '</div></div></div>'; }).join('')
+      : '<div class="none">Nothing needs action right now.</div>';
+
+    var df = g.def;
+    if (df && df.ok && df.available && (df.total || []).length) {
+      var mx = df.total[0].n;
+      $('defects').innerHTML = df.total.slice(0, 6).map(function (x) { return '<div class="df"><div class="r"><span>' + esc(x.name) + '</span><b>' + x.n + '</b></div><div class="b"><i style="width:' + Math.round(x.n / mx * 100) + '%"></i></div></div>'; }).join('');
+    } else $('defects').innerHTML = '<div class="none">' + esc(df && df.available === false ? df.note : 'No defects entered yet today.') + '</div>';
+  }
+
+  markUnit(); load(); setInterval(load, 60000); rotate();
+})();
+</script>
+</body>
+</html>

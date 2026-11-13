@@ -34,7 +34,7 @@ function dtMins_(a, b) {
 function dtClean_(s, n) { return String(s == null ? '' : s).replace(/^[=+\-@]+/, '').slice(0, n || 200); }
 
 function dtAdd_(p) {
-  const u = axUser_(p.token); if (!u) return { ok: false, error: 'Please sign in again.' };
+  const u = axUser_(p.token); if (!u) return { ok: false, error: 'signin' };
   const unit = String(p.unit || '').toUpperCase(); if (KPI_UNITS.indexOf(unit) < 0) return { ok: false, error: 'Pick a unit' };
   const line = dtClean_(p.line, 10); if (!line) return { ok: false, error: 'Enter the line number' };
   const reason = DT_REASONS.indexOf(p.reason) > -1 ? p.reason : 'Other';
@@ -51,7 +51,7 @@ function dtAdd_(p) {
 }
 
 function dtEnd_(p) {
-  const u = axUser_(p.token); if (!u) return { ok: false, error: 'Please sign in again.' };
+  const u = axUser_(p.token); if (!u) return { ok: false, error: 'signin' };
   const end = dtTime_(p.end) || Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'HH:mm');
   const sh = dtSheet_(), n = sh.getLastRow() - 1; if (n < 1) return { ok: false, error: 'Not found' };
   const ids = sh.getRange(2, 1, n, 1).getValues();

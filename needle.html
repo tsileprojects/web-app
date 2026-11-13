@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Needle control tower</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/pro.css">
+<style>
+  .pro-top{background:#fff;color:var(--text);border-bottom:1px solid var(--line)}
+  .ic{width:38px;height:38px;border-radius:10px;background:#fff1e6;display:flex;align-items:center;justify-content:center}
+  .uc .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px} .uc .top b{font-size:18px}
+  .uc .big{font-size:28px;font-weight:800;letter-spacing:-.6px} .uc .rw{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin-top:6px}
+  .trend{height:150px;display:grid;gap:6px;align-items:end} .trend .c{display:flex;flex-direction:column;align-items:center;gap:4px;justify-content:flex-end;height:100%}
+  .trend .c span{font-size:11px;color:var(--muted)} .trend .c i{display:block;width:100%;border-radius:6px 6px 0 0}
+  .filters{display:flex;gap:8px;flex-wrap:wrap}
+  .filters button{height:36px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:#fff;font:500 13px Inter,Arial;cursor:pointer;color:var(--text)}
+  .filters button.on{background:var(--navy);border-color:var(--navy);color:#fff}
+</style>
+</head>
+<body class="pro">
+<header class="pro-top">
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c2581b" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 5L7 17"></path><path d="M7 17l-3 3"></path><circle cx="18" cy="6" r="2"></circle></svg></span>
+    <div><div style="font-size:18px;font-weight:800">Needle control tower</div><div class="muted small" id="sub">All units + CMD · stock, days of cover and what to move or buy</div></div>
+  </div>
+  <div class="sp">
+    <a class="pro-btn" href="qr.html">Scan needle QR</a>
+    <a class="pro-btn" href="ndl_form1.html">Needle issue form</a>
+    <a class="pro-btn primary" href="requests.html?type=needle" id="lnkReq">Raise CMD request</a>
+  </div>
+</header>
+<main class="pro-main">
+  <section class="pro-grid" id="units"><div class="pro-card skel" style="height:130px"></div><div class="pro-card skel" style="height:130px"></div><div class="pro-card skel" style="height:130px"></div></section>
+  <div class="pro-row">
+    <section class="pro-card wide">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px">
+        <h2 style="margin:0">Smart reorder - needle types under <span id="lowDays">3</span> days of cover</h2>
+        <div class="filters" id="filt" role="group" aria-label="Filter by unit"></div>
+      </div>
+      <p class="muted small" style="margin:0 0 8px" id="rule"></p>
+      <div class="tbl-wrap" id="sugg"><div class="skel" style="height:160px"></div></div>
+    </section>
+    <section class="pro-card side"><h2>Most used - last 14 days</h2><div id="top"></div></section>
+  </div>
+  <section class="pro-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px"><h2 style="margin:0">Needles used per day - all units</h2><span class="muted small">Red bars are days 40% above the average - worth checking</span></div>
+    <div class="trend" id="trend"></div>
+  </section>
+  <p class="muted small" id="notes"></p>
+</main>
+<script src="js/tspl-config.js"></script>
+<script src="js/tspl-app.js"></script>
+<script src="js/home-btn.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.TSPL_APP, esc = A.esc, data = null, flt = 'ALL';
+  function $(id) { return document.getElementById(id); }
+  function fmt(n) { return n == null ? '-' : Math.round(n).toLocaleString('en-IN'); }
+  function dmy(s) { if (!s) return '-'; var p = s.split('-'); return p[2] + '/' + p[1]; }
+  function ago(s) { if (!s) return 99; return Math.round((new Date() - new Date(s + 'T00:00:00')) / 864e5); }
+  function load() {
+    A.jsonp({ action: 'needle_tower' }, function (r) {
+      if (!r || !r.ok) { $('sugg').innerHTML = '<div class="empty">Could not load needle data. ' + esc(r && r.error || 'Please refresh.') + '</div>'; return; }
+      data = r; render();
+    }, 90000);
+  }
+  function render() {
+    var r = data, R = r.rules;
+    $('lowDays').textContent = R.low;
+    $('rule').textContent = 'Cover = stock ÷ average daily use over the last ' + R.days + ' days. Suggestion brings stock to ' + R.target + ' days: move from a unit with over ' + R.surplus + ' days of cover, else issue from CMD, else buy.';
+    $('units').innerHTML = r.units.map(function (u) {
+      var cov = u.cover, cls = cov == null ? 'info' : cov < R.low ? 'bad' : cov < 7 ? 'warn' : 'good', lbl = cov == null ? 'No recent use' : cov < R.low ? 'Low' : cov < 7 ? 'Watch' : 'Healthy';
+      if (u.low) { cls = u.low > 2 ? 'bad' : 'warn'; lbl = u.low + ' type' + (u.low > 1 ? 's' : '') + ' low'; }
+      var stale = ago(u.date) > 2;
+      return '<div class="pro-card uc"><div class="top"><b>' + (u.unit === 'CMD' ? 'CMD store' : u.unit) + '</b><span class="chip ' + cls + '">' + esc(lbl) + '</span></div>' +
+        '<div><span class="big">' + fmt(u.stock) + '</span> <span class="muted small">pcs in stock</span></div>' +
+        '<div class="rw"><span>Avg use / day</span><b style="color:var(--text)">' + fmt(u.avg) + '</b></div>' +
+        '<div class="rw"><span>Stock as of</span><b style="color:' + (stale ? 'var(--bad)' : 'var(--text)') + '">' + dmy(u.date) + (stale ? ' (not updating)' : '') + '</b></div></div>';
+    }).join('');
+    var units = ['ALL'].concat(r.units.filter(function (u) { return u.unit !== 'CMD'; }).map(function (u) { return u.unit; }));
+    $('filt').innerHTML = units.map(function (u) { return '<button type="button" class="' + (u === flt ? 'on' : '') + '" data-u="' + u + '">' + (u === 'ALL' ? 'All units' : u) + '</button>'; }).join('');
+    var list = r.suggestions.filter(function (s) { return flt === 'ALL' || s.unit === flt; });
+    var tag = { move: 'info', issue: 'good', buy: 'warn' };
+    var link = function (s) { return 'requests.html?type=needle&unit=' + encodeURIComponent(s.unit) + '&item=' + encodeURIComponent(s.type) + '&qty=' + s.qty + (s.from ? '&from=' + encodeURIComponent(s.from) : ''); };
+    $('sugg').innerHTML = list.length ? '<table><thead><tr><th>Needle type</th><th>Unit</th><th class="r">Stock</th><th class="r">Use/day</th><th class="r">Cover</th><th class="r">Next month plan</th><th>Suggestion</th><th><span class="sr">Action</span></th></tr></thead><tbody>' +
+      list.map(function (s) { return '<tr><td><b>' + esc(s.type) + '</b></td><td>' + esc(s.unit) + '</td><td class="r">' + fmt(Math.max(s.stock, 0)) + (s.stock < 0 ? ' <span class="chip bad" title="The sheet shows ' + s.stock + ' - stock needs correcting">check</span>' : '') + '</td><td class="r">' + s.avg + '</td><td class="r"><b style="color:' + (s.cover < 1 ? 'var(--bad)' : 'var(--warn)') + '">' + s.cover + ' d</b></td><td class="r">' + (s.need == null ? '-' : fmt(s.need)) + '</td>' +
+        '<td><span class="chip ' + tag[s.action] + '">' + esc(s.text) + '</span></td><td class="r"><a class="pro-btn" style="height:34px" href="' + link(s) + '">' + (s.action === 'buy' ? 'Request' : s.action === 'move' ? 'Transfer' : 'Issue') + '</a></td></tr>'; }).join('') + '</tbody></table>'
+      : '<div class="empty">No needle type is under ' + R.low + ' days of cover' + (flt === 'ALL' ? '' : ' in ' + flt) + '. </div>';
+    var mx = r.top.length ? r.top[0].used14 : 1;
+    $('top').innerHTML = r.top.length ? r.top.map(function (t) { return '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:14px"><span><b>' + esc(t.type) + '</b> <span class="muted">' + esc(t.unit) + '</span></span><b>' + fmt(t.used14) + '</b></div><div class="bar" style="margin-top:5px"><i style="width:' + Math.round(t.used14 / mx * 100) + '%;background:var(--orange)"></i></div></div>'; }).join('') : '<div class="empty">No use recorded.</div>';
+    var tr = r.trend, tm = Math.max.apply(null, tr.map(function (x) { return x.used; }).concat([1]));
+    var avg = tr.length ? tr.reduce(function (a, x) { return a + x.used; }, 0) / tr.filter(function (x) { return x.used > 0; }).length : 0;
+    $('trend').style.gridTemplateColumns = 'repeat(' + Math.max(tr.length, 1) + ',1fr)';
+    $('trend').innerHTML = tr.map(function (x) { return '<div class="c" title="' + dmy(x.date) + ': ' + x.used + '"><span>' + (x.used || '') + '</span><i style="height:' + Math.max(3, Math.round(x.used / tm * 110)) + 'px;background:' + (avg && x.used > avg * 1.4 ? '#d64545' : 'var(--blue)') + '"></i><span>' + dmy(x.date) + '</span></div>'; }).join('');
+    var stale = r.units.filter(function (u) { return ago(u.date) > 2; }).map(function (u) { return u.unit + ' (' + dmy(u.date) + ')'; });
+    $('notes').textContent = 'Updated ' + r.time + ' · refreshes every 15 minutes.' + (stale.length ? ' Stock sheets not updated recently: ' + stale.join(', ') + ' - those figures may be out of date.' : '');
+  }
+  $('filt').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b || !data) return; flt = b.dataset.u; render(); });
+  load(); setInterval(load, 15 * 60000);
+})();
+</script>
+</body>
+</html>
