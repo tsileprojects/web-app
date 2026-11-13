@@ -58,6 +58,7 @@
 (function () {
   'use strict';
   var A = window.TSPL_APP, esc = A.esc, data = null, flt = 'ALL';
+  if (!A.mem) A.mem = function (k, v) { try { k = 'tsplMem_' + k; if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };   // works with an older cached tspl-app.js
   function $(id) { return document.getElementById(id); }
   function fmt(n) { return n == null ? '-' : Math.round(n).toLocaleString('en-IN'); }
   function dmy(s) { if (!s) return '-'; var p = s.split('-'); return p[2] + '/' + p[1]; }

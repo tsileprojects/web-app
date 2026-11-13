@@ -63,6 +63,7 @@
 (function () {
   'use strict';
   var A = window.TSPL_APP, esc = A.esc, UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'];
+  if (!A.mem) A.mem = function (k, v) { try { k = 'tsplMem_' + k; if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };   // works with an older cached tspl-app.js
   var P = new URLSearchParams(location.search);
   function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   var st = { unit: (P.get('unit') || 'TS2').toUpperCase(), line: P.get('line') || '', date: P.get('date') || today() };

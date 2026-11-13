@@ -10,10 +10,10 @@
 <link rel="stylesheet" href="css/pro.css">
 <style>
   .pro-main{max-width:1180px}
-  form{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
   form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
   form .w2{grid-column:span 2} form .full{grid-column:1/-1}
-  form input,form select{height:46px;border-radius:12px;border:1px solid #d5dce8;padding:0 12px;font:500 15px Inter,Arial;color:var(--text);background:#fff;min-width:0}
+  form input,form select{height:46px;border-radius:12px;border:1px solid #d5dce8;padding:0 12px;font:500 15px Inter,Arial;color:var(--text);background:#fff;min-width:0;width:100%}
   form input[type=number]{font-weight:700;font-size:17px}
   .grp{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--blue-d);text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
   .flash{font-size:14px;font-weight:600}
@@ -22,7 +22,7 @@
   .hrs div{background:#f5f7fb;border-radius:10px;padding:8px;text-align:center} .hrs b{display:block;font-size:18px} .hrs small{color:var(--muted);font-size:11px}
   .hrs div.on{background:#e8f0fe}
   .row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #f0f3f8;font-size:13.5px}
-  @media (max-width:760px){form{grid-template-columns:1fr 1fr}form .w2{grid-column:1/-1}}
+  @media (max-width:760px){form{grid-template-columns:repeat(2,minmax(0,1fr))}form .w2{grid-column:1/-1}}
 </style>
 </head>
 <body class="pro">
@@ -79,6 +79,7 @@
 (function () {
   'use strict';
   var A = window.TSPL_APP, esc = A.esc, P = new URLSearchParams(location.search), STY = {}, sewn = null;
+  if (!A.mem) A.mem = function (k, v) { try { k = 'tsplMem_' + k; if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };   // works with an older cached tspl-app.js
   var Q = ['iron', 'chk', 'pass', 'alt', 'rej', 'pack', 'ctn'];
   function $(id) { return document.getElementById(id); }
   function fmt(n) { return n == null ? '-' : Math.round(n).toLocaleString('en-IN'); }

@@ -81,6 +81,7 @@
 (function () {
   'use strict';
   var A = window.TSPL_APP, esc = A.esc;
+  if (!A.mem) A.mem = function (k, v) { try { k = 'tsplMem_' + k; if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };   // works with an older cached tspl-app.js
   var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'];
   var P = new URLSearchParams(location.search);
   var fixed = (P.get('unit') || '').toUpperCase(); if (UNITS.indexOf(fixed) < 0) fixed = '';
