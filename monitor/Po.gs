@@ -47,13 +47,27 @@ const PO_BUYERS = {
     alias: { L38W27061: 'L38S27061' },   // DPR style typed as L38W27061 is the Spring 27 L38S27061 (coral / cream)
     since: '2026-08-01',
     map: []
+  },
+  Evsyle: {
+    id: '1Z4uWx_sLuHIOpsBgDLKF40nwHW1PHVdojvv_3CMrDow',   // "TSPL PO Plan - Evsyle (live)" (Disney + Greg Norman, one tab per style group)
+    format: 'lp',          // every tab: Style # / Color / PO.NO / Dest / QTY / CUT / STITCH / IRON / PACK / FSA / F I (= ship) / Rev F I
+    skipTabs: /^sheet\d*$/i,
+    poRe: /^(TBA|(?=.*\d{3})[A-Z0-9][A-Z0-9 \/.-]{3,})$/,   // POs here: 9736222, CF469, TL117697, MO24348383, DCL-9747047 ...
+    productByTab: true,    // a tab = one product line (several style nos, summed); colour row = style no + colour
+    noSetGuess: true,
+    dprBuyer: ['Disney', 'Greg Norman', 'Aarsan'],
+    dprMatch: 'code',      // DPR "# DISNEY 1000137300/301/302" = style 1000137300
+    alias: { '100013810': '1000138310', '100017083': '1000117083' },   // style nos typed short in the DPR
+    poolByStyle: true, sumDpr: true,
+    since: '2026-08-01',
+    map: []
   }
 };
 const PO_FINISH_DAYS = 2;           // sewing must finish this many working days before the ship date
 const PO_DONE = /insp\s*clr|t\s*\/\s*o(ut)?$|shipped|dispatch|^rfi$|^rts$/i;   // RFI / RTS = packed, ready for inspection / to ship; T/O = taken out
 
 function poKeyCol_(c) { return String(c || '').toUpperCase().replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim(); }
-function poNum_(v) { const n = Number(v); return v === '' || v === null || isNaN(n) ? null : Math.round(n); }
+function poNum_(v) { if (v instanceof Date) return null; const n = Number(v); return v === '' || v === null || isNaN(n) ? null : Math.round(n); }   // a date typed in a qty column is not a qty
 function poYmd_(d) { return Utilities.formatDate(d, Session.getScriptTimeZone(), 'yyyy-MM-dd'); }
 
 /** every PO line in the plan workbook */
@@ -141,23 +155,32 @@ function poParseHo_(cfg) {
 }
 
 /** Matalan-style line plan: one tab per style, PO rows under a "STYLE NO ... PO NO" header, Top / BTM rows = one set */
+/** style code used to match the DPR: "# DISNEY 1000137300/301" -> 1000137300, "DCL -1000145297" -> 1000145297, "ASS27OG13" -> ASS270G13 */
+function poCode_(s, cfg) {
+  s = String(s || '').toUpperCase();
+  const tok = s.replace(/[#\/]/g, ' ').replace(/-(?=\d)/g, ' ').split(/\s+/).filter(t => /\d/.test(t) && t.replace(/[^A-Z0-9]/g, '').length >= 6)[0] || s;
+  const c0 = tok.replace(/[^A-Z0-9]/g, '').replace(/O/g, '0');
+  return (cfg && cfg.alias || {})[c0] || c0;
+}
+
 function poParseLp_(cfg) {
   const out = [], issues = [], tz = Session.getScriptTimeZone();
   const norm = h => String(h || '').toUpperCase().replace(/[^A-Z]/g, '');
   const isD = v => v instanceof Date && !isNaN(v);
-  const done = s => /t\s*[\/.]\s*o(ut)?\b|insp\w*\s*cl|^ready|^rts$|shipped|dispatch/i.test(String(s || '').trim());
+  const done = s => /t\s*[\/.]\s*o(ut)?\b|insp\w*\s*cl|^ready|^rts$|^rfi$|shipped|dispatch/i.test(String(s || '').trim());
   SpreadsheetApp.openById(cfg.id).getSheets().forEach(sh => {
     const name = sh.getName(); if (cfg.skipTabs && cfg.skipTabs.test(name)) return;
     const rows = sh.getDataRange().getValues();
     let hr = -1;
-    for (let i = 0; i < Math.min(rows.length, 8); i++) { const h = rows[i].map(norm); if (h.indexOf('PONO') > -1 && h.indexOf('STYLENO') > -1) { hr = i; break; } }
+    for (let i = 0; i < Math.min(rows.length, 8); i++) { const h = rows[i].map(norm); if (h.indexOf('PONO') > -1 && (h.indexOf('STYLENO') > -1 || h.indexOf('STYLE') > -1 || h.indexOf('QTY') > -1)) { hr = i; break; } }
     if (hr < 0) return;
     const h = rows[hr].map(norm), C = {}, fi = [];
     h.forEach((x, i) => {
-      const k = { STYLENO: 'style', PONO: 'po', DES: 'part', DESC: 'part', DEST: 'colour', COLOUR: 'colour', COLOR: 'colour', HODATE: 'ship', DEL: 'ship',
+      const k = { STYLENO: 'style', STYLE: 'style', PONO: 'po', DES: 'part', DESC: 'part', DEST: 'colour', COLOUR: 'colour', COLOR: 'colour', HODATE: 'ship', DEL: 'ship',
         QTY: 'qty', FTY: 'fty', CUT: 'cut', STITCH: 'stitch', IRON: 'iron', PACK: 'pack', FSA: 'fsa', REMARKS: 'rem', REVFI: 'rev' }[x];
       if (k && !(k in C)) C[k] = i;
       if (x === 'FI') fi.push(i);
+      if (/^REVFI/.test(x) && !('rev' in C)) C.rev = i;
     });
     if (!('ship' in C) && fi.length) C.ship = fi.shift();   // old tabs: first "F I" column is the hand-over date
     if (fi.length) C.fi = fi[fi.length - 1];
@@ -165,15 +188,20 @@ function poParseLp_(cfg) {
     const grp = {}, order = [];
     for (let r = hr + 1; r < rows.length; r++) {
       const R = rows[r], g = k => k in C ? R[C[k]] : '';
-      const po = String(g('po') || '').trim().toUpperCase();
-      if (!/^[A-Z]\d{6,}$/.test(po)) continue;
-      const style = String(g('style') || '').trim().toUpperCase() || (order.length ? grp[order[order.length - 1]].style : name.trim().toUpperCase());
+      const po = String(g('po') || '').trim().toUpperCase().replace(/\s+/g, ' ');
+      if (!(cfg.poRe || /^[A-Z]\d{6,}$/).test(po)) continue;
+      const sv = g('style'), st0 = sv instanceof Date ? '' : String(sv || '').trim().toUpperCase();
+      if ('style' in C && cfg.poRe && !/(?:\D*\d){3}/.test(st0)) continue;   // loose PO rule: the row must carry a real style no
+      if (!('style' in C) && !/[A-Z]/i.test(String(g('colour') || ''))) continue;
+      const style = st0 || (order.length ? grp[order[order.length - 1]].style : name.trim().toUpperCase().split(/\s+/)[0]);
       const colour = String(g('colour') || '').trim().toUpperCase().replace(/\s*\/\s*/g, ' / ') || 'ALL';
       const p0 = String(g('part') || '').toUpperCase(), part = /BTM|BOTTOM|SHORT|PANT|TROUSER/.test(p0) ? 'BTM' : /TOP|SHIRT/.test(p0) ? 'TOP' : '';
       const fiv = g('fi'), last = Math.max.apply(null, ['cut', 'stitch', 'iron', 'pack', 'fsa', 'fi'].filter(k => k in C).map(k => C[k])), from = 'rem' in C ? Math.min(C.rem, last + 1) : last + 1;
       const rem = R.slice(from, from + 4).filter(v => typeof v === 'string' && v.trim()).join(' ').trim();   // remarks often spill into the next columns
       const ship = isD(g('ship')) ? poYmd_(g('ship')) : '';
-      const status = !isD(fiv) && String(fiv || '').trim() ? String(fiv).trim() : rem;
+      const shv = g('ship'), rv = g('rev');
+      const status = [!isD(fiv) && String(fiv || '').trim() ? String(fiv).trim() : '', !isD(shv) && typeof shv === 'string' && C.ship !== C.fi ? shv.trim() : '',
+        !isD(rv) && typeof rv === 'string' ? rv.trim() : '', rem].filter(Boolean).join(' ');
       const k = style + '|' + po + '|' + colour;
       let G = grp[k]; if (!G) { G = grp[k] = { style: style, po: po, colour: colour, parts: {}, ship: ship, fty: '', status: [], rev: '', fiDate: '' }; order.push(k); }
       if (ship && (!G.ship || ship < G.ship)) G.ship = ship;
@@ -182,21 +210,24 @@ function poParseLp_(cfg) {
       if (isD(g('rev'))) G.rev = poYmd_(g('rev'));
       if (isD(fiv)) G.fiDate = poYmd_(fiv);
       // same part twice with the same qty and no part name = the other half of a set (e.g. NW108)
-      let pk = part || 'X'; if (!part && G.parts[pk] && G.parts[pk].qty === (poNum_(g('qty')) || 0) && !G.parts.Y) pk = 'Y';
+      let pk = part || 'X'; if (!part && !cfg.noSetGuess && G.parts[pk] && G.parts[pk].qty === (poNum_(g('qty')) || 0) && !G.parts.Y) pk = 'Y';
       const P = G.parts[pk] = G.parts[pk] || { qty: 0, cut: null, stitch: null, iron: null, pack: null, fsa: null };
       P.qty += poNum_(g('qty')) || 0;
       ['cut', 'stitch', 'iron', 'pack', 'fsa'].forEach(f => { const v = poNum_(g(f)); if (v !== null) P[f] = (P[f] || 0) + v; });
     }
+    const tabCodes = []; order.forEach(k => { const c = poCode_(grp[k].style, cfg); if (tabCodes.indexOf(c) < 0) tabCodes.push(c); });
     order.forEach(k => {
       const G = grp[k], ps = Object.keys(G.parts).map(p => G.parts[p]), names = Object.keys(G.parts);
       const set = names.indexOf('TOP') > -1 && names.indexOf('BTM') > -1 || names.indexOf('Y') > -1;
       const mn = f => ps.some(p => p[f] === null) ? (ps.every(p => p[f] === null) ? null : Math.min.apply(null, ps.map(p => p[f] || 0))) : Math.min.apply(null, ps.map(p => p[f]));
-      const code0 = String(G.style).replace(/[^A-Z0-9]/g, '').replace(/O/g, '0'), code = (cfg.alias || {})[code0] || code0;
+      const code = poCode_(G.style, cfg);
       const st = G.status.filter(Boolean), allDone = st.length > 0 && st.some(done) && !st.some(s => /pending|hold|\bbal\b/i.test(s));
-      const x = { product: G.style + (set ? ' (set)' : ''), dpr: set ? [code + '|TOP', code + '|BTM'] : [code + '|*'], fty: G.fty, po: G.po, colour: G.colour,
+      const byTab = cfg.productByTab, label = name.trim().replace(/\s+/g, ' ');
+      const x = { product: byTab ? label : G.style + (set ? ' (set)' : ''), dpr: byTab ? tabCodes.map(c => c + '|*') : set ? [code + '|TOP', code + '|BTM'] : [code + '|*'], fty: G.fty, po: G.po,
+        colour: byTab && (tabCodes.length > 1 || G.style !== label.toUpperCase()) ? G.style + (G.colour !== 'ALL' ? ' · ' + G.colour : '') : G.colour,
         qty: Math.max.apply(null, ps.map(p => p.qty)), cut: mn('cut'), stitch: mn('stitch'), iron: mn('iron'), pack: mn('pack'), fsa: mn('fsa'), ship: G.ship,
         status: allDone ? (/t\s*[\/.]\s*o/i.test(st.join(' ')) ? 'T/O' : /ready/i.test(st.join(' ')) ? 'RTS' : 'Insp clrd') : (st[0] || '').slice(0, 60),
-        priority: ['tab ' + name.trim(), G.rev && G.rev !== G.ship ? 'rev FI ' + Utilities.formatDate(new Date(G.rev + 'T12:00:00'), tz, 'dd-MMM') : (G.fiDate ? 'FI ' + Utilities.formatDate(new Date(G.fiDate + 'T12:00:00'), tz, 'dd-MMM') : '')].filter(Boolean).join(' · ') };
+ priority: [byTab ? '' : 'tab ' + name.trim(), G.rev && G.rev !== G.ship ? 'rev FI ' + Utilities.formatDate(new Date(G.rev + 'T12:00:00'), tz, 'dd-MMM') : (G.fiDate ? 'FI ' + Utilities.formatDate(new Date(G.fiDate + 'T12:00:00'), tz, 'dd-MMM') : '')].filter(Boolean).join(' · ') };
       if (x.ship && (x.ship < '2026-03-01' || x.ship > '2027-12-31')) { issues.push(x.product + ' PO ' + x.po + ' ' + x.colour + ': HO date ' + x.ship + ' looks wrong - please correct it in tab "' + name.trim() + '"'); x.shipOdd = true; x.note0 = 'HO date ' + x.ship + ' looks wrong'; x.ship = ''; }
       if (!x.ship && !x.note0) x.note0 = 'No HO date in the plan';
       out.push(x);
@@ -207,16 +238,14 @@ function poParseLp_(cfg) {
 
 /** DPR sewing output per style + colour: total since cfg.since, recent daily rate, today's lines */
 function poDpr_(cfg) {
-  const src = kpiSrc_('PROD'), today = tdToday_();
-  const tot = appCsv_(src, "select H, I, D, sum(AK) where G contains '" + cfg.dprBuyer + "' and C >= date '" + cfg.since + "' and E = 'Sew' group by H, I, D");
+  const src = kpiSrc_('PROD'), today = tdToday_(), bw = '(' + [].concat(cfg.dprBuyer).map(b => "G contains '" + b + "'").join(' or ') + ')';
+  const tot = appCsv_(src, "select H, I, D, sum(AK) where " + bw + " and C >= date '" + cfg.since + "' and E = 'Sew' group by H, I, D");
   const from = Utilities.formatDate(new Date(Date.now() - 14 * 864e5), Session.getScriptTimeZone(), 'yyyy-MM-dd');
-  const day = appCsv_(src, "select H, I, C, sum(AK) where G contains '" + cfg.dprBuyer + "' and C >= date '" + from + "' and E = 'Sew' group by H, I, C");
-  const now = appCsv_(src, "select D, F, H, I, sum(X), sum(AK) where G contains '" + cfg.dprBuyer + "' and C = date '" + today + "' and E = 'Sew' group by D, F, H, I");
+  const day = appCsv_(src, "select H, I, C, sum(AK) where " + bw + " and C >= date '" + from + "' and E = 'Sew' group by H, I, C");
+  const now = appCsv_(src, "select D, F, H, I, sum(X), sum(AK) where " + bw + " and C = date '" + today + "' and E = 'Sew' group by D, F, H, I");
   const codeKey = s => {   // "# L38S27061 TOP" -> "L38S27061|TOP"; keys already in that form pass through
     s = String(s || '').toUpperCase(); if (s.indexOf('|') > -1) return s;
-    const tok = s.replace(/#/g, ' ').split(/\s+/).filter(t => /[A-Z]/.test(t) && /\d/.test(t) && t.replace(/[^A-Z0-9]/g, '').length >= 6)[0] || s.trim();
-    const c0 = tok.replace(/[^A-Z0-9]/g, '').replace(/O/g, '0'), code = (cfg.alias || {})[c0] || c0;
-    return code + '|' + (/\b(BTM|BOTTOM|SHORTS?|PANTS?|TROUSERS?)\b/.test(s) ? 'BTM' : /\b(TOP|SHIRT)\b/.test(s) ? 'TOP' : '');
+    return poCode_(s, cfg) + '|' + (/\b(BTM|BOTTOM|SHORTS?|PANTS?|TROUSERS?)\b/.test(s) ? 'BTM' : /\b(TOP|SHIRT)\b/.test(s) ? 'TOP' : '');
   };
   const key = cfg.dprMatch === 'code' ? ((s, c) => codeKey(s))
             : cfg.dprMatch === 'number' ? ((s, c) => ((String(s || '').match(/\d{4,}/) || [String(s || '').trim().toUpperCase()])[0]) + '|')
@@ -262,8 +291,9 @@ function poView_(buyer, fresh) {
     let dprSewn = null, rate = 0, unitSplit = {};
     if (pl.dpr.length) {
       const parts = pl.dpr.map(s => D.key(s, pl.colour));
-      dprSewn = Math.min.apply(null, parts.map(k => D.sewn[k] || 0));
-      rate = Math.min.apply(null, parts.map(k => D.rate[k] || 0));
+      const agg = cfg.sumDpr ? (a => a.reduce((x, y) => x + y, 0)) : (a => Math.min.apply(null, a));   // sets: the smaller half; style groups: the sum
+      dprSewn = agg(parts.map(k => D.sewn[k] || 0));
+      rate = agg(parts.map(k => D.rate[k] || 0));
       parts.forEach(k => Object.keys(D.units[k] || {}).forEach(u => unitSplit[u] = Math.max(unitSplit[u] || 0, D.units[k][u])));
     }
     const planStitch = pl.pos.reduce((a, x) => a + (x.stitch || 0), 0);
