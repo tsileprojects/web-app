@@ -279,7 +279,7 @@
         return row;
       }).join('') + '</tbody></table></div>';
     }
-    document.getElementById('drill').innerHTML = tools + (DR.lines.length ? '<h3 class="sub2" style="margin-top:0">Line-wise' + (HOURLY ? ' - hour by hour (pieces)' : '') + '</h3>' + head + body + tot : '<div class="msg">No DPR lines for ' + esc(unit) + ' on ' + dmy(date) + ' yet.</div>') + prod +
+    document.getElementById('drill').innerHTML = tools + prod.replace('<h3 class="sub2">', '<h3 class="sub2" style="margin-top:0">') + (DR.lines.length ? '<h3 class="sub2"' + (prod ? '' : ' style="margin-top:0"') + '>Line-wise' + (HOURLY ? ' - hour by hour (pieces)' : '') + '</h3>' + head + body + tot : '<div class="msg">No DPR lines for ' + esc(unit) + ' on ' + dmy(date) + ' yet.</div>') +
       (live ? '<p class="hint">Pace = output so far vs target x hours entered / 9. H1-H9 = pieces in the 1st to 9th hour from the DPR. Produced to date = sum of every day\'s DPR output for the style (shown next to the DPR\'s own Cum Pro column). Balance = order qty - produced to date in this unit. *shared = the line also runs another style; its hourly pieces are for the whole line. Efficiency is not shown for today because the COT sheet is updated up to yesterday.</p>' : '') +
       (r.errors && r.errors.length ? '<p class="hint">' + esc(r.errors.join('; ')) + '</p>' : '') +
       '<p class="hint no-print"><a href="#" id="drillBack">' + T('back') + '</a></p>';
