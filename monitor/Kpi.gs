@@ -72,7 +72,7 @@ function kpisCompute_() {
     }
     if (d) {
       out.prodDate = kpiFmt_(d);
-      const r = gviz_(s, "select D, sum(AK), sum(X) where C = date '" + out.prodDate + "' and E = 'Sew' and X > 0 group by D");
+      const r = gviz_(s, "select D, sum(AK), sum(X) where C = date '" + out.prodDate + "' and E = 'Sew' and (X > 0 or AK > 0) group by D");
       (r.rows || []).forEach(x => { if (out.units[x[0]]) { out.units[x[0]].pro = kpiNum_(x[1]); out.units[x[0]].tgt = kpiNum_(x[2]); } });
     }
   } catch (e) { errs.push('production: ' + e.message); }

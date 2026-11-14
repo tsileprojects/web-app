@@ -46,7 +46,7 @@ function reportProduction_() {
   (r0.rows || []).some(x => { if (kpiNum_(x[1]) > 0) { d = kpiFmt_(kpiDate_(x[0])); return true; } return false; });
   const out = { date: d, units: {} };
   if (!d) return out;
-  const r = gviz_(s, "select D, sum(AK), sum(X) where C = date '" + d + "' and E = 'Sew' and X > 0 group by D");
+  const r = gviz_(s, "select D, sum(AK), sum(X) where C = date '" + d + "' and E = 'Sew' and (X > 0 or AK > 0) group by D");
   (r.rows || []).forEach(x => { out.units[x[0]] = { pro: kpiNum_(x[1]), tgt: kpiNum_(x[2]) }; });
   return out;
 }

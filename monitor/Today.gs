@@ -38,7 +38,7 @@ function prodDay_(date, fresh) {
   const tz = Session.getScriptTimeZone();
   const out = { ok: true, date: date, live: isToday, time: Utilities.formatDate(new Date(), tz, 'HH:mm'), units: [] };
   const r = appCsv_(kpiSrc_('PROD'), "select D, sum(AK), sum(X), count(F), " + TD_H.map(c => 'sum(' + c + ')').join(', ') +
-    " where C = date '" + date + "' and E = 'Sew' and X > 0 group by D");
+    " where C = date '" + date + "' and E = 'Sew' and (X > 0 or AK > 0) group by D");
   if (r.error) return { ok: false, error: r.error, date: date };
   const by = {};
   (r.rows || []).forEach(x => {
