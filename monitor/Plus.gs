@@ -144,6 +144,7 @@ function checkAlerts() {
     (needleTower_().suggestions || []).forEach(s => { if (s.cover !== null && s.cover < 1) items.push({ unit: s.unit, key: 'ndl_' + s.type,
       kind: 'NEEDLE', text: s.unit + ': ' + s.type + ' has under 1 day of stock (' + Math.max(s.stock, 0) + ' pcs) - ' + s.text }); });
   } catch (e) {}
+  try { if (hm >= 10 * 60) poAlertItems_().forEach(x => items.push(x)); } catch (e) {}   // PO ship-date reminders (each PO once a day)
   const props = PropertiesService.getScriptProperties(), seenKey = 'alerts_seen_' + today;
   const seen = JSON.parse(props.getProperty(seenKey) || '{}');
   const fresh = items.filter(x => !seen[x.unit + '|' + x.key]);
@@ -155,7 +156,7 @@ function checkAlerts() {
   alertRecipients_().forEach(r => {
     const mine = fresh.filter(x => !r.units.length || r.units.indexOf(x.unit) > -1);
     if (!mine.length) return;
-    const color = { OUTPUT: '#b91c1c', DOWNTIME: '#b45309', NEEDLE: '#9a3412', DPR: '#475569' };
+    const color = { OUTPUT: '#b91c1c', DOWNTIME: '#b45309', NEEDLE: '#9a3412', DPR: '#475569', SHIP: '#7c2d12' };
     const html = '<div style="font-family:Arial,Helvetica,sans-serif;color:#0f172a;max-width:620px">' +
       '<h2 style="margin:0 0 6px;font-size:18px">TSPL - ' + mine.length + ' item' + (mine.length > 1 ? 's need' : ' needs') + ' action</h2>' +
       '<p style="margin:0 0 12px;color:#475569;font-size:13px">' + Utilities.formatDate(now, tz, 'dd MMM yyyy, HH:mm') + '</p>' +
@@ -163,7 +164,8 @@ function checkAlerts() {
         '<b style="font-size:11px;color:#fff;background:' + (color[x.kind] || '#334155') + ';padding:2px 6px;border-radius:4px">' + x.kind + '</b> ' +
         '<span style="font-size:14px">' + x.text.replace(/</g, '&lt;') + '</span></div>').join('') +
       '<p style="margin:14px 0 0"><a href="' + REPORT_SITE + 'floor.html" style="color:#1d4ed8">Open the floor screen</a> &middot; ' +
-      '<a href="' + REPORT_SITE + 'needle.html" style="color:#1d4ed8">Needle control tower</a></p>' +
+      '<a href="' + REPORT_SITE + 'needle.html" style="color:#1d4ed8">Needle control tower</a> &middot; ' +
+      '<a href="' + REPORT_SITE + 'po.html" style="color:#1d4ed8">PO tracker</a></p>' +
       '<p style="color:#94a3b8;font-size:11px">Each problem is emailed once a day. Change who gets these in the "' + AL_TAB + '" tab of the TSPL_Error_Monitor_Log sheet.</p></div>';
     MailApp.sendEmail({ to: r.email, subject: 'TSPL alert: ' + mine[0].text.slice(0, 80) + (mine.length > 1 ? ' (+' + (mine.length - 1) + ' more)' : ''), htmlBody: html, name: 'TSPL Smart Tool' });
     sent++;

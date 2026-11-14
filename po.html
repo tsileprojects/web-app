@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | PO tracker</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/pro.css">
+<style>
+  .pro-main{max-width:none}
+  .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+  .kp .pro-card{padding:12px 14px}
+  table.po td,table.po th{padding:7px 6px;white-space:normal;font-size:13px}
+  table.po th{font-size:10.5px}
+  tr.lvl1{cursor:pointer} tr.lvl1:hover td{background:#f5f8ff}
+  tr.lvl1 td:first-child b{font-size:14px}
+  tr.lvl2{cursor:pointer;background:#fafbfd} tr.lvl2 td:first-child{padding-left:26px}
+  tr.lvl3 td{background:#fff;font-size:12.5px} tr.lvl3 td:first-child{padding-left:46px}
+  tr.lvl3h td{background:#f1f4f9;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;font-weight:600} tr.lvl3h td:first-child{padding-left:46px}
+  .tg{display:inline-block;width:16px;color:var(--muted)}
+  .st{display:inline-block;font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+  .st.late{background:#7f1d1d;color:#fff} .st.risk{background:var(--bad-bg);color:var(--bad)} .st.warn{background:var(--warn-bg);color:var(--warn)}
+  .st.ok{background:var(--good-bg);color:var(--good)} .st.done{background:#e8f0fe;color:var(--blue-d)} .st.nodate{background:#eef2f8;color:var(--muted)}
+  .bar2{height:6px;background:#eef2f8;border-radius:3px;overflow:hidden;margin-top:4px;min-width:60px} .bar2 i{display:block;height:100%;background:var(--blue)} .bar2 i.p{background:#11613f}
+  .note{font-size:11.5px;color:var(--muted)}
+  .al{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid #f0f3f8;font-size:13px} .al:first-child{border-top:0}
+  .odd{color:var(--bad);font-weight:700}
+</style>
+</head>
+<body class="pro">
+<header class="pro-top">
+  <div class="brand">TSPL<span> PO tracker</span></div>
+  <div class="crumb" id="asof"></div>
+  <div class="sp">
+    <select class="pro-sel" id="buyer" aria-label="Buyer"></select>
+    <a class="pro-btn dark" id="sheetLnk" target="_blank" rel="noopener">Open plan sheet</a>
+    <button class="pro-btn dark" type="button" id="btnUpd">Update now</button>
+  </div>
+</header>
+<main class="pro-main">
+  <div class="kp" id="kpis"><div class="skel" style="height:80px"></div></div>
+
+  <section class="pro-card" id="alCard" hidden>
+    <h2 style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">Shipping reminders <span class="small muted" style="font-weight:400" id="alNote"></span></h2>
+    <div id="alerts"></div>
+  </section>
+
+  <section class="pro-card">
+    <h2><span id="bTitle">Buyer</span> · product-wise <span class="small muted" style="font-weight:400">- click a product for colours, then a colour for its POs</span></h2>
+    <div class="tbl-wrap"><table class="po">
+      <thead><tr><th>Product / colour / PO</th><th class="r">POs</th><th class="r">Order qty</th><th class="r">Sewn</th><th class="r">Packed</th><th class="r">Balance to sew</th><th class="r">Sewing today</th><th class="r">Running / day</th><th>Units</th><th>Next ship</th><th>Status</th></tr></thead>
+      <tbody id="prod"><tr><td colspan="11"><div class="skel" style="height:120px"></div></td></tr></tbody>
+    </table></div>
+    <p class="hint small muted" id="hint"></p>
+  </section>
+
+  <section class="pro-card">
+    <h2>Line-wise today <span class="small muted" style="font-weight:400">- lines sewing this buyer's styles (DPR)</span></h2>
+    <div class="tbl-wrap"><table class="po"><thead><tr><th>Unit</th><th>Line</th><th>Product</th><th>DPR style</th><th>Colour</th><th class="r">Output</th><th class="r">Target</th><th class="r">Achieved</th></tr></thead><tbody id="lines"></tbody></table></div>
+  </section>
+
+  <section class="pro-card" id="issCard" hidden>
+    <h2>Plan sheet notes</h2>
+    <ul id="issues" style="margin:0;padding-left:18px;font-size:13px"></ul>
+  </section>
+</main>
+<script src="js/tspl-config.js"></script>
+<script src="js/tspl-app.js"></script>
+<script src="js/home-btn.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.TSPL_APP, esc = A.esc, P = new URLSearchParams(location.search), D = null, OPEN = {};
+  if (!A.mem) A.mem = function (k, v) { try { k = 'tsplMem_' + k; if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };
+  var buyer = P.get('buyer') || 'Primark';
+  var LBL = { late: 'Late', risk: 'At risk', warn: 'Tight', ok: 'On track', done: 'Packed / shipped', nodate: 'No date' };
+  function $(id) { return document.getElementById(id); }
+  function n0(v) { return v == null || v === '' ? '-' : Math.round(v).toLocaleString('en-IN'); }
+  function dmy(s) { if (!s) return '-'; var p = s.split('-'); return p[2] + '-' + ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+p[1] - 1]; }
+  function st(r) { return '<span class="st ' + r + '">' + LBL[r] + '</span>'; }
+  function bar(a, b, cls) { var p = b ? Math.min(100, Math.round(a / b * 100)) : 0; return '<div class="bar2"><i class="' + (cls || '') + '" style="width:' + p + '%"></i></div>'; }
+  function units(o) { return Object.keys(o || {}).filter(function (u) { return o[u] > 0; }).join(', ') || '-'; }
+
+  function load(fresh) {
+    var m = A.mem('po_' + buyer); if (m && m.ok && !D) render(m);
+    $('btnUpd').disabled = true; $('btnUpd').textContent = 'Updating…';
+    var p = { action: 'po_view', buyer: buyer }; if (fresh) p.fresh = 1;
+    A.jsonp(p, function (r) {
+      $('btnUpd').disabled = false; $('btnUpd').textContent = 'Update now';
+      if (!r || !r.ok) { if (!D) $('prod').innerHTML = '<tr><td colspan="11" class="empty">Could not load the PO plan. ' + esc(r && r.error || 'Please try again.') + '</td></tr>'; return; }
+      A.mem('po_' + buyer, r); render(r);
+    }, 120000);
+  }
+  function render(r) {
+    D = r;
+    $('buyer').innerHTML = r.buyers.map(function (b) { return '<option' + (b === r.buyer ? ' selected' : '') + '>' + esc(b) + '</option>'; }).join('');
+    $('bTitle').textContent = r.buyer; $('sheetLnk').href = r.sheetUrl;
+    $('asof').textContent = 'as of ' + r.time + ' · updates every 5 min';
+    var t = r.total, late = r.alerts.filter(function (a) { return a.risk === 'late'; }).length, risk = r.alerts.filter(function (a) { return a.risk === 'risk'; }).length;
+    var nxt = r.products.map(function (p) { return p.nextShip; }).filter(Boolean).sort()[0];
+    var K = [['Order qty', n0(t.qty), t.pos + ' PO lines'], ['Sewn', n0(t.sewnEst), Math.round(t.qty ? t.sewnEst / t.qty * 100 : 0) + '% of order'], ['Packed', n0(t.pack), Math.round(t.qty ? t.pack / t.qty * 100 : 0) + '% of order'],
+      ['Sewing today', n0(t.todayPro), 'all lines, this buyer'], ['Late', late, 'ship date passed', late ? 'bad' : 'good'], ['At risk', risk, 'will miss ship date at current pace', risk ? 'bad' : 'good'], ['Next ship', dmy(nxt), '']];
+    $('kpis').innerHTML = K.map(function (k) { return '<div class="pro-card kpi"><div class="l">' + k[0] + '</div><div class="v"' + (k[3] ? ' style="color:var(--' + k[3] + ')"' : '') + '>' + k[1] + '</div><div class="n muted">' + k[2] + '</div></div>'; }).join('');
+    // reminders
+    $('alCard').hidden = !r.alerts.length;
+    $('alNote').textContent = 'sewing must finish ' + r.finishDays + ' working days before ship (iron, pack, FSA)';
+    $('alerts').innerHTML = r.alerts.slice(0, 40).map(function (a) {
+      return '<div class="al">' + st(a.risk) + '<div><b>' + esc(a.product) + ' · ' + esc(a.colour) + ' · PO ' + esc(a.po) + '</b> <span class="muted">(' + n0(a.qty) + ' pcs' + (a.fty ? ', ' + esc(a.fty) : '') + ', ship ' + dmy(a.ship) + ')</span><div class="note">' + esc(a.note) + '</div></div></div>';
+    }).join('') + (r.alerts.length > 40 ? '<div class="note">+ ' + (r.alerts.length - 40) + ' more in the table below</div>' : '');
+    // products
+    var h = '';
+    r.products.forEach(function (p, i) {
+      var k = 'p' + i, bal = Math.max(0, p.qty - p.sewnEst);
+      h += '<tr class="lvl1" data-k="' + k + '"><td><span class="tg">' + (OPEN[k] ? '▾' : '▸') + '</span><b>' + esc(p.product) + '</b><div class="note">' + (p.dpr.length ? 'DPR: ' + esc(p.dpr.join(' + ')) : 'not linked to a DPR style - plan figures only') + '</div></td>' +
+        '<td class="r">' + p.poCount + '</td><td class="r"><b>' + n0(p.qty) + '</b></td><td class="r">' + n0(p.sewnEst) + bar(p.sewnEst, p.qty) + '</td><td class="r">' + n0(p.pack) + bar(p.pack, p.qty, 'p') + '</td>' +
+        '<td class="r">' + n0(bal) + '</td><td class="r">' + n0(p.todayPro) + '</td><td class="r">' + n0(p.rate) + '</td><td>' + esc(units(p.colours.reduce(function (a, c) { Object.keys(c.units).forEach(function (u) { a[u] = (a[u] || 0) + c.units[u]; }); return a; }, {}))) + '</td>' +
+        '<td>' + dmy(p.nextShip) + '</td><td>' + st(p.risk) + '</td></tr>';
+      if (!OPEN[k]) return;
+      p.colours.forEach(function (c, j) {
+        var k2 = k + 'c' + j;
+        h += '<tr class="lvl2" data-k="' + k2 + '"><td><span class="tg">' + (OPEN[k2] ? '▾' : '▸') + '</span><b>' + esc(c.colour) + '</b>' + (c.dprSewn != null ? '<div class="note">DPR sewn to date ' + n0(c.dprSewn) + '</div>' : '') + '</td>' +
+          '<td class="r">' + c.poCount + '</td><td class="r">' + n0(c.qty) + '</td><td class="r">' + n0(c.sewnEst) + bar(c.sewnEst, c.qty) + '</td><td class="r">' + n0(c.pack) + bar(c.pack, c.qty, 'p') + '</td>' +
+          '<td class="r">' + n0(Math.max(0, c.qty - c.sewnEst)) + '</td><td class="r">-</td><td class="r">' + n0(c.rate) + '</td><td>' + esc(units(c.units)) + '</td><td>' + dmy(c.nextShip) + '</td><td>' + st(c.risk) + '</td></tr>';
+        if (!OPEN[k2]) return;
+        h += '<tr class="lvl3h"><td>PO · unit · priority</td><td class="r">Cut</td><td class="r">Qty</td><td class="r">Sewn (est)</td><td class="r">Packed</td><td class="r">Stitch / iron / FSA (plan)</td><td class="r" colspan="2">Days left · need / day</td><td>F I</td><td>Ship</td><td>Status</td></tr>';
+        c.pos.forEach(function (x) {
+          h += '<tr class="lvl3"><td><b>' + esc(x.po) + '</b> <span class="muted">' + esc([x.fty, x.priority].filter(Boolean).join(' · ')) + '</span>' + (x.note ? '<div class="note">' + esc(x.note) + '</div>' : '') + '</td>' +
+            '<td class="r">' + n0(x.cut) + '</td><td class="r"><b>' + n0(x.qty) + '</b></td><td class="r">' + n0(x.sewnEst) + '</td><td class="r">' + n0(x.pack) + '</td>' +
+            '<td class="r">' + n0(x.stitch) + ' / ' + n0(x.iron) + ' / ' + n0(x.fsa) + '</td><td class="r" colspan="2">' + (x.daysLeft == null ? '-' : x.daysLeft + ' d') + (x.needPerDay != null && x.risk !== 'done' ? ' · ' + n0(x.needPerDay) + '/day' : '') + '</td>' +
+            '<td>' + esc(x.status || '-') + '</td><td class="' + (x.shipOdd ? 'odd' : '') + '">' + dmy(x.ship) + '</td><td>' + st(x.risk) + '</td></tr>';
+        });
+      });
+    });
+    $('prod').innerHTML = h || '<tr><td colspan="11" class="empty">No POs found in the plan sheet.</td></tr>';
+    $('hint').textContent = 'Sewn = the higher of the plan sheet\'s STITCH figures and the DPR output since ' + 'Aug 2026' + ' for the same style and colour, given to POs in ship-date order. Running / day = average of the last 6 working days in the DPR. A PO is "At risk" if, at that pace, sewing will not cover it ' + r.finishDays + ' working days before its ship date.';
+    // lines
+    var L = [];
+    r.products.forEach(function (p) { p.lines.forEach(function (l) { L.push([p.product, l]); }); });
+    L.sort(function (a, b) { return (a[1].unit + a[1].line).localeCompare(b[1].unit + b[1].line, undefined, { numeric: true }); });
+    $('lines').innerHTML = L.length ? L.map(function (z) { var l = z[1]; return '<tr><td>' + esc(l.unit) + '</td><td><b>' + esc(l.line) + '</b></td><td>' + esc(z[0]) + '</td><td>' + esc(l.style) + '</td><td>' + esc(l.colour) + '</td><td class="r"><b>' + n0(l.pro) + '</b></td><td class="r">' + n0(l.tgt) + '</td><td class="r">' + (l.tgt ? Math.round(l.pro / l.tgt * 100) + '%' : '-') + '</td></tr>'; }).join('') : '<tr><td colspan="8" class="empty">No lines have entered output for these styles yet today.</td></tr>';
+    $('issCard').hidden = !r.issues.length;
+    $('issues').innerHTML = r.issues.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('');
+  }
+  $('prod').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-k]'); if (!tr) return; var k = tr.getAttribute('data-k'); OPEN[k] = !OPEN[k]; if (D) render(D); });
+  $('buyer').onchange = function () { buyer = this.value; D = null; OPEN = {}; history.replaceState(null, '', '?buyer=' + encodeURIComponent(buyer)); load(); };
+  $('btnUpd').onclick = function () { load(true); };
+  load(); setInterval(function () { if (!document.hidden) load(true); }, 5 * 60000);
+})();
+</script>
+</body>
+</html>

@@ -8,6 +8,7 @@ function warmFeeds() {
   if (h < 6 || h >= 22) return 'night - skipped';
   const t0 = Date.now(), done = [];
   try { needleTower_(true); done.push('tower'); } catch (e) { done.push('tower ERR ' + e.message); }
+  try { Object.keys(PO_BUYERS).forEach(b => poView_(b, 1)); done.push('po'); } catch (e) { done.push('po ERR ' + e.message); }
   const day = Utilities.formatDate(new Date(), 'Asia/Kolkata', 'yyyy-MM-dd');
   KPI_UNITS.forEach(u => {
     if (Date.now() - t0 > 240000) return;
