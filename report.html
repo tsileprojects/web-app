@@ -50,6 +50,17 @@
   .hb { display:flex; align-items:flex-end; gap:2px; height:22px; min-width:72px; } .hb i { flex:1; background:#93c5fd; border-radius:2px 2px 0 0; min-height:2px; } .hb i.z { background:#e2e8f0; }
   .live { display:inline-block; background:#dc2626; color:#fff; font-size:10.5px; font-weight:700; border-radius:9px; padding:1px 7px; margin-left:6px; vertical-align:middle; }
   h3.sub2 { font-size:14px; margin:18px 0 8px; }
+  /* fit tables to the window on PCs/TVs - no sideways scrolling (phones keep the scroll) */
+  @media (min-width:900px) {
+    .wrap { max-width:none; padding:14px 18px 40px; }
+    .tw, .tw > div { overflow-x:visible !important; }
+    table { font-size:12.5px; }
+    th, td { padding:6px 6px; white-space:normal; }
+    th { font-size:10.5px; letter-spacing:.2px; line-height:1.25; }
+    td.wrapc { min-width:110px; }
+    .hb { min-width:54px; }
+  }
+  header #btnHourly.on { background:#2196f3; color:#fff; border-color:#2196f3; }
   @media (max-width:860px) { .grid2 { grid-template-columns:1fr; } form.addn { grid-template-columns:1fr 1fr; } }
   @media print {
     header { position:static; border:0; } .acts, form.addn, .no-print { display:none !important; }
@@ -69,6 +80,7 @@
     <input type="date" id="day" hidden style="padding:6px 8px">
     <button type="button" id="btnXls"><i class="las la-file-excel"></i><span data-i18n="downloadXls">Download Excel</span></button>
     <button type="button" id="btnPdf"><i class="las la-print"></i><span data-i18n="printPdf">Print / PDF</span></button>
+    <button type="button" id="btnHourly" title="Show pieces for each hour (H1-H9)"><i class="las la-clock"></i><span>Hourly view</span></button>
     <button type="button" id="btnRe" title="Read the latest hourly production from the DPR now"><i class="las la-sync"></i><span>Update now</span></button>
   </div>
 </header>
@@ -291,7 +303,7 @@
       (r.errors && r.errors.length ? '<p class="hint">' + esc(r.errors.join('; ')) + '</p>' : '') +
       '<p class="hint no-print"><a href="#" id="drillBack">' + T('back') + '</a></p>';
     document.getElementById('bUpd').onclick = function () { updateNow(); };
-    document.getElementById('bHourly').onclick = function () { HOURLY = !HOURLY; renderDrill(); };
+    document.getElementById('bHourly').onclick = toggleHourly;
     var bk = document.getElementById('drillBack'); if (bk) bk.onclick = function (e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   }
   function prodClick(e) {
@@ -300,6 +312,12 @@
   }
   document.getElementById('drill').addEventListener('click', prodClick);
   document.getElementById('prodBody').addEventListener('click', prodClick);
+  function toggleHourly() {
+    HOURLY = !HOURLY;
+    var b = document.getElementById('btnHourly'); b.classList.toggle('on', HOURLY); b.querySelector('span').textContent = HOURLY ? 'Hourly view (on)' : 'Hourly view';
+    if (DR && DR.r) renderDrill(); else if (!DR) { var u = ONLY || (R && R.k.units && R.k.units[0] && R.k.units[0].unit); if (u) { if (unitSel) unitSel.value = u; ONLY = u; openDrill(u); } }
+  }
+  document.getElementById('btnHourly').addEventListener('click', toggleHourly);
   function updateNow() {
     var ub = document.getElementById('bUpd'); if (ub) { ub.disabled = true; ub.textContent = 'Updating…'; }
     if (MODE === 'last') { if (DR) openDrill(DR.unit, true, true); return; }
