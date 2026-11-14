@@ -166,7 +166,7 @@ function fsaCheck_() {
   const ex = ss_().getSheetByName('FSA_Expected'); if (!ex || ex.getLastRow() < 2) return 0;
   const want = {}; ex.getRange(2, 1, ex.getLastRow() - 1, 2).getValues().forEach(r => want[r[0]] = String(r[1]).replace(/^'/, ''));
   const allow = JSON.parse(PropertiesService.getScriptProperties().getProperty('FSA_ALLOW') || '{}');
-  let n = 0;
+  let n = 0, M = null; try { M = fsaLayout_(SpreadsheetApp.openById(FSA_MASTER).getSheetByName(FSA_TAB)); } catch (e) {}
   Object.keys(FSA_SHEETS).forEach(name => {
     if (FSA_SKIP.test(name)) return;
     const id = FSA_SHEETS[name], key = 'FSA|' + id, ok = allow[id] || [];
@@ -177,7 +177,79 @@ function fsaCheck_() {
         target: book.getUrl() + '#gid=' + sh.getSheetId(),
         message: bad.length + ' formula cell(s) changed from the master FSA report: ' + bad.slice(0, 10).join(', ') + '. HO: restore from the master copy.' });
       else autoResolve_(key, 'FSA formulas match the master again');
+      if (M && !/MATALAN/.test(name)) {   // locked / unmerged photo boxes and entry areas = Save & Send can't clear, photos fail
+        const d = fsaLayoutDiff_(sh, M), lk = 'FSALAYOUT|' + id, prob = d.openMissing.concat(d.openBad).concat(d.mergeMissing.map(a => a + ' (box split)'));
+        if (prob.length) upsertIssue_({ key: lk, severity: 'Error', source: 'FSA guard', program: book.getName() + ' > ' + FSA_TAB,
+          target: book.getUrl() + '#gid=' + sh.getSheetId(),
+          message: 'Entry / photo areas damaged: ' + prob.slice(0, 6).join(', ') + '. Save & Send may not clear the form. HO: run fsaLayoutRepair in the monitor.' });
+        else autoResolve_(lk, 'FSA entry / photo areas match the master again');
+      }
     } catch (e) {}
   });
   return n;
+}
+
+/** READ-ONLY: open (editable) ranges + photo merges of one report vs the master */
+function fsaProtCompare() {
+  const one = id => {
+    const sh = SpreadsheetApp.openById(id).getSheetByName(FSA_TAB);
+    const open = sh.getProtections(SpreadsheetApp.ProtectionType.SHEET).map(p => p.getUnprotectedRanges().map(r => r.getA1Notation())).flat().sort();
+    const ranges = sh.getProtections(SpreadsheetApp.ProtectionType.RANGE).map(p => p.getRange().getA1Notation() + (p.isWarningOnly() ? '(warn)' : ''));
+    const merges = sh.getRange('A60:Q310').getMergedRanges().map(r => r.getA1Notation()).sort();
+    return { open: open, ranges: ranges, merges: merges, rows: sh.getMaxRows() };
+  };
+  const m = one(FSA_MASTER), r = one(FSA_SHEETS['12_FIPL_Mr.Ramesh']);
+  const diff = (a, b) => a.filter(x => b.indexOf(x) < 0);
+  Logger.log(['RAMESH open-only: ' + diff(r.open, m.open).join(' '), 'MASTER open-only: ' + diff(m.open, r.open).join(' '),
+    'RAMESH range-protections: ' + r.ranges.join(' '), 'MASTER range-protections: ' + m.ranges.join(' '),
+    'RAMESH merges-only: ' + diff(r.merges, m.merges).join(' '), 'MASTER merges-only: ' + diff(m.merges, r.merges).join(' '),
+    'rows R/M: ' + r.rows + '/' + m.rows, 'MASTER merges: ' + m.merges.join(' ')].join('\n'));
+}
+
+/* ---------- open (auditor-editable) areas + photo boxes: compare and repair ---------- */
+function fsaLayout_(sh) {
+  const open = [];
+  sh.getProtections(SpreadsheetApp.ProtectionType.SHEET).forEach(p => p.getUnprotectedRanges().forEach(r => { let a = '#REF!'; try { a = r.getA1Notation(); } catch (e) {} open.push(a); }));
+  const merges = sh.getRange('A1:Q' + Math.min(sh.getMaxRows(), 320)).getMergedRanges().map(r => r.getA1Notation());
+  return { open: open, merges: merges };
+}
+function fsaLayoutDiff_(sh, M) {
+  const L = fsaLayout_(sh);
+  return { L: L, openMissing: M.open.filter(a => L.open.indexOf(a) < 0), openBad: L.open.filter(a => a === '#REF!'),
+    openExtra: L.open.filter(a => a !== '#REF!' && M.open.indexOf(a) < 0), mergeMissing: M.merges.filter(a => L.merges.indexOf(a) < 0) };
+}
+/** READ-ONLY scan of all reports */
+function fsaLayoutScan() { return fsaLayoutFix_(false); }
+/** REPAIR: puts back missing open areas / photo boxes exactly as in the master. Never removes an extra open area, never merges over content. */
+function fsaLayoutRepair() { return fsaLayoutFix_(true); }
+function fsaLayoutFix_(apply) {
+  const M = fsaLayout_(SpreadsheetApp.openById(FSA_MASTER).getSheetByName(FSA_TAB)), lines = [];
+  Object.keys(FSA_SHEETS).forEach(n => {
+    if (FSA_SKIP.test(n) || /MATALAN/.test(n)) return;
+    try {
+      const sh = SpreadsheetApp.openById(FSA_SHEETS[n]).getSheetByName(FSA_TAB), d = fsaLayoutDiff_(sh, M);
+      if (!d.openMissing.length && !d.openBad.length && !d.mergeMissing.length) { lines.push(n + ': OK'); return; }
+      const did = [];
+      if (apply) {
+        d.mergeMissing.forEach(a => {
+          const rg = sh.getRange(a), fv = rg.getFormulas(), vv = rg.getValues(), vals = fv.map((r, i) => r.map((f, j) => f || vv[i][j]));
+          const filled = vals.flat().filter(v => v !== '' && v !== null).length;
+          if (filled <= 1 && !rg.getMergedRanges().length) { rg.merge(); did.push('merged ' + a); } else did.push('LEFT ' + a + ' (has content)');
+        });
+        if (d.openMissing.length || d.openBad.length) {
+          const p = sh.getProtections(SpreadsheetApp.ProtectionType.SHEET)[0];
+          if (p) {
+            const keep = p.getUnprotectedRanges().filter(r => { try { return r.getA1Notation() !== '#REF!'; } catch (e) { return false; } });
+            p.setUnprotectedRanges(keep.concat(d.openMissing.map(a => sh.getRange(a))));
+            did.push('opened ' + d.openMissing.join(','));
+          }
+        }
+        SpreadsheetApp.flush();
+      }
+      lines.push(n + ': open missing [' + d.openMissing.join(' ') + '] bad ' + d.openBad.length + ' | photo boxes missing [' + d.mergeMissing.join(' ') + ']' +
+        (d.openExtra.length ? ' | extra open [' + d.openExtra.join(' ') + ']' : '') + (did.length ? ' => ' + did.join('; ') : ''));
+    } catch (e) { lines.push(n + ': ERROR ' + e.message); }
+  });
+  Logger.log(lines.join('\n'));
+  return lines;
 }
