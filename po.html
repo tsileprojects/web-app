@@ -335,7 +335,7 @@
 
   $('prod').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-k]'); if (!tr || active()) return; var k = tr.getAttribute('data-k'); OPEN[k] = !OPEN[k]; table(); });
   $('tabs').addEventListener('click', function (e) { var b = e.target.closest('button[data-b]'); if (!b || b.getAttribute('data-b') === buyer) return;
-    buyer = b.getAttribute('data-b'); D = null; OPEN = {}; F.st = ''; history.replaceState(null, '', '?buyer=' + encodeURIComponent(buyer));
+    buyer = b.getAttribute('data-b'); D = null; OPEN = {}; F.st = ''; history.replaceState(null, '', '?buyer=' + encodeURIComponent(buyer) + (P.get('from') ? '&from=' + encodeURIComponent(P.get('from')) : ''));
     $('prod').innerHTML = '<tr><td colspan="10"><div class="skel" style="height:160px"></div></td></tr>'; load(); });
   function setSt(s) { F.st = s; if (D) chips(counts()); table(); }
   $('chips').addEventListener('click', function (e) { var b = e.target.closest('[data-st]'); if (b) setSt(b.getAttribute('data-st')); });

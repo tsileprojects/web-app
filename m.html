@@ -32,6 +32,10 @@
   .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; margin-bottom:12px; }
   h2 { font-size:15px; margin:0 0 8px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
   h2 a, .lnk { font-size:13px; font-weight:500; color:var(--brand); text-decoration:none; cursor:pointer; background:none; border:0; padding:0; font-family:inherit; }
+  .po-card { display:flex; align-items:center; gap:12px; text-decoration:none; color:var(--text); background:linear-gradient(135deg,#0b1b33,#1f4fb8) !important; color:#fff !important; }
+  .po-card .po-ic { font-size:26px; width:44px; height:44px; border-radius:12px; background:rgba(255,255,255,.14); display:flex; align-items:center; justify-content:center; flex:none; }
+  .po-card .po-tx { flex:1; min-width:0; } .po-card b { display:block; font-size:15px; } .po-card small { display:block; font-size:12px; opacity:.8; margin-top:2px; }
+  .po-card .po-go { font-weight:700; font-size:13px; background:#fff; color:#0b1b33; padding:7px 12px; border-radius:999px; flex:none; }
   .acts { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; margin-bottom:12px; }
   .act { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:10px 4px; text-align:center; font-size:12px; font-weight:600; cursor:pointer; color:var(--text); font-family:inherit; }
   .act i { display:block; font-style:normal; font-size:22px; margin-bottom:3px; }
@@ -144,6 +148,11 @@
       <button class="act" type="button" data-do="scan"><i>&#128247;</i>Scan</button>
       <button class="act" type="button" data-do="ask"><i>&#128172;</i>Ask</button>
     </div>
+    <a class="card po-card" id="poCard" href="po.html?from=app">
+      <span class="po-ic">&#128230;</span>
+      <span class="po-tx"><b>Order &amp; Shipment Tracker</b><small>PO-wise production vs. ship date · Primark · AEO</small></span>
+      <span class="po-go">Open ›</span>
+    </a>
     <div class="card" id="queueCard" hidden><h2><span>Waiting to send <span class="m" id="qn"></span></span><button class="lnk" id="sendNow" type="button">Send now</button></h2><ul class="q" id="queue"></ul></div>
     <div class="card"><h2><span>Needs attention</span></h2><div id="ex"><div class="skel"></div></div></div>
     <div class="card"><h2><span>Notes from the floor</span><button class="lnk" type="button" data-do="note">+ Add</button></h2><div id="notes"><div class="skel"></div></div></div>
@@ -210,7 +219,7 @@
       <div class="set"><span>Language</span><select id="setLang" style="width:auto;margin:0"><option value="en">English</option><option value="kn">ಕನ್ನಡ</option><option value="hi">हिंदी</option></select></div>
       <div class="set"><span>Dark mode</span><input type="checkbox" id="setDark" style="width:22px;height:22px;margin:0"></div>
       <div class="set"><span>Approval alerts on this phone<small class="m" style="display:block;font-size:12px">Shows a phone notice when something waits for you (while the app is open or in the background).</small></span><input type="checkbox" id="setAlert" style="width:22px;height:22px;margin:0;flex:none"></div>
-      <div class="set"><span>Other pages</span><span><a class="lnk" href="tv.html?from=app">Live board</a> · <a class="lnk" href="floor.html?from=app">Floor screen</a> · <a class="lnk" href="line.html?from=app">Line detail</a> · <a class="lnk" href="needle.html?from=app">Needle tower</a> · <a class="lnk" href="downtime.html?from=app">Log downtime</a> · <a class="lnk" href="finishing.html?from=app">Finishing</a> · <a class="lnk" href="masters.html?from=app">Ship dates &amp; skills</a> · <a class="lnk" href="status.html?from=app">Status</a> · <a class="lnk" href="qr.html?from=app">QR labels</a></span></div>
+      <div class="set"><span>Other pages</span><span><a class="lnk" href="tv.html?from=app">Live board</a> · <a class="lnk" href="floor.html?from=app">Floor screen</a> · <a class="lnk" href="line.html?from=app">Line detail</a> · <a class="lnk" href="needle.html?from=app">Needle tower</a> · <a class="lnk" href="downtime.html?from=app">Log downtime</a> · <a class="lnk" href="finishing.html?from=app">Finishing</a> · <a class="lnk" href="po.html?from=app">PO tracker</a> · <a class="lnk" href="masters.html?from=app">Ship dates &amp; skills</a> · <a class="lnk" href="status.html?from=app">Status</a> · <a class="lnk" href="qr.html?from=app">QR labels</a></span></div>
       <div class="set"><span>Install on this phone</span><button class="btn" type="button" id="install">Install</button></div>
       <div class="set"><span class="m" id="verTxt">App version</span><button class="btn" type="button" id="updBtn">Check for update</button></div>
     </div>
