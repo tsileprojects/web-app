@@ -114,7 +114,7 @@ $$('.menu').forEach(d => {
 // ===== About modal =====
 const aboutBtn = $('#about-btn');
 const aboutModal = $('#about-modal');
-const closeBtn = aboutModal.querySelector('.close-modal');
+const closeBtn = aboutModal ? aboutModal.querySelector('.close-modal, .close-about-modal') : null;
 let lastFocus = null;
 
 function showAboutModal() {
@@ -122,7 +122,7 @@ function showAboutModal() {
     aboutModal.classList.add('open');
     aboutModal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
-    closeBtn.focus();
+    if (closeBtn) closeBtn.focus();
 }
 
 function hideAboutModal() {

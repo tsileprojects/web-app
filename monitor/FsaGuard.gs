@@ -164,7 +164,8 @@ function fsaWatchSetup() {
 /** formula drift check vs the expected list - raises / clears an issue on the HO bell */
 function fsaCheck_() {
   const ex = ss_().getSheetByName('FSA_Expected'); if (!ex || ex.getLastRow() < 2) return 0;
-  const want = {}; ex.getRange(2, 1, ex.getLastRow() - 1, 2).getValues().forEach(r => want[r[0]] = String(r[1]).replace(/^'/, ''));
+  const want = {}, er = ex.getRange(2, 1, ex.getLastRow() - 1, 2), ev = er.getValues(), efm = er.getFormulas();   // a stored formula may have lost its ' and become live: use its formula text
+  ev.forEach((r, i) => want[r[0]] = efm[i][1] || String(r[1]).replace(/^'/, ''));
   const allow = JSON.parse(PropertiesService.getScriptProperties().getProperty('FSA_ALLOW') || '{}');
   let n = 0, M = null; try { M = fsaLayout_(SpreadsheetApp.openById(FSA_MASTER).getSheetByName(FSA_TAB)); } catch (e) {}
   Object.keys(FSA_SHEETS).forEach(name => {
