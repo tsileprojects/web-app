@@ -36,6 +36,17 @@ const PO_BUYERS = {
     dprMatch: 'number',    // DPR style "# 5110 Spring 25" belongs to style 5110 (any season)
     since: '2026-10-01',
     map: []
+  },
+  Matalan: {
+    id: '12TgbPya8D54t5jyPUEhSucCTgHcqr1sTYeE1bHsccrw',   // "TSPL PO Plan - Matalan (live)" (line plan, one tab per style)
+    format: 'lp',          // every style tab: STYLE NO / DES (Top, BTM) / PO NO / Dest or Colour / HO DATE / QTY / FTY / FI / CUT / STITCH / IRON / PACK / FSA / REMARKS
+    skipTabs: /^sheet\d*$/i,
+    dprBuyer: 'Matalan',
+    dprMatch: 'code',      // DPR "# L38S27061 TOP" = style L38S27061, top half of the set; colours are not matched (DPR colour names differ)
+    poolByStyle: true,
+    alias: { L38W27061: 'L38S27061' },   // DPR style typed as L38W27061 is the Spring 27 L38S27061 (coral / cream)
+    since: '2026-08-01',
+    map: []
   }
 };
 const PO_FINISH_DAYS = 2;           // sewing must finish this many working days before the ship date
@@ -48,6 +59,7 @@ function poYmd_(d) { return Utilities.formatDate(d, Session.getScriptTimeZone(),
 /** every PO line in the plan workbook */
 function poParse_(cfg) {
   if (cfg.format === 'ho') return poParseHo_(cfg);
+  if (cfg.format === 'lp') return poParseLp_(cfg);
   const KEYS = { 'fty': 'fty', 'po no': 'po', 'colour': 'colour', 'color': 'colour', 'qty': 'qty', 'del': 'del', 'cut': 'cut', 'stitch': 'stitch',
     'iron': 'iron', 'pack': 'pack', 'fsa': 'fsa', 'f i': 'fi', 'priority': 'priority', 'remarks': 'remarks' };
   const out = [], issues = [], seen = {};
@@ -128,6 +140,71 @@ function poParseHo_(cfg) {
   return { lines: out, issues: issues, tab: sh.getName() };
 }
 
+/** Matalan-style line plan: one tab per style, PO rows under a "STYLE NO ... PO NO" header, Top / BTM rows = one set */
+function poParseLp_(cfg) {
+  const out = [], issues = [], tz = Session.getScriptTimeZone();
+  const norm = h => String(h || '').toUpperCase().replace(/[^A-Z]/g, '');
+  const isD = v => v instanceof Date && !isNaN(v);
+  const done = s => /t\s*[\/.]\s*o(ut)?\b|insp\w*\s*cl|^ready|^rts$|shipped|dispatch/i.test(String(s || '').trim());
+  SpreadsheetApp.openById(cfg.id).getSheets().forEach(sh => {
+    const name = sh.getName(); if (cfg.skipTabs && cfg.skipTabs.test(name)) return;
+    const rows = sh.getDataRange().getValues();
+    let hr = -1;
+    for (let i = 0; i < Math.min(rows.length, 8); i++) { const h = rows[i].map(norm); if (h.indexOf('PONO') > -1 && h.indexOf('STYLENO') > -1) { hr = i; break; } }
+    if (hr < 0) return;
+    const h = rows[hr].map(norm), C = {}, fi = [];
+    h.forEach((x, i) => {
+      const k = { STYLENO: 'style', PONO: 'po', DES: 'part', DESC: 'part', DEST: 'colour', COLOUR: 'colour', COLOR: 'colour', HODATE: 'ship', DEL: 'ship',
+        QTY: 'qty', FTY: 'fty', CUT: 'cut', STITCH: 'stitch', IRON: 'iron', PACK: 'pack', FSA: 'fsa', REMARKS: 'rem', REVFI: 'rev' }[x];
+      if (k && !(k in C)) C[k] = i;
+      if (x === 'FI') fi.push(i);
+    });
+    if (!('ship' in C) && fi.length) C.ship = fi.shift();   // old tabs: first "F I" column is the hand-over date
+    if (fi.length) C.fi = fi[fi.length - 1];
+    if (!('po' in C) || !('qty' in C)) { issues.push('Tab "' + name.trim() + '": PO NO / QTY columns not found'); return; }
+    const grp = {}, order = [];
+    for (let r = hr + 1; r < rows.length; r++) {
+      const R = rows[r], g = k => k in C ? R[C[k]] : '';
+      const po = String(g('po') || '').trim().toUpperCase();
+      if (!/^[A-Z]\d{6,}$/.test(po)) continue;
+      const style = String(g('style') || '').trim().toUpperCase() || (order.length ? grp[order[order.length - 1]].style : name.trim().toUpperCase());
+      const colour = String(g('colour') || '').trim().toUpperCase().replace(/\s*\/\s*/g, ' / ') || 'ALL';
+      const p0 = String(g('part') || '').toUpperCase(), part = /BTM|BOTTOM|SHORT|PANT|TROUSER/.test(p0) ? 'BTM' : /TOP|SHIRT/.test(p0) ? 'TOP' : '';
+      const fiv = g('fi'), last = Math.max.apply(null, ['cut', 'stitch', 'iron', 'pack', 'fsa', 'fi'].filter(k => k in C).map(k => C[k])), from = 'rem' in C ? Math.min(C.rem, last + 1) : last + 1;
+      const rem = R.slice(from, from + 4).filter(v => typeof v === 'string' && v.trim()).join(' ').trim();   // remarks often spill into the next columns
+      const ship = isD(g('ship')) ? poYmd_(g('ship')) : '';
+      const status = !isD(fiv) && String(fiv || '').trim() ? String(fiv).trim() : rem;
+      const k = style + '|' + po + '|' + colour;
+      let G = grp[k]; if (!G) { G = grp[k] = { style: style, po: po, colour: colour, parts: {}, ship: ship, fty: '', status: [], rev: '', fiDate: '' }; order.push(k); }
+      if (ship && (!G.ship || ship < G.ship)) G.ship = ship;
+      const fty = String(g('fty') || '').trim().toUpperCase().replace(/\s+/g, ''); if (fty && !G.fty) G.fty = fty === 'AP' ? 'AP2' : fty;
+      if (status) G.status.push(status);
+      if (isD(g('rev'))) G.rev = poYmd_(g('rev'));
+      if (isD(fiv)) G.fiDate = poYmd_(fiv);
+      // same part twice with the same qty and no part name = the other half of a set (e.g. NW108)
+      let pk = part || 'X'; if (!part && G.parts[pk] && G.parts[pk].qty === (poNum_(g('qty')) || 0) && !G.parts.Y) pk = 'Y';
+      const P = G.parts[pk] = G.parts[pk] || { qty: 0, cut: null, stitch: null, iron: null, pack: null, fsa: null };
+      P.qty += poNum_(g('qty')) || 0;
+      ['cut', 'stitch', 'iron', 'pack', 'fsa'].forEach(f => { const v = poNum_(g(f)); if (v !== null) P[f] = (P[f] || 0) + v; });
+    }
+    order.forEach(k => {
+      const G = grp[k], ps = Object.keys(G.parts).map(p => G.parts[p]), names = Object.keys(G.parts);
+      const set = names.indexOf('TOP') > -1 && names.indexOf('BTM') > -1 || names.indexOf('Y') > -1;
+      const mn = f => ps.some(p => p[f] === null) ? (ps.every(p => p[f] === null) ? null : Math.min.apply(null, ps.map(p => p[f] || 0))) : Math.min.apply(null, ps.map(p => p[f]));
+      const code0 = String(G.style).replace(/[^A-Z0-9]/g, '').replace(/O/g, '0'), code = (cfg.alias || {})[code0] || code0;
+      const st = G.status.filter(Boolean), allDone = st.length > 0 && st.some(done) && !st.some(s => /pending|hold|\bbal\b/i.test(s));
+      const x = { product: G.style + (set ? ' (set)' : ''), dpr: set ? [code + '|TOP', code + '|BTM'] : [code + '|*'], fty: G.fty, po: G.po, colour: G.colour,
+        qty: Math.max.apply(null, ps.map(p => p.qty)), cut: mn('cut'), stitch: mn('stitch'), iron: mn('iron'), pack: mn('pack'), fsa: mn('fsa'), ship: G.ship,
+        status: allDone ? (/t\s*[\/.]\s*o/i.test(st.join(' ')) ? 'T/O' : /ready/i.test(st.join(' ')) ? 'RTS' : 'Insp clrd') : (st[0] || '').slice(0, 60),
+        priority: ['tab ' + name.trim(), G.rev && G.rev !== G.ship ? 'rev FI ' + Utilities.formatDate(new Date(G.rev + 'T12:00:00'), tz, 'dd-MMM') : (G.fiDate ? 'FI ' + Utilities.formatDate(new Date(G.fiDate + 'T12:00:00'), tz, 'dd-MMM') : '')].filter(Boolean).join(' · ') };
+      if (x.ship && (x.ship < '2026-03-01' || x.ship > '2027-12-31')) { issues.push(x.product + ' PO ' + x.po + ' ' + x.colour + ': HO date ' + x.ship + ' looks wrong - please correct it in tab "' + name.trim() + '"'); x.shipOdd = true; x.note0 = 'HO date ' + x.ship + ' looks wrong'; x.ship = ''; }
+      if (!x.ship && !x.note0) x.note0 = 'No HO date in the plan';
+      out.push(x);
+    });
+  });
+  return { lines: out, issues: issues };
+}
+
 /** DPR sewing output per style + colour: total since cfg.since, recent daily rate, today's lines */
 function poDpr_(cfg) {
   const src = kpiSrc_('PROD'), today = tdToday_();
@@ -135,13 +212,21 @@ function poDpr_(cfg) {
   const from = Utilities.formatDate(new Date(Date.now() - 14 * 864e5), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   const day = appCsv_(src, "select H, I, C, sum(AK) where G contains '" + cfg.dprBuyer + "' and C >= date '" + from + "' and E = 'Sew' group by H, I, C");
   const now = appCsv_(src, "select D, F, H, I, sum(X), sum(AK) where G contains '" + cfg.dprBuyer + "' and C = date '" + today + "' and E = 'Sew' group by D, F, H, I");
-  const key = cfg.dprMatch === 'number' ? ((s, c) => ((String(s || '').match(/\d{4,}/) || [String(s || '').trim().toUpperCase()])[0]) + '|')
+  const codeKey = s => {   // "# L38S27061 TOP" -> "L38S27061|TOP"; keys already in that form pass through
+    s = String(s || '').toUpperCase(); if (s.indexOf('|') > -1) return s;
+    const tok = s.replace(/#/g, ' ').split(/\s+/).filter(t => /[A-Z]/.test(t) && /\d/.test(t) && t.replace(/[^A-Z0-9]/g, '').length >= 6)[0] || s.trim();
+    const c0 = tok.replace(/[^A-Z0-9]/g, '').replace(/O/g, '0'), code = (cfg.alias || {})[c0] || c0;
+    return code + '|' + (/\b(BTM|BOTTOM|SHORTS?|PANTS?|TROUSERS?)\b/.test(s) ? 'BTM' : /\b(TOP|SHIRT)\b/.test(s) ? 'TOP' : '');
+  };
+  const key = cfg.dprMatch === 'code' ? ((s, c) => codeKey(s))
+            : cfg.dprMatch === 'number' ? ((s, c) => ((String(s || '').match(/\d{4,}/) || [String(s || '').trim().toUpperCase()])[0]) + '|')
                                          : ((s, c) => String(s || '').trim().toUpperCase() + '|' + poKeyCol_(c));
+  const star = k => cfg.dprMatch === 'code' && k.slice(-2) !== '|*' ? [k, k.split('|')[0] + '|*'] : [k];   // code mode: also a whole-style total
   const sewn = {}, units = {}, rate = {}, lines = [];
-  (tot.rows || []).forEach(x => { const k = key(x[0], x[1]); sewn[k] = (sewn[k] || 0) + kpiNum_(x[3]); (units[k] = units[k] || {})[x[2]] = (units[k][x[2]] || 0) + kpiNum_(x[3]); });
+  (tot.rows || []).forEach(x => star(key(x[0], x[1])).forEach(k => { sewn[k] = (sewn[k] || 0) + kpiNum_(x[3]); (units[k] = units[k] || {})[x[2]] = (units[k][x[2]] || 0) + kpiNum_(x[3]); }));
   const byDay = {};
   const ymd = v => { if (v instanceof Date) return poYmd_(v); const p = String(v).split(/[-\/]/); return p.length === 3 ? (p[0].length === 4 ? p[0] + '-' + ('0' + p[1]).slice(-2) + '-' + ('0' + p[2]).slice(-2) : p[2] + '-' + ('0' + p[1]).slice(-2) + '-' + ('0' + p[0]).slice(-2)) : String(v); };
-  (day.rows || []).forEach(x => { const k = key(x[0], x[1]), d = ymd(x[2]); (byDay[k] = byDay[k] || {})[d] = (byDay[k][d] || 0) + kpiNum_(x[3]); });
+  (day.rows || []).forEach(x => { const d = ymd(x[2]); star(key(x[0], x[1])).forEach(k => { (byDay[k] = byDay[k] || {})[d] = (byDay[k][d] || 0) + kpiNum_(x[3]); }); });
   Object.keys(byDay).forEach(k => {   // average of the last 6 days that had output (today counts only if it already beats yesterday's pace)
     const ds = Object.keys(byDay[k]).sort().filter(d => d !== today && byDay[k][d] > 0).slice(-6);
     rate[k] = ds.length ? Math.round(ds.reduce((a, d) => a + byDay[k][d], 0) / ds.length) : 0;
@@ -168,8 +253,8 @@ function poView_(buyer, fresh) {
   // ---- shared pools: same DPR style(s) + colour. Sewn pieces are given to POs in ship-date order.
   const pools = {};
   P.lines.forEach(x => {
-    const pk = (x.dpr.join('+') || ('PLAN:' + x.product)) + '|' + poKeyCol_(x.colour);
-    (pools[pk] = pools[pk] || { dpr: x.dpr, colour: poKeyCol_(x.colour), pos: [] }).pos.push(x);
+    const pk = (x.dpr.join('+') || ('PLAN:' + x.product)) + '|' + (cfg.poolByStyle ? '' : poKeyCol_(x.colour));
+    (pools[pk] = pools[pk] || { dpr: x.dpr, colour: cfg.poolByStyle ? '' : poKeyCol_(x.colour), pos: [] }).pos.push(x);
   });
   Object.keys(pools).forEach(pk => {
     const pl = pools[pk];
@@ -218,7 +303,7 @@ function poView_(buyer, fresh) {
   const products = Object.keys(prods).map(pn => {
     const p = prods[pn];
     const colours = Object.keys(p.colours).map(cn => {
-      const col = p.colours[cn], pk = (p.dpr.join('+') || ('PLAN:' + pn)) + '|' + cn, pl = pools[pk] || {};
+      const col = p.colours[cn], pk = (p.dpr.join('+') || ('PLAN:' + pn)) + '|' + (cfg.poolByStyle ? '' : cn), pl = pools[pk] || {};
       const s = f => col.pos.reduce((a, x) => a + (x[f] || 0), 0);
       const open = col.pos.filter(x => x.risk !== 'done');
       col.pos.sort((a, b) => (a.ship || '9999') < (b.ship || '9999') ? -1 : 1);
@@ -229,7 +314,7 @@ function poView_(buyer, fresh) {
     }).sort((a, b) => b.qty - a.qty);
     const s = f => colours.reduce((a, x) => a + (x[f] || 0), 0);
     const live = D.lines.filter(l => p.dpr.some(st => D.key(st, '').split('|')[0] === D.key(l.style, '').split('|')[0]));
-    return { product: pn, dpr: p.dpr, qty: s('qty'), stitch: s('stitch'), pack: s('pack'), sewnEst: s('sewnEst'), rate: s('rate'),
+    return { product: pn, dpr: p.dpr, qty: s('qty'), stitch: s('stitch'), pack: s('pack'), sewnEst: s('sewnEst'), rate: cfg.poolByStyle ? ((colours[0] || {}).rate || 0) : s('rate'),
       poCount: colours.reduce((a, x) => a + x.poCount, 0), nextShip: colours.map(x => x.nextShip).filter(Boolean).sort()[0] || '',
       risk: colours.reduce((a, x) => rank[x.risk] > rank[a] ? x.risk : a, 'done'), colours: colours,
       lines: live, todayPro: live.reduce((a, l) => a + l.pro, 0) };
