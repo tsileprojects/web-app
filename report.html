@@ -78,6 +78,10 @@
     <div class="tw" id="sum"><div class="msg" data-i18n="loading">Loading…</div></div>
     <p class="hint no-print">Click a unit to see its line-wise and product-wise detail.</p>
   </div>
+  <div class="card" id="prodCard" hidden>
+    <h2><span id="prodTitle"></span></h2>
+    <div class="tw" id="prodBody"></div>
+  </div>
   <div class="card" id="drillCard" hidden>
     <h2><span id="drillTitle"></span> <small id="drillSub"></small></h2>
     <div class="tw" id="drill"></div>
@@ -120,7 +124,7 @@
     var q = new URLSearchParams(location.search); if (ONLY) q.set('unit', ONLY); else q.delete('unit');
     try { history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '')); } catch (e) {}
     if (!R) return;
-    if (ONLY) openDrill(ONLY); else { DR = null; document.getElementById('drillCard').hidden = true; }
+    if (ONLY) openDrill(ONLY); else { DR = null; document.getElementById('drillCard').hidden = true; document.getElementById('prodCard').hidden = true; }
     renderSummary(); renderNotes();
   };
 
@@ -187,15 +191,17 @@
     var date = prodDate();
     var card = document.getElementById('drillCard');
     card.hidden = false;
-    document.getElementById('drillTitle').textContent = unit + ' · line-wise & product-wise';
-    if (!quiet) document.getElementById('drill').innerHTML = '<div class="msg">' + T('loading') + '</div>';
+    document.getElementById('drillTitle').textContent = unit + ' · line-wise';
+    document.getElementById('prodTitle').textContent = unit + ' · product-wise (buyer, style & colour)';
+    var pc = document.getElementById('prodCard'); pc.hidden = false;
+    if (!quiet) { document.getElementById('drill').innerHTML = '<div class="msg">' + T('loading') + '</div>'; document.getElementById('prodBody').innerHTML = '<div class="msg">' + T('loading') + '</div>'; }
     if (!DR || DR.unit !== unit) OPENP = {};
     DR = { unit: unit, date: date, lines: DR && DR.unit === unit ? DR.lines : null, products: DR && DR.unit === unit ? DR.products : null, r: DR && DR.unit === unit ? DR.r : null }; renderSummary();
-    if (!quiet) card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!quiet) pc.scrollIntoView({ behavior: 'smooth', block: 'start' });
     var ub = document.getElementById('bUpd'); if (ub) { ub.disabled = true; ub.textContent = 'Updating…'; }
     var params = { action: 'drill', unit: unit, date: date }; if (fresh) params.fresh = 1;
     jsonp(params, function (r) {
-      if (!r || !r.ok) { document.getElementById('drill').innerHTML = '<div class="msg">' + esc(r && r.error || T('tryAgain')) + '</div>'; return; }
+      if (!r || !r.ok) { document.getElementById('drill').innerHTML = '<div class="msg">' + esc(r && r.error || T('tryAgain')) + '</div>'; document.getElementById('prodBody').innerHTML = ''; return; }
       DR.r = r; DR.lines = r.lines || []; DR.products = r.products || [];
       renderDrill();
     }, 120000);
@@ -279,7 +285,8 @@
         return row;
       }).join('') + '</tbody></table></div>';
     }
-    document.getElementById('drill').innerHTML = tools + prod.replace('<h3 class="sub2">', '<h3 class="sub2" style="margin-top:0">') + (DR.lines.length ? '<h3 class="sub2"' + (prod ? '' : ' style="margin-top:0"') + '>Line-wise' + (HOURLY ? ' - hour by hour (pieces)' : '') + '</h3>' + head + body + tot : '<div class="msg">No DPR lines for ' + esc(unit) + ' on ' + dmy(date) + ' yet.</div>') +
+    document.getElementById('prodBody').innerHTML = prod ? prod.replace(/^<h3 class="sub2">Product-wise \(buyer, style & colour\) (<span[^>]*>[^<]*<\/span>)<\/h3>/, '<p style="margin:0 0 8px">$1</p>') : '<div class="msg">No products for ' + esc(unit) + ' on ' + dmy(date) + ' yet.</div>';
+    document.getElementById('drill').innerHTML = tools + (DR.lines.length ? '<h3 class="sub2" style="margin-top:0">Line-wise' + (HOURLY ? ' - hour by hour (pieces)' : '') + '</h3>' + head + body + tot : '<div class="msg">No DPR lines for ' + esc(unit) + ' on ' + dmy(date) + ' yet.</div>') +
       (live ? '<p class="hint">Pace = output so far vs target x hours entered / 9. H1-H9 = pieces in the 1st to 9th hour from the DPR. Produced to date = sum of every day\'s DPR output for the style (shown next to the DPR\'s own Cum Pro column). Balance = order qty - produced to date in this unit. *shared = the line also runs another style; its hourly pieces are for the whole line. Efficiency is not shown for today because the COT sheet is updated up to yesterday.</p>' : '') +
       (r.errors && r.errors.length ? '<p class="hint">' + esc(r.errors.join('; ')) + '</p>' : '') +
       '<p class="hint no-print"><a href="#" id="drillBack">' + T('back') + '</a></p>';
@@ -287,10 +294,12 @@
     document.getElementById('bHourly').onclick = function () { HOURLY = !HOURLY; renderDrill(); };
     var bk = document.getElementById('drillBack'); if (bk) bk.onclick = function (e) { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); };
   }
-  document.getElementById('drill').addEventListener('click', function (e) {
+  function prodClick(e) {
     var tr = e.target.closest('tr.prow'); if (!tr) return;
     var k = tr.getAttribute('data-k'); OPENP[k] = !OPENP[k]; renderDrill();
-  });
+  }
+  document.getElementById('drill').addEventListener('click', prodClick);
+  document.getElementById('prodBody').addEventListener('click', prodClick);
   function updateNow() {
     var ub = document.getElementById('bUpd'); if (ub) { ub.disabled = true; ub.textContent = 'Updating…'; }
     if (MODE === 'last') { if (DR) openDrill(DR.unit, true, true); return; }
