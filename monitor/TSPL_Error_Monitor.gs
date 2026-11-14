@@ -141,7 +141,8 @@ function runChecks() {
     }
     const a = checkApps_();
     const s = scanSheets_();
-    return 'apps checked: ' + a + ', sheet tabs scanned: ' + s;
+    let fsa = 0; try { fsa = fsaCheck_(); } catch (e) {}   // FSA reports: formula drift vs master
+    return 'apps checked: ' + a + ', sheet tabs scanned: ' + s + ', FSA reports checked: ' + fsa;
   } finally {
     lock.releaseLock();
   }

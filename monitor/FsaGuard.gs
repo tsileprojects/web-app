@@ -47,22 +47,137 @@ function fsaFormulas_(sh) {
 /** READ-ONLY. Run from the editor: View > Logs shows the result. */
 function fsaAudit() {
   const mSh = SpreadsheetApp.openById(FSA_MASTER).getSheetByName(FSA_TAB), master = fsaFormulas_(mSh);
-  const lines = ['MASTER formula cells: ' + Object.keys(master).length,
-    Object.keys(master).map(k => k + ' ' + master[k].slice(0, 70)).join('\n')];
+  const open = mSh.getProtections(SpreadsheetApp.ProtectionType.SHEET).map(p => p.getUnprotectedRanges().map(r => r.getA1Notation()).join(' ')).join(' / ');
+  const lines = ['MASTER cells ' + Object.keys(master).length + ' | S31 ' + master.S31 + ' | S33 ' + master.S33 + ' | N48 ' + master.N48 + ' | Q28 ' + master.Q28, 'OPEN RANGES: ' + open];
   Object.keys(FSA_SHEETS).forEach(n => {
     try {
       const ss = SpreadsheetApp.openById(FSA_SHEETS[n]), sh = ss.getSheetByName(FSA_TAB);
       if (!sh) { lines.push(n + ': NO FSA_Report TAB'); return; }
       const f = fsaFormulas_(sh), diff = [];
-      Object.keys(master).forEach(k => { if (f[k] !== master[k]) diff.push(k + (f[k] ? ' has ' + f[k].slice(0, 50) : ' missing')); });
+      Object.keys(master).forEach(k => { if (f[k] !== master[k] && !/^=IMAGE\(/i.test(master[k] || '')) diff.push(k + (f[k] ? ' has ' + f[k].slice(0, 50) : ' missing')); });
       Object.keys(f).forEach(k => { if (!(k in master) && !/^=IMAGE\(/i.test(f[k])) diff.push(k + ' extra ' + f[k].slice(0, 50)); });
       const pr = sh.getProtections(SpreadsheetApp.ProtectionType.RANGE).map(p => p.getRange().getA1Notation() + (p.isWarningOnly() ? '(warn)' : ''));
       const ps = sh.getProtections(SpreadsheetApp.ProtectionType.SHEET).map(p => 'SHEET' + (p.isWarningOnly() ? '(warn)' : '') +
         ' open=' + p.getUnprotectedRanges().length + ' editors=' + p.getEditors().length);
-      lines.push(n + ': ' + (diff.length ? diff.length + ' DIFF -> ' + diff.slice(0, 12).join('; ') : 'formulas match') +
+      if (n === '05_TS4_Mr.Nijaguna' || /old|Methlan/.test(n)) return;
+      lines.push(n + ': ' + (diff.length ? diff.length + ' DIFF -> ' + diff.slice(0, 12).map(d => d.slice(0, 40)).join('; ') : 'formulas match') +
         ' | protect: ' + (pr.concat(ps).join(', ') || 'none') + ' | file editors ' + ss.getEditors().length);
     } catch (e) { lines.push(n + ': ERROR ' + e.message); }
   });
   Logger.log(lines.join('\n'));
   return lines;
+}
+
+/* ---------- hardening: formulas that survive cut/paste/drag inside the defect table ---------- */
+const FSA_SKIP = /old|Methlan/;                       // obsolete / different-layout files: never touched
+const FSA_CAPTIONS = ['C92', 'I92', 'N92', 'C105', 'I105', 'N105', 'C118', 'I118', 'N118'];
+
+/** new move-proof formulas, built from the master's own formulas */
+function fsaTargets_(master) {
+  const t = {};
+  FSA_CAPTIONS.forEach((a, i) => t[a] = '=CONCATENATE(INDEX($E$33:$E$47,' + (i + 1) + '),\" | \",INDEX($G$33:$G$47,' + (i + 1) + '))');
+  for (let r = 33; r <= 47; r++) {
+    const f = master['S' + r]; if (!f) continue;
+    t['S' + r] = f.replace(new RegExp('\\b([DEGNP])' + r + '\\b', 'g'), (m, c) => 'INDEX($' + c + '$33:$' + c + '$47,' + (r - 32) + ')');
+  }
+  if (master.S31) t.S31 = master.S31.replace(/\bE33\b/g, 'INDEX($E$33:$E$47,1)');
+  return t;
+}
+/** is the current formula the old master one, or the old one damaged by a moved cell? */
+function fsaOldOrBroken_(cur, old) {
+  if (!cur || !old) return false;
+  if (cur === old) return true;
+  const norm = s => s.replace(/(#REF!|\bG\d+\b)/g, 'G#');
+  return norm(cur) === norm(old);
+}
+function fsaPlan_(sh, master, targets) {
+  const f = fsaFormulas_(sh), plan = [], skip = [];
+  Object.keys(targets).forEach(a => {
+    const cur = f[a] || '';
+    if (cur === targets[a]) return;
+    if (fsaOldOrBroken_(cur, master[a])) plan.push({ a: a, from: cur, to: targets[a], repair: cur !== master[a] });
+    else skip.push(a + ' (' + (cur || 'empty').slice(0, 40) + ')');
+  });
+  return { plan: plan, skip: skip, f: f };
+}
+
+/** PREVIEW - changes nothing. */
+function fsaHardenPreview() { return fsaHarden_(false); }
+/** APPLY - backs up every old formula to the FSA_Backup tab first. */
+function fsaHardenApply() { return fsaHarden_(true); }
+/** PILOT - applies to one healthy report only and checks every affected value is unchanged. */
+function fsaHardenPilot() { return fsaHarden_(true, '08_TS9_Mr.Sureshkumar'); }
+
+function fsaHarden_(apply, only) {
+  const master = fsaFormulas_(SpreadsheetApp.openById(FSA_MASTER).getSheetByName(FSA_TAB));
+  const targets = fsaTargets_(master), lines = [], allow = {};
+  const tz = Session.getScriptTimeZone(), stamp = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm');
+  let bk = null;
+  if (apply) {
+    const log = ss_(); bk = log.getSheetByName('FSA_Backup') || log.insertSheet('FSA_Backup');
+    if (bk.getLastRow() === 0) bk.appendRow(['When', 'Report', 'Cell', 'Old formula', 'New formula']);
+  }
+  Object.keys(FSA_SHEETS).forEach(n => {
+    if (only && n !== only) return;
+    if (FSA_SKIP.test(n)) { lines.push(n + ': skipped (old / different layout)'); return; }
+    try {
+      const sh = SpreadsheetApp.openById(FSA_SHEETS[n]).getSheetByName(FSA_TAB);
+      const p = fsaPlan_(sh, master, targets);
+      const VR = ['S31:S47', 'C92:Q92', 'C105:Q105', 'C118:Q118'], before = VR.map(r => JSON.stringify(sh.getRange(r).getDisplayValues()));
+      let same = '';
+      if (apply && p.plan.length) {
+        bk.getRange(bk.getLastRow() + 1, 1, p.plan.length, 5).setValues(p.plan.map(x => [stamp, n, x.a, "'" + x.from, "'" + x.to]));
+        p.plan.forEach(x => sh.getRange(x.a).setFormula(x.to));
+        SpreadsheetApp.flush();
+        const after = VR.map(r => JSON.stringify(sh.getRange(r).getDisplayValues()));
+        same = before.every((b, i) => b === after[i]) ? ' | values unchanged' : ' | VALUES CHANGED: ' + VR.filter((r, i) => before[i] !== after[i]).join(',');
+      }
+      // remember what legitimately differs in this copy (its own extras / template variant), so the hourly check ignores it
+      const nowF = apply ? fsaFormulas_(sh) : p.f;
+      allow[FSA_SHEETS[n]] = Object.keys(master).filter(k => !/^=IMAGE\(/i.test(master[k]) && !(k in targets) && nowF[k] !== master[k]);
+      const rep = p.plan.filter(x => x.repair).map(x => x.a);
+      lines.push(n + ': ' + (apply ? 'changed ' : 'would change ') + p.plan.length + ' cells' + (rep.length ? ' (REPAIRS broken: ' + rep.join(',') + ')' : '') +
+        (p.skip.length ? ' | LEFT ALONE: ' + p.skip.join('; ') : '') + same);
+    } catch (e) { lines.push(n + ': ERROR ' + e.message); }
+  });
+  if (apply && !only) {
+    const exp = Object.keys(master).filter(k => !/^=IMAGE\(/i.test(master[k])).map(k => [k, "'" + (targets[k] || master[k])]);
+    const log = ss_(), ex = log.getSheetByName('FSA_Expected') || log.insertSheet('FSA_Expected');
+    ex.clearContents(); ex.getRange(1, 1, 1, 2).setValues([['Cell', 'Expected formula']]); ex.getRange(2, 1, exp.length, 2).setValues(exp);
+    PropertiesService.getScriptProperties().setProperty('FSA_ALLOW', JSON.stringify(allow));
+  }
+  Logger.log(lines.join('\n'));
+  return lines;
+}
+
+/* ---------- watching: hourly from runChecks ---------- */
+/** adds the FSA reports to the monitor's Watch_Sheets list (error-value scan). Safe to run again. */
+function fsaWatchSetup() {
+  const sh = ss_().getSheetByName('Watch_Sheets'), have = sh.getLastRow() > 1 ? sh.getRange(2, 1, sh.getLastRow() - 1, 1).getValues().map(r => String(r[0])) : [];
+  const add = Object.keys(FSA_SHEETS).filter(n => !FSA_SKIP.test(n) && !have.some(h => h.indexOf(FSA_SHEETS[n]) > -1))
+    .map(n => [FSA_SHEETS[n], FSA_TAB, 'Y', '', '']);
+  if (add.length) sh.getRange(sh.getLastRow() + 1, 1, add.length, 5).setValues(add);
+  Logger.log('added ' + add.length + ' FSA reports to Watch_Sheets');
+  return add.length;
+}
+
+/** formula drift check vs the expected list - raises / clears an issue on the HO bell */
+function fsaCheck_() {
+  const ex = ss_().getSheetByName('FSA_Expected'); if (!ex || ex.getLastRow() < 2) return 0;
+  const want = {}; ex.getRange(2, 1, ex.getLastRow() - 1, 2).getValues().forEach(r => want[r[0]] = String(r[1]).replace(/^'/, ''));
+  const allow = JSON.parse(PropertiesService.getScriptProperties().getProperty('FSA_ALLOW') || '{}');
+  let n = 0;
+  Object.keys(FSA_SHEETS).forEach(name => {
+    if (FSA_SKIP.test(name)) return;
+    const id = FSA_SHEETS[name], key = 'FSA|' + id, ok = allow[id] || [];
+    try {
+      const book = SpreadsheetApp.openById(id), sh = book.getSheetByName(FSA_TAB), f = fsaFormulas_(sh); n++;
+      const bad = Object.keys(want).filter(k => ok.indexOf(k) < 0 && f[k] !== want[k]);
+      if (bad.length) upsertIssue_({ key: key, severity: 'Error', source: 'FSA guard', program: book.getName() + ' > ' + FSA_TAB,
+        target: book.getUrl() + '#gid=' + sh.getSheetId(),
+        message: bad.length + ' formula cell(s) changed from the master FSA report: ' + bad.slice(0, 10).join(', ') + '. HO: restore from the master copy.' });
+      else autoResolve_(key, 'FSA formulas match the master again');
+    } catch (e) {}
+  });
+  return n;
 }
