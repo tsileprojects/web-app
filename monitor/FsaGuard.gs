@@ -253,3 +253,44 @@ function fsaLayoutFix_(apply) {
   Logger.log(lines.join('\n'));
   return lines;
 }
+
+/* ---------- robust row checks: invisible "" or spaces never count as an entry ---------- */
+function fsaRobustTargets_() {
+  const t = {}, cols = ['D', 'E', 'G', 'N', 'P'], vis = 'SUMPRODUCT(--(LEN(TRIM(D33:D47))>0))';
+  for (let r = 33; r <= 47; r++) {
+    const k = r - 32, cnt = cols.map(c => '(LEN(TRIM(INDEX($' + c + '$33:$' + c + '$47,' + k + ')))>0)').join('+');
+    t['S' + r] = '=IF(' + cnt + '=0,0,IF(' + cnt + '>=4,1,2))';
+  }
+  t.S31 = '=IF(OR(INDEX($E$33:$E$47,1)="No Defects",INDEX($E$33:$E$47,1)="Carton Box Audit"),1, IF(and(SUM(S33:S47) = ' + vis + ',' + vis + '>0),1, 0))';
+  t.S32 = '=' + vis;
+  return t;
+}
+function fsaRobustApply() {
+  const T = fsaRobustTargets_(), lines = [], log = ss_(), bk = log.getSheetByName('FSA_Backup');
+  const stamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'yyyy-MM-dd HH:mm');
+  const okOld = (a, f) => a === 'S32' ? /^=value\(COUNTA\(D33:D47\)\)$/i.test(f) : a === 'S31' ? /COUNTA\(D33:D47\)/.test(f) : /^=IF\(COUNTA\(INDEX\(/.test(f);
+  Object.keys(FSA_SHEETS).forEach(n => {
+    if (FSA_SKIP.test(n)) return;
+    try {
+      const sh = SpreadsheetApp.openById(FSA_SHEETS[n]).getSheetByName(FSA_TAB), f = fsaFormulas_(sh), plan = [], skip = [];
+      Object.keys(T).forEach(a => { if (f[a] === T[a]) return; if (okOld(a, f[a] || '')) plan.push(a); else skip.push(a); });
+      const before = sh.getRange('S31:S47').getDisplayValues().map(r => r[0]);
+      if (plan.length) {
+        bk.getRange(bk.getLastRow() + 1, 1, plan.length, 5).setValues(plan.map(a => [stamp, n, a, "'" + f[a], "'" + T[a]]));
+        plan.forEach(a => sh.getRange(a).setFormula(T[a])); SpreadsheetApp.flush();
+      }
+      const after = sh.getRange('S31:S47').getDisplayValues().map(r => r[0]);
+      const ch = before.map((b, i) => b !== after[i] ? 'S' + (31 + i) + ' ' + b + '->' + after[i] : null).filter(Boolean);
+      lines.push(n + ': changed ' + plan.length + (skip.length ? ' | LEFT ' + skip.join(',') : '') + (ch.length ? ' | values: ' + ch.join(', ') : ' | values unchanged'));
+    } catch (e) { lines.push(n + ': ERROR ' + e.message); }
+  });
+  // keep the hourly master check in step
+  const ex = log.getSheetByName('FSA_Expected');
+  if (ex && ex.getLastRow() > 1) {
+    const rows = ex.getRange(2, 1, ex.getLastRow() - 1, 2).getValues();
+    rows.forEach(r => { if (T[r[0]]) r[1] = "'" + T[r[0]]; });
+    ex.getRange(2, 1, rows.length, 2).setValues(rows);
+  }
+  Logger.log(lines.join('\n'));
+  return lines;
+}
