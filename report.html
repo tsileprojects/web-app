@@ -64,6 +64,7 @@
 <header>
   <div><h1>TSPL | <span data-i18n="dailyReport">Daily Report</span></h1><div class="meta" id="meta" data-i18n="loading">Loading…</div></div>
   <div class="acts">
+    <select id="unitSel" aria-label="Factory" title="Choose a factory" style="padding:7px 10px;font-weight:600"></select>
     <select id="mode" aria-label="Which day" style="padding:7px 10px"><option value="today">Today (live)</option><option value="last">Last full day</option><option value="date">Pick a date…</option></select>
     <input type="date" id="day" hidden style="padding:6px 8px">
     <button type="button" id="btnXls"><i class="las la-file-excel"></i><span data-i18n="downloadXls">Download Excel</span></button>
@@ -108,6 +109,20 @@
   var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'];
   var ONLY = (new URLSearchParams(location.search).get('unit') || '').toUpperCase();
   var R = null, NOTES = [], DR = null, loadedAt = null;
+
+  // ---------- factory picker: HO can switch, unit portals stay on their own unit ----------
+  function hoUser() { try { var s = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); return !s.redirect || /main_ho/i.test(s.redirect) || /main_ho/i.test(document.referrer); } catch (e) { return true; } }
+  var unitSel = document.getElementById('unitSel'), LOCKED = !!ONLY && UNITS.indexOf(ONLY) > -1 && !hoUser();
+  unitSel.innerHTML = (LOCKED ? [ONLY] : [''].concat(UNITS)).map(function (u) { return '<option value="' + u + '">' + (u || 'All factories') + '</option>'; }).join('');
+  unitSel.value = UNITS.indexOf(ONLY) > -1 ? ONLY : ''; unitSel.disabled = LOCKED;
+  unitSel.onchange = function () {
+    ONLY = this.value;
+    var q = new URLSearchParams(location.search); if (ONLY) q.set('unit', ONLY); else q.delete('unit');
+    try { history.replaceState(null, '', location.pathname + (q.toString() ? '?' + q : '')); } catch (e) {}
+    if (!R) return;
+    if (ONLY) openDrill(ONLY); else { DR = null; document.getElementById('drillCard').hidden = true; }
+    renderSummary(); renderNotes();
+  };
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function n0(v) { return v == null || v === '' ? '-' : Math.round(v).toLocaleString('en-IN'); }
