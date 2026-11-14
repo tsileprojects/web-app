@@ -28,10 +28,18 @@ const PO_BUYERS = {
       { sheet: 'Rib Top & BTM PO', product: 'Ribbed Stripe Top & Btm (sets)', dpr: ['# RIBED Stripe TOP', '# RIBED Stripe BTM'] },
       { sheet: 'Rib Top & BTM 50k AIR qty', product: 'Ribbed Stripe Top & Btm - AIR', dpr: ['# RIBED Stripe TOP', '# RIBED Stripe BTM'] }
     ]
+  },
+  AEO: {
+    id: '1oHITcWzGeyRyVZ6aZb4juZbOu87nx6wNm8BI03U0y-k',   // "TSPL PO Plan - AEO (live)" (SPRING 27 delivery update)
+    format: 'ho',          // one tab per day: STYLE NO / PO NO / DESTINATION / MODE / HO DATE / TOTAL / CUT / STITCH / FINISH ... - the LAST tab is read
+    dprBuyer: 'AEO',
+    dprMatch: 'number',    // DPR style "# 5110 Spring 25" belongs to style 5110 (any season)
+    since: '2026-10-01',
+    map: []
   }
 };
 const PO_FINISH_DAYS = 2;           // sewing must finish this many working days before the ship date
-const PO_DONE = /insp\s*clr|t\s*\/\s*out|shipped|dispatch|^rfi$/i;   // RFI = packed, ready for inspection
+const PO_DONE = /insp\s*clr|t\s*\/\s*o(ut)?$|shipped|dispatch|^rfi$|^rts$/i;   // RFI / RTS = packed, ready for inspection / to ship; T/O = taken out
 
 function poKeyCol_(c) { return String(c || '').toUpperCase().replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim(); }
 function poNum_(v) { const n = Number(v); return v === '' || v === null || isNaN(n) ? null : Math.round(n); }
@@ -39,6 +47,7 @@ function poYmd_(d) { return Utilities.formatDate(d, Session.getScriptTimeZone(),
 
 /** every PO line in the plan workbook */
 function poParse_(cfg) {
+  if (cfg.format === 'ho') return poParseHo_(cfg);
   const KEYS = { 'fty': 'fty', 'po no': 'po', 'colour': 'colour', 'color': 'colour', 'qty': 'qty', 'del': 'del', 'cut': 'cut', 'stitch': 'stitch',
     'iron': 'iron', 'pack': 'pack', 'fsa': 'fsa', 'f i': 'fi', 'priority': 'priority', 'remarks': 'remarks' };
   const out = [], issues = [], seen = {};
@@ -85,6 +94,40 @@ function poParse_(cfg) {
   return { lines: out, issues: issues };
 }
 
+/** AEO-style daily delivery update: the last tab, PO rows grouped under "dd MMM HO" headings */
+function poParseHo_(cfg) {
+  const out = [], issues = [], seen = {};
+  const sheets = SpreadsheetApp.openById(cfg.id).getSheets(), sh = sheets[sheets.length - 1];
+  const rows = sh.getDataRange().getValues();
+  let hr = -1;
+  for (let i = 0; i < Math.min(rows.length, 10); i++) if (rows[i].some(c => String(c).trim().toUpperCase() === 'PO NO')) { hr = i; break; }
+  if (hr < 0) return { lines: [], issues: ['No "PO NO" header found on tab "' + sh.getName() + '"'], tab: sh.getName() };
+  const H = {}, raw = rows[hr].map(c => String(c).trim().toUpperCase().replace(/\s+/g, ' '));
+  const want = { 'STYLE NO': 'style', 'PO NO': 'po', 'DESTINATION': 'dest', 'MODE': 'mode', 'HO DATE': 'ship', 'TOTAL': 'qty', 'CUT': 'cut', 'STITCH': 'stitch',
+    'FINISH': 'iron', 'CARTON PACK B': 'carton', 'FSA STATUS': 'fsa', 'REMARKS': 'status' };
+  raw.forEach((h, i) => { const k = want[h] || (h.indexOf('CARTON PACK') === 0 ? 'carton' : ''); if (k && !(k in H)) H[k] = i; });
+  const asOn = raw.map((h, i) => /^AS ON|PPD/.test(h) ? i : -1).filter(i => i >= 0);   // revised / planned dates, latest column last
+  for (let r = hr + 1; r < rows.length; r++) {
+    const R = rows[r], g = k => k in H ? R[H[k]] : '';
+    const po = String(g('po') || '').replace(/[^0-9A-Za-z]/g, ''), style = String(g('style') || '').trim();
+    if (!/^\d{5,}$/.test(po) || !style) continue;
+    const ship = g('ship') instanceof Date ? poYmd_(g('ship')) : '';
+    const carton = poNum_(g('carton')), fsa = poNum_(g('fsa'));
+    const x = { product: 'Style ' + style, dpr: [style], fty: '', po: po, colour: 'ALL', qty: poNum_(g('qty')) || 0, cut: poNum_(g('cut')), stitch: poNum_(g('stitch')),
+      iron: poNum_(g('iron')), pack: carton || fsa ? Math.max(carton || 0, fsa || 0) : null, fsa: fsa, ship: ship,
+      status: String(g('status') || '').trim().replace(/^T\/0$/i, 'T/O'), priority: [String(g('dest') || '').trim(), String(g('mode') || '').trim()].filter(Boolean).join(' · ') };
+    if (/^rts$/i.test(x.status)) x.status = 'RTS';
+    const rev = asOn.map(i => R[i]).filter(v => v instanceof Date).pop();
+    if (rev && poYmd_(rev) !== ship) x.priority += (x.priority ? ' · ' : '') + 'revised ' + Utilities.formatDate(rev, Session.getScriptTimeZone(), 'dd-MMM');
+    if (!ship) x.note0 = 'No HO date in the plan';
+    const mk = x.product + '|' + po + '|' + x.priority, prev = seen[mk];
+    if (!prev) { seen[mk] = x; out.push(x); continue; }
+    ['qty', 'cut', 'stitch', 'iron', 'pack', 'fsa'].forEach(f => { if (x[f] !== null) prev[f] = (prev[f] || 0) + x[f]; });
+    if (x.status !== prev.status && (!prev.status || PO_DONE.test(prev.status))) prev.status = x.status;
+  }
+  return { lines: out, issues: issues, tab: sh.getName() };
+}
+
 /** DPR sewing output per style + colour: total since cfg.since, recent daily rate, today's lines */
 function poDpr_(cfg) {
   const src = kpiSrc_('PROD'), today = tdToday_();
@@ -92,7 +135,8 @@ function poDpr_(cfg) {
   const from = Utilities.formatDate(new Date(Date.now() - 14 * 864e5), Session.getScriptTimeZone(), 'yyyy-MM-dd');
   const day = appCsv_(src, "select H, I, C, sum(AK) where G contains '" + cfg.dprBuyer + "' and C >= date '" + from + "' and E = 'Sew' group by H, I, C");
   const now = appCsv_(src, "select D, F, H, I, sum(X), sum(AK) where G contains '" + cfg.dprBuyer + "' and C = date '" + today + "' and E = 'Sew' group by D, F, H, I");
-  const key = (s, c) => String(s || '').trim().toUpperCase() + '|' + poKeyCol_(c);
+  const key = cfg.dprMatch === 'number' ? ((s, c) => ((String(s || '').match(/\d{4,}/) || [String(s || '').trim().toUpperCase()])[0]) + '|')
+                                         : ((s, c) => String(s || '').trim().toUpperCase() + '|' + poKeyCol_(c));
   const sewn = {}, units = {}, rate = {}, lines = [];
   (tot.rows || []).forEach(x => { const k = key(x[0], x[1]); sewn[k] = (sewn[k] || 0) + kpiNum_(x[3]); (units[k] = units[k] || {})[x[2]] = (units[k][x[2]] || 0) + kpiNum_(x[3]); });
   const byDay = {};
@@ -118,7 +162,7 @@ function poView_(buyer, fresh) {
   const cfg = PO_BUYERS[buyer], c = CacheService.getScriptCache(), ck = 'po_' + buyer;
   const hit = poCacheGet_(c, ck); if (hit && !tdFresh_(ck, fresh)) return JSON.parse(hit);
   const today = tdToday_(), P = poParse_(cfg), D = poDpr_(cfg);
-  const linked = {}; cfg.map.forEach(x => x.dpr.forEach(st => linked[st.toUpperCase()] = 1));
+  const linked = {}; (cfg.map.length ? cfg.map : P.lines).forEach(x => x.dpr.forEach(st => linked[D.key(st, '').split('|')[0]] = 1));
   const free = {}; Object.keys(D.sewn).forEach(k => { const st = k.split('|')[0]; if (!linked[st]) free[st] = (free[st] || 0) + D.sewn[k]; });
   Object.keys(free).filter(st => free[st] > 0).forEach(st => P.issues.push('DPR style "' + st + '" (' + free[st].toLocaleString() + ' pcs sewn since ' + cfg.since + ') is not linked to any PO sheet - tell us which product it belongs to'));
   // ---- shared pools: same DPR style(s) + colour. Sewn pieces are given to POs in ship-date order.
@@ -184,7 +228,7 @@ function poView_(buyer, fresh) {
         poCount: col.pos.length, pos: col.pos };
     }).sort((a, b) => b.qty - a.qty);
     const s = f => colours.reduce((a, x) => a + (x[f] || 0), 0);
-    const live = D.lines.filter(l => p.dpr.some(st => st.toUpperCase() === l.style.toUpperCase()));
+    const live = D.lines.filter(l => p.dpr.some(st => D.key(st, '').split('|')[0] === D.key(l.style, '').split('|')[0]));
     return { product: pn, dpr: p.dpr, qty: s('qty'), stitch: s('stitch'), pack: s('pack'), sewnEst: s('sewnEst'), rate: s('rate'),
       poCount: colours.reduce((a, x) => a + x.poCount, 0), nextShip: colours.map(x => x.nextShip).filter(Boolean).sort()[0] || '',
       risk: colours.reduce((a, x) => rank[x.risk] > rank[a] ? x.risk : a, 'done'), colours: colours,
@@ -197,7 +241,7 @@ function poView_(buyer, fresh) {
   alerts.sort((a, b) => (rank[b.risk] - rank[a.risk]) || (a.ship || '').localeCompare(b.ship || ''));
   const s = f => products.reduce((a, x) => a + (x[f] || 0), 0);
   const out = { ok: true, buyer: buyer, buyers: Object.keys(PO_BUYERS), date: today, time: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'HH:mm'),
-    sheetUrl: 'https://docs.google.com/spreadsheets/d/' + cfg.id + '/edit', finishDays: PO_FINISH_DAYS,
+    sheetUrl: 'https://docs.google.com/spreadsheets/d/' + cfg.id + '/edit', finishDays: PO_FINISH_DAYS, tab: P.tab || '', since: cfg.since,
     total: { qty: s('qty'), stitch: s('stitch'), pack: s('pack'), sewnEst: s('sewnEst'), pos: s('poCount'), todayPro: s('todayPro') },
     products: products, alerts: alerts, issues: P.issues };
   poCachePut_(c, ck, JSON.stringify(out), 2100);   // warmed by warmFeeds every 30 min

@@ -98,7 +98,7 @@
     D = r;
     $('buyer').innerHTML = r.buyers.map(function (b) { return '<option' + (b === r.buyer ? ' selected' : '') + '>' + esc(b) + '</option>'; }).join('');
     $('bTitle').textContent = r.buyer; $('sheetLnk').href = r.sheetUrl;
-    $('asof').textContent = 'as of ' + r.time + ' · updates every 5 min';
+    $('asof').textContent = 'as of ' + r.time + (r.tab ? ' · sheet tab "' + r.tab.trim() + '"' : '') + ' · updates every 5 min';
     var t = r.total, late = r.alerts.filter(function (a) { return a.risk === 'late'; }).length, risk = r.alerts.filter(function (a) { return a.risk === 'risk'; }).length;
     var nxt = r.products.map(function (p) { return p.nextShip; }).filter(Boolean).sort()[0];
     var K = [['Order qty', n0(t.qty), t.pos + ' PO lines'], ['Sewn', n0(t.sewnEst), Math.round(t.qty ? t.sewnEst / t.qty * 100 : 0) + '% of order'], ['Packed', n0(t.pack), Math.round(t.qty ? t.pack / t.qty * 100 : 0) + '% of order'],
@@ -120,12 +120,12 @@
         '<td>' + dmy(p.nextShip) + '</td><td>' + st(p.risk) + '</td></tr>';
       if (!OPEN[k]) return;
       p.colours.forEach(function (c, j) {
-        var k2 = k + 'c' + j;
-        h += '<tr class="lvl2" data-k="' + k2 + '"><td><span class="tg">' + (OPEN[k2] ? '▾' : '▸') + '</span><b>' + esc(c.colour) + '</b>' + (c.dprSewn != null ? '<div class="note">DPR sewn to date ' + n0(c.dprSewn) + '</div>' : '') + '</td>' +
+        var k2 = k + 'c' + j, flat = p.colours.length === 1 && c.colour === 'ALL';   // no colour split (e.g. AEO): show POs straight away
+        if (!flat) h += '<tr class="lvl2" data-k="' + k2 + '"><td><span class="tg">' + (OPEN[k2] ? '▾' : '▸') + '</span><b>' + esc(c.colour) + '</b>' + (c.dprSewn != null ? '<div class="note">DPR sewn to date ' + n0(c.dprSewn) + '</div>' : '') + '</td>' +
           '<td class="r">' + c.poCount + '</td><td class="r">' + n0(c.qty) + '</td><td class="r">' + n0(c.sewnEst) + bar(c.sewnEst, c.qty) + '</td><td class="r">' + n0(c.pack) + bar(c.pack, c.qty, 'p') + '</td>' +
           '<td class="r">' + n0(Math.max(0, c.qty - c.sewnEst)) + '</td><td class="r">-</td><td class="r">' + n0(c.rate) + '</td><td>' + esc(units(c.units)) + '</td><td>' + dmy(c.nextShip) + '</td><td>' + st(c.risk) + '</td></tr>';
-        if (!OPEN[k2]) return;
-        h += '<tr class="lvl3h"><td>PO · unit · priority</td><td class="r">Cut</td><td class="r">Qty</td><td class="r">Sewn (est)</td><td class="r">Packed</td><td class="r">Stitch / iron / FSA (plan)</td><td class="r" colspan="2">Days left · need / day</td><td>F I</td><td>Ship</td><td>Status</td></tr>';
+        if (!flat && !OPEN[k2]) return;
+        h += '<tr class="lvl3h"><td>PO · unit · priority / destination</td><td class="r">Cut</td><td class="r">Qty</td><td class="r">Sewn (est)</td><td class="r">Packed</td><td class="r">Stitch / iron / FSA (plan)</td><td class="r" colspan="2">Days left · need / day</td><td>F I</td><td>Ship</td><td>Status</td></tr>';
         c.pos.forEach(function (x) {
           h += '<tr class="lvl3"><td><b>' + esc(x.po) + '</b> <span class="muted">' + esc([x.fty, x.priority].filter(Boolean).join(' · ')) + '</span>' + (x.note ? '<div class="note">' + esc(x.note) + '</div>' : '') + '</td>' +
             '<td class="r">' + n0(x.cut) + '</td><td class="r"><b>' + n0(x.qty) + '</b></td><td class="r">' + n0(x.sewnEst) + '</td><td class="r">' + n0(x.pack) + '</td>' +
@@ -135,7 +135,7 @@
       });
     });
     $('prod').innerHTML = h || '<tr><td colspan="11" class="empty">No POs found in the plan sheet.</td></tr>';
-    $('hint').textContent = 'Sewn = the higher of the plan sheet\'s STITCH figures and the DPR output since ' + 'Aug 2026' + ' for the same style and colour, given to POs in ship-date order. Running / day = average of the last 6 working days in the DPR. A PO is "At risk" if, at that pace, sewing will not cover it ' + r.finishDays + ' working days before its ship date.';
+    $('hint').textContent = 'Sewn = the higher of the plan sheet\'s STITCH figures and the DPR output since ' + (r.since || '') + ' for the same style' + (r.buyer === 'AEO' ? '' : ' and colour') + ', given to POs in ship-date order. Running / day = average of the last 6 working days in the DPR. A PO is "At risk" if, at that pace, sewing will not cover it ' + r.finishDays + ' working days before its ship date.';
     // lines
     var L = [];
     r.products.forEach(function (p) { p.lines.forEach(function (l) { L.push([p.product, l]); }); });
