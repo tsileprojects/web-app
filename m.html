@@ -396,7 +396,7 @@
   }
   function loadToday() {
     if (navigator.onLine === false) return renderToday();
-    A.jsonp({ action: 'today' }, function (r) { if (r) { TODAY = r; ls('tsplAppToday', JSON.stringify(r)); renderToday(); if (VIEW === 'report') renderReport(); } }, 90000);
+    A.jsonp({ action: 'today', fresh: 1 }, function (r) { if (r) { TODAY = r; ls('tsplAppToday', JSON.stringify(r)); renderToday(); if (VIEW === 'report') renderReport(); } }, 90000);
   }
 
   // ---------- report ----------
@@ -749,7 +749,7 @@
   // ---------- start ----------
   renderHome();                               // instant from the saved copy
   loadHome();                                 // then fresh numbers
-  renderToday(); loadToday(); setInterval(function () { if (!document.hidden) loadToday(); }, 5 * 60000);
+  renderToday(); loadToday(); setInterval(function () { if (!document.hidden) loadToday(); }, 60000);
   Q.changed(); Q.flush();
   setInterval(function () { if (!document.hidden) loadHome(); else if (ls('tsplAppAlerts') === '1') loadHome(); }, 3 * 60000);
   document.addEventListener('visibilitychange', function () { if (!document.hidden && Date.now() - HOME_AT > 60000) loadHome(); });

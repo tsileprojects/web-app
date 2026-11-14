@@ -98,7 +98,7 @@
     if (m && m.d && m.d.ok) { try { render(m); } catch (e) {} } else $('eyebrow').textContent = 'Loading ' + st.unit + '…';
     var got = {}, need = 3;
     function done() { if (--need) return; if (!(got.d && got.d.ok) && m && m.d && m.d.ok) return; cache[k] = got; if (got.d && got.d.ok) A.mem('line_' + k, got); if (k === st.unit + st.date) render(got); }
-    A.jsonp({ action: 'drill', unit: st.unit, date: st.date }, function (r) { got.d = r; done(); });
+    A.jsonp({ action: 'drill', unit: st.unit, date: st.date, fresh: st.date === today() ? 1 : '' }, function (r) { got.d = r; done(); });
     A.jsonp({ action: 'line_defects', unit: st.unit, date: st.date }, function (r) { got.q = r; done(); });
     A.jsonp({ action: 'dt_list', unit: st.unit, date: st.date }, function (r) { got.t = r; done(); });
   }
@@ -178,7 +178,7 @@
       : '<div class="empty">No stops logged on this line' + (st.date === today() ? ' today' : '') + '.</div>';
   }
   go();
-  setInterval(function () { if (st.date === today()) { delete cache[st.unit + st.date]; go(); } }, 120000);
+  setInterval(function () { if (st.date === today()) { delete cache[st.unit + st.date]; go(); } }, 60000);
 })();
 </script>
 </body>

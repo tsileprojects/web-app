@@ -169,8 +169,9 @@
     document.querySelectorAll('#dots span').forEach(function(d, k){ d.className = k === cur ? 'on' : ''; });
     countUp(m);
   }
+  function loadToday(){ jsonp({ action: 'today', fresh: 1 }, function (r) { if (r && r.ok) { TODAY = r; if (data) { build(); show(cur); } } }); }
   function load(){
-    jsonp({ action: 'today' }, function (r) { if (r && r.ok) { TODAY = r; if (data) { build(); show(cur); } } });
+    loadToday();
     jsonp({ action: 'notes' }, function (r) { if (r && r.ok) { NOTES = r.notes || []; if (data) { build(); show(cur); } } });
     jsonp({ action: 'kpis' }, function (r) {
       if (r && r.ok) { data = r; loadedAt = Date.now(); build(); show(cur); }
@@ -183,6 +184,7 @@
   }, 1000);
   setInterval(function(){ if (slides.length) show(cur + 1); }, ROTATE);
   setInterval(load, 5 * 60000);
+  setInterval(loadToday, 60000);   // live output every minute
   document.addEventListener('keydown', function(e){ if (e.key === 'ArrowRight') show(cur + 1); if (e.key === 'ArrowLeft') show(cur - 1 + slides.length); if (e.key === 'f') document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); });
   load();
 })();

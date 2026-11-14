@@ -260,7 +260,7 @@
     }
   }
   function loadToday() {
-    jsonp({ action: 'today' }, function (r) { if (r) { TODAY = r; renderToday(); } }, 90000);
+    jsonp({ action: 'today', fresh: 1 }, function (r) { if (r) { TODAY = r; renderToday(); } }, 90000);
   }
   document.getElementById('today').addEventListener('click', function (e) { var u = e.target.closest('[data-u]'); if (u) location.href = 'report.html?unit=' + u.getAttribute('data-u'); });
   // ---------- quick launch (uses the menu of the page around this one) ----------
@@ -309,7 +309,7 @@
   setTimeout(function () { collect(); renderApps(); }, 400);   // after the portal menu is ready
   setInterval(tick, 30000);
   setInterval(load, 5 * 60000);
-  setInterval(loadToday, 5 * 60000);
+  setInterval(function () { if (!document.hidden) loadToday(); }, 60000);   // live output every minute
   load();
   loadToday();
 })();
