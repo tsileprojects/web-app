@@ -215,7 +215,7 @@
     var tools = '<div class="no-print" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px">' +
       '<button type="button" id="bUpd" title="Read the latest hourly production from the DPR now">&#8635; Update now</button>' +
       '<button type="button" id="bHourly" class="' + (HOURLY ? 'pri' : '') + '" style="' + (HOURLY ? 'background:#2196f3;color:#fff;border-color:#2196f3' : '') + '">&#9201; Hourly view' + (HOURLY ? ' (on)' : '') + '</button>' +
-      '<span class="m" style="font-size:12px;align-self:center">' + (live ? 'Live as of ' + esc(r.time) + ' · auto-refresh every 5 min' : 'Day: ' + dmy(date)) + '</span></div>';
+      '<span class="m" style="font-size:12px;align-self:center">' + (live ? 'Live as of ' + esc(r.time) + ' · auto-updates every minute' : 'Day: ' + dmy(date)) + '</span></div>';
     var head, body, tot;
     if (HOURLY) {
       head = '<table><thead><tr><th>' + T('line') + '</th><th class="l">' + T('style') + '</th>' + [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (h) { return '<th>H' + h + '</th>'; }).join('') + '<th>Total</th><th>' + T('target') + '</th><th>Of target</th></tr></thead><tbody>';
@@ -328,7 +328,7 @@
     loadNotes();
   }
   function loadNotes() { jsonp({ action: 'notes' }, function (r) { if (r && r.ok) { NOTES = r.notes || []; renderNotes(); if (R) renderSummary(); } }, 60000); }
-  function tick() { if (!loadedAt) return; var m = Math.floor((Date.now() - loadedAt) / 60000); document.getElementById('meta').textContent = (m < 1 ? T('updatedNow') : T('updatedMin', { n: m })) + (isLive() ? ' · live, refreshes every 5 min' : ''); }
+  function tick() { if (!loadedAt) return; var m = Math.floor((Date.now() - loadedAt) / 60000); document.getElementById('meta').textContent = (m < 1 ? T('updatedNow') : T('updatedMin', { n: m })) + (isLive() ? ' · live, updates every minute' : ''); }
 
   // day switch
   var modeSel = document.getElementById('mode'), dayInp = document.getElementById('day');
@@ -340,7 +340,8 @@
     PD = null; renderSummary(); loadProd(function () { if (DR) openDrill(DR.unit, true); tick(); });
   };
   dayInp.onchange = function () { DAY = this.value; if (!DAY) return; PD = null; renderSummary(); loadProd(function () { if (DR) openDrill(DR.unit, true); }); };
-  setInterval(function () { if (MODE === 'today' && !document.hidden) loadProd(function () { if (DR) openDrill(DR.unit, true); loadedAt = Date.now(); tick(); }); }, 5 * 60000);
+  setInterval(function () { if (MODE === 'today' && !document.hidden && R) updateNow(); }, 60000);   // same as pressing Update now, every minute (server allows one fresh read per minute)
+  setInterval(tick, 20000);
 
   // ---------- Excel ----------
   function loadXlsx(cb) {
