@@ -80,8 +80,12 @@ function fnRows_(unit, date) {
 }
 function fnTot_(rows) {
   const t = { iron: 0, chk: 0, pass: 0, alt: 0, rej: 0, pack: 0, ctn: 0 };
-  rows.forEach(r => FN_Q.forEach((k, i) => t[k] += Number(r[8 + i]) || 0));
-  t.passPct = t.chk ? Math.round(t.pass / t.chk * 1000) / 10 : null;
+  let chkQ = 0;   // checked qty only from rows that recorded pass/alter/reject (FSR day imports carry checked qty only)
+  rows.forEach(r => {
+    FN_Q.forEach((k, i) => t[k] += Number(r[8 + i]) || 0);
+    if ((Number(r[10]) || 0) + (Number(r[11]) || 0) + (Number(r[12]) || 0) > 0) chkQ += Number(r[9]) || 0;
+  });
+  t.passPct = chkQ ? Math.round(t.pass / chkQ * 1000) / 10 : null;
   return t;
 }
 
