@@ -271,11 +271,51 @@ function poWorkDays_(fromYmd, toYmd) {   // Mon-Sat between today (exclusive) an
 }
 function poMinusWorkDays_(ymd, n) { const d = new Date(ymd + 'T12:00:00'); while (n > 0) { d.setDate(d.getDate() - 1); if (d.getDay() !== 0) n--; } return poYmd_(d); }
 
+/* ---------- FSA audits (00_FSA_C_Datamaster_7) - one row per defect, so reports are de-duplicated ---------- */
+const PO_FSA_DM = { id: '1_PPSVI0IBkLGmEJRPA1ioA2KBSLdJlNKFxEI3k7V1f8', sheet: 'FSA_DM_7' };
+function poFsaKey_(v) { return String(v || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); }
+function poFsa_() {
+  const c = CacheService.getScriptCache(), hit = poCacheGet_(c, 'po_fsa2');
+  if (hit) return JSON.parse(hit);
+  const since = Utilities.formatDate(new Date(Date.now() - 240 * 864e5), Session.getScriptTimeZone(), 'yyyy-MM-dd');
+  const r = appCsv_(PO_FSA_DM, "select F, E, M, Q, max(S), max(AN), max(D), max(T) where D >= date '" + since + "' and M is not null group by F, E, M, Q");
+  const by = {};
+  (r.rows || []).forEach(x => {
+    const k = poFsaKey_(x[2]); if (k.length < 5) return;
+    const res = String(x[5] || '').trim().toUpperCase(), q = kpiNum_(x[4]), d = String(x[6] || '');
+    const dd = (d.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/) || []), ymd = dd.length ? dd[1] + '-' + ('0' + dd[2]).slice(-2) + '-' + ('0' + dd[3]).slice(-2) : '';
+    (by[k] = by[k] || []).push({ col: poKeyCol_(x[3]), q: q, t: kpiNum_(x[7]), res: res, d: ymd, unit: x[0] });
+  });
+  const out = { at: new Date().toISOString(), by: by, error: r.error || '' };
+  poCachePut_(c, 'po_fsa2', JSON.stringify(out), 1800);
+  return out;
+}
+/** FSA audit summary for one PO line (colour used only when the PO has audits for several colours) */
+function poFsaFor_(F, po, colour, qty) {
+  const keys = String(po || '').split(/[\/,&+]| and /i).map(poFsaKey_).filter(k => k.length >= 5);
+  let rows = []; keys.forEach(k => { rows = rows.concat(F.by[k] || []); });
+  if (!rows.length) return null;
+  const cols = {}; rows.forEach(x => cols[x.col] = 1);
+  if (Object.keys(cols).length > 1 && colour) {
+    const want = poKeyCol_(colour), w1 = want.split(/[\s\/\-]+/)[0];
+    const m = rows.filter(x => x.col === want || (w1 && x.col.split(/[\s\/\-]+/)[0] === w1));
+    if (m.length) rows = m;
+  }
+  rows.sort((a, b) => a.d < b.d ? -1 : 1);
+  const last = rows[rows.length - 1];
+  // passed = the highest cumulative quantity cleared by a PASS report ("Total Offered" is cumulative; final re-audits repeat the full PO)
+  const passed = rows.filter(x => x.res === 'PASS').reduce((a, x) => Math.max(a, x.q, x.t), 0);
+  return { pass: qty ? Math.min(qty, passed) : passed, offered: rows.reduce((a, x) => Math.max(a, x.q, x.t), 0),
+    fail: rows.filter(x => x.res === 'FAIL').length, reports: rows.length, last: last.d, lastRes: last.res };
+}
+
 function poView_(buyer, fresh) {
   buyer = buyer && PO_BUYERS[buyer] ? buyer : Object.keys(PO_BUYERS)[0];
   const cfg = PO_BUYERS[buyer], c = CacheService.getScriptCache(), ck = 'po_' + buyer;
   const hit = poCacheGet_(c, ck); if (hit && !tdFresh_(ck, fresh)) return JSON.parse(hit);
   const today = tdToday_(), P = poParse_(cfg), D = poDpr_(cfg);
+  let FSA = { by: {} }; try { FSA = poFsa_(); } catch (e) {}
+  P.lines.forEach(x => { const f = poFsaFor_(FSA, x.po, x.colour, x.qty); x.fa = f; x.fsaQ = f ? f.pass : (x.fsa || 0); });
   const linked = {}; (cfg.map.length ? cfg.map : P.lines).forEach(x => x.dpr.forEach(st => linked[D.key(st, '').split('|')[0]] = 1));
   const free = {}; Object.keys(D.sewn).forEach(k => { const st = k.split('|')[0]; if (!linked[st]) free[st] = (free[st] || 0) + D.sewn[k]; });
   Object.keys(free).filter(st => free[st] > 0).forEach(st => P.issues.push('DPR style "' + st + '" (' + free[st].toLocaleString() + ' pcs sewn since ' + cfg.since + ') is not linked to any PO sheet - tell us which product it belongs to'));
@@ -327,7 +367,7 @@ function poView_(buyer, fresh) {
   P.lines.forEach(x => {
     const p = prods[x.product] = prods[x.product] || { product: x.product, dpr: x.dpr, colours: {} };
     const ck2 = poKeyCol_(x.colour), col = p.colours[ck2] = p.colours[ck2] || { colour: ck2, pos: [] };
-    col.pos.push({ po: x.po, colour: x.colour, fty: x.fty, qty: x.qty, cut: x.cut, stitch: x.stitch, iron: x.iron, pack: x.pack, fsa: x.fsa,
+    col.pos.push({ po: x.po, colour: x.colour, fty: x.fty, qty: x.qty, cut: x.cut, stitch: x.stitch, iron: x.iron, pack: x.pack, fsa: x.fsa, fsaQ: x.fsaQ, fa: x.fa,
       ship: x.ship, shipOdd: !!x.shipOdd, status: x.status, priority: x.priority, sewnEst: x.sewnEst, risk: x.risk, note: x.note, daysLeft: x.daysLeft, needPerDay: x.needPerDay });
   });
   const products = Object.keys(prods).map(pn => {
@@ -337,14 +377,14 @@ function poView_(buyer, fresh) {
       const s = f => col.pos.reduce((a, x) => a + (x[f] || 0), 0);
       const open = col.pos.filter(x => x.risk !== 'done');
       col.pos.sort((a, b) => (a.ship || '9999') < (b.ship || '9999') ? -1 : 1);
-      return { colour: cn, qty: s('qty'), stitch: s('stitch'), iron: s('iron'), pack: s('pack'), fsa: s('fsa'), sewnEst: s('sewnEst'),
+      return { colour: cn, qty: s('qty'), stitch: s('stitch'), iron: s('iron'), pack: s('pack'), fsa: s('fsa'), fsaQ: s('fsaQ'), fsaFail: col.pos.reduce((a, x) => a + (x.fa ? x.fa.fail : 0), 0), sewnEst: s('sewnEst'),
         dprSewn: pl.dprSewn, poolSewn: pl.sewn, rate: pl.rate || 0, units: pl.units || {},
         nextShip: open.map(x => x.ship).filter(Boolean).sort()[0] || '', risk: col.pos.reduce((a, x) => rank[x.risk] > rank[a] ? x.risk : a, 'done'),
         poCount: col.pos.length, pos: col.pos };
     }).sort((a, b) => b.qty - a.qty);
     const s = f => colours.reduce((a, x) => a + (x[f] || 0), 0);
     const live = D.lines.filter(l => p.dpr.some(st => D.key(st, '').split('|')[0] === D.key(l.style, '').split('|')[0]));
-    return { product: pn, dpr: p.dpr, qty: s('qty'), stitch: s('stitch'), pack: s('pack'), sewnEst: s('sewnEst'), rate: cfg.poolByStyle ? ((colours[0] || {}).rate || 0) : s('rate'),
+    return { product: pn, dpr: p.dpr, qty: s('qty'), stitch: s('stitch'), pack: s('pack'), fsaQ: s('fsaQ'), fsaFail: s('fsaFail'), sewnEst: s('sewnEst'), rate: cfg.poolByStyle ? ((colours[0] || {}).rate || 0) : s('rate'),
       poCount: colours.reduce((a, x) => a + x.poCount, 0), nextShip: colours.map(x => x.nextShip).filter(Boolean).sort()[0] || '',
       risk: colours.reduce((a, x) => rank[x.risk] > rank[a] ? x.risk : a, 'done'), colours: colours,
       lines: live, todayPro: live.reduce((a, l) => a + l.pro, 0) };
@@ -357,7 +397,8 @@ function poView_(buyer, fresh) {
   const s = f => products.reduce((a, x) => a + (x[f] || 0), 0);
   const out = { ok: true, buyer: buyer, buyers: Object.keys(PO_BUYERS), date: today, time: Utilities.formatDate(new Date(), Session.getScriptTimeZone(), 'HH:mm'),
     sheetUrl: 'https://docs.google.com/spreadsheets/d/' + cfg.id + '/edit', finishDays: PO_FINISH_DAYS, tab: P.tab || '', since: cfg.since,
-    total: { qty: s('qty'), stitch: s('stitch'), pack: s('pack'), sewnEst: s('sewnEst'), pos: s('poCount'), todayPro: s('todayPro') },
+    total: { qty: s('qty'), stitch: s('stitch'), pack: s('pack'), fsaQ: s('fsaQ'), fsaFail: s('fsaFail'), sewnEst: s('sewnEst'), pos: s('poCount'), todayPro: s('todayPro') },
+    fsaAt: FSA.at || '',
     products: products, alerts: alerts, issues: P.issues };
   poCachePut_(c, ck, JSON.stringify(out), 2100);   // warmed by warmFeeds every 30 min
   return out;

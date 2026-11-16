@@ -24,7 +24,7 @@
   .sec-h h2{margin:0;font-size:15px;font-weight:700;letter-spacing:-.1px}
   .sec-h .sub{font-size:12px;color:var(--muted)}
   .pro-card{border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.06),0 0 0 1px #e2e8f0;padding:16px 18px}
-  .kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+  .kpis{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:12px}
   .k{background:#fff;border-radius:12px;box-shadow:0 1px 2px rgba(15,23,42,.06),0 0 0 1px #e2e8f0;padding:14px 16px;position:relative;overflow:hidden}
   .k:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--acc,#2f6fed)}
   .k .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
@@ -91,7 +91,7 @@
   details.notes summary{cursor:pointer;font-weight:700;font-size:15px;list-style:none} details.notes summary::-webkit-details-marker{display:none}
   details.notes summary:after{content:" ▸";color:#94a3b8} details.notes[open] summary:after{content:" ▾"}
   .foot{font-size:11.5px;color:var(--muted);line-height:1.6;margin:0}
-  @media (max-width:1250px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.ov{grid-template-columns:1fr 1fr}.ov>.acts-card{grid-column:1/-1}}
+  @media (max-width:1250px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.ov{grid-template-columns:1fr 1fr}.ov>.acts-card{grid-column:1/-1}}
   @media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ov{grid-template-columns:1fr}.pro-main{padding:12px}.tw{max-height:none}}
   @media print{.pro-top{position:static}.tool,#tsplHomeBtn,.sp button{display:none!important}.tw{max-height:none;overflow:visible}body.pro{background:#fff}}
 </style>
@@ -143,6 +143,7 @@
         <th class="r" data-s="poCount">POs<span class="ar"></span></th>
         <th class="r" data-s="qty">Order qty<span class="ar"></span></th>
         <th class="ns">Progress (sewn · packed)</th>
+        <th class="r" data-s="fsaQ">FSA passed<span class="ar"></span></th>
         <th class="r" data-s="bal">Bal. to sew<span class="ar"></span></th>
         <th class="r" data-s="todayPro">Today<span class="ar"></span></th>
         <th class="r" data-s="rate">Avg / day<span class="ar"></span></th>
@@ -150,7 +151,7 @@
         <th data-s="nextShip">Next ship<span class="ar"></span></th>
         <th data-s="risk">Status<span class="ar"></span></th>
       </tr></thead>
-      <tbody id="prod"><tr><td colspan="10"><div class="skel" style="height:160px"></div></td></tr></tbody>
+      <tbody id="prod"><tr><td colspan="11"><div class="skel" style="height:160px"></div></td></tr></tbody>
     </table></div>
   </section>
 
@@ -194,6 +195,12 @@
   }
   function shp(s, r) { if (!s) return '–'; var d = days(s), t = d === 0 ? 'today' : d > 0 ? 'in ' + d + ' d' : Math.abs(d) + ' d ago';
     return '<div class="shp' + (d < 0 && r !== 'done' ? ' od' : '') + '"><b>' + dmy(s) + '</b><span>' + t + '</span></div>'; }
+  function fsaTd(q, qty, fail) { return '<td class="r"><b>' + n0(q) + '</b><div class="sub2" style="text-align:right">' + (qty ? pct(q || 0, qty) + '%' : '') + (fail ? ' · <span style="color:#b91c1c;font-weight:700">' + fail + ' fail</span>' : '') + '</div></td>'; }
+  function fsaPo(x) {
+    if (!x.fa) return '<td class="r">' + (x.fsa ? n0(x.fsa) + '<div class="sub2" style="text-align:right">plan sheet</div>' : '–') + '</td>';
+    var f = x.fa, bad = f.lastRes === 'FAIL';
+    return '<td class="r"><b>' + n0(f.pass) + '</b><div class="sub2" style="text-align:right"><span style="font-weight:700;color:' + (bad ? '#b91c1c' : '#15803d') + '">' + esc(f.lastRes || '–') + '</span> ' + dmy(f.last) + ' · ' + f.reports + ' audit' + (f.reports === 1 ? '' : 's') + (f.fail ? ' · ' + f.fail + ' fail' : '') + '</div></td>';
+  }
   function units(o) { return Object.keys(o || {}).filter(function (u) { return o[u] > 0; }).join(', ') || '–'; }
 
   function poMatch(x, p, c) {
@@ -211,7 +218,7 @@
     var p = { action: 'po_view', buyer: buyer }; if (fresh) p.fresh = 1;
     A.jsonp(p, function (r) {
       $('btnUpd').disabled = false; $('btnUpd').textContent = 'Refresh';
-      if (!r || !r.ok) { if (!D) $('prod').innerHTML = '<tr><td colspan="10" class="empty">Could not load the PO plan. ' + esc(r && r.error || 'Please try again.') + '</td></tr>'; return; }
+      if (!r || !r.ok) { if (!D) $('prod').innerHTML = '<tr><td colspan="11" class="empty">Could not load the PO plan. ' + esc(r && r.error || 'Please try again.') + '</td></tr>'; return; }
       if (r.buyer !== buyer) return;
       A.mem('po_' + buyer, r); render(r);
     }, 120000);
@@ -231,6 +238,7 @@
       ['Order quantity', kfmt(t.qty), t.pos + ' PO lines · ' + r.products.length + ' products', '#2f6fed', null],
       ['Sewn', kfmt(t.sewnEst), pct(t.sewnEst, t.qty) + '% of order', '#6d8fe0', pct(t.sewnEst, t.qty)],
       ['Packed / ready', kfmt(t.pack), pct(t.pack, t.qty) + '% of order', '#1f4fb8', pct(t.pack, t.qty)],
+      ['FSA passed', kfmt(t.fsaQ || 0), pct(t.fsaQ || 0, t.qty) + '% of order' + (t.fsaFail ? ' · ' + t.fsaFail + ' failed audits' : ''), '#15803d', pct(t.fsaQ || 0, t.qty)],
       ['Open to ship', kfmt(openQty), (all.length - cnt.done) + ' open PO lines', '#475569', null],
       ['Late / at risk', (cnt.late + cnt.risk), cnt.late + ' late · ' + cnt.risk + ' at risk', (cnt.late + cnt.risk) ? '#b91c1c' : '#15803d', null],
       ['Next shipment', nxt ? dmy(nxt) : '–', nxt ? (days(nxt) === 0 ? 'today' : 'in ' + days(nxt) + ' days') : 'nothing scheduled', '#0f766e', null]];
@@ -302,26 +310,26 @@
       var u = {}; p.colours.forEach(function (c) { Object.keys(c.units || {}).forEach(function (x) { u[x] = (u[x] || 0) + c.units[x]; }); });
       h += '<tr class="l1' + (op ? ' open' : '') + '" data-k="' + esc(k) + '"><td><span class="cv' + (op ? ' o' : '') + '">▶</span> ' + esc(p.product) +
         '<div class="sub2">' + (p.dpr.length ? 'DPR ' + esc(p.dpr.join(' + ')) : 'no DPR link · plan figures only') + '</div></td>' +
-        '<td class="r">' + p.poCount + '</td><td class="r"><b>' + n0(p.qty) + '</b></td><td>' + prog(p.sewnEst, p.pack, p.qty) + '</td>' +
+        '<td class="r">' + p.poCount + '</td><td class="r"><b>' + n0(p.qty) + '</b></td><td>' + prog(p.sewnEst, p.pack, p.qty) + '</td>' + fsaTd(p.fsaQ, p.qty, p.fsaFail) +
         '<td class="r">' + n0(z.bal) + '</td><td class="r">' + n0(p.todayPro) + '</td><td class="r">' + n0(p.rate) + '</td><td>' + esc(units(u)) + '</td>' +
         '<td>' + shp(p.nextShip, p.risk) + '</td><td>' + pill(p.risk) + '</td></tr>';
       if (!op) return;
       z.cols.forEach(function (zc) {
         var c = zc.c, k2 = k + '|' + c.colour, flat = p.colours.length === 1 && c.colour === 'ALL', op2 = flat || act || OPEN[k2];
         if (!flat) h += '<tr class="l2" data-k="' + esc(k2) + '"><td><span class="cv' + (op2 ? ' o' : '') + '">▶</span> <b>' + esc(c.colour) + '</b>' + (c.dprSewn != null ? '<div class="sub2">DPR sewn to date ' + n0(c.dprSewn) + '</div>' : '') + '</td>' +
-          '<td class="r">' + c.poCount + '</td><td class="r">' + n0(c.qty) + '</td><td>' + prog(c.sewnEst, c.pack, c.qty) + '</td><td class="r">' + n0(Math.max(0, c.qty - c.sewnEst)) + '</td>' +
+          '<td class="r">' + c.poCount + '</td><td class="r">' + n0(c.qty) + '</td><td>' + prog(c.sewnEst, c.pack, c.qty) + '</td>' + fsaTd(c.fsaQ, c.qty, c.fsaFail) + '<td class="r">' + n0(Math.max(0, c.qty - c.sewnEst)) + '</td>' +
           '<td class="r">–</td><td class="r">' + n0(c.rate) + '</td><td>' + esc(units(c.units)) + '</td><td>' + shp(c.nextShip, c.risk) + '</td><td>' + pill(c.risk) + '</td></tr>';
         if (!op2) return;
-        h += '<tr class="l3h"><td>PO · details</td><td class="r">Cut</td><td class="r">Qty</td><td>Progress</td><td class="r">Stitch / Iron / FSA</td><td class="r" colspan="2">Days left · need/day</td><td>Plan status</td><td>Ship</td><td>Status</td></tr>';
+        h += '<tr class="l3h"><td>PO · details</td><td class="r">Cut</td><td class="r">Qty</td><td>Progress</td><td class="r">FSA (audits)</td><td class="r">Stitch / Iron</td><td class="r" colspan="2">Days left · need/day</td><td>Plan status</td><td>Ship</td><td>Status</td></tr>';
         zc.pos.forEach(function (x) {
           h += '<tr class="l3"><td><b>' + esc(x.po) + '</b> <span class="sub2" style="display:inline">' + esc([x.fty, x.priority].filter(Boolean).join(' · ')) + '</span>' + (x.note ? '<div class="note' + (x.risk === 'late' || x.risk === 'risk' ? ' bad' : '') + '">' + esc(x.note) + '</div>' : '') + '</td>' +
-            '<td class="r">' + n0(x.cut) + '</td><td class="r"><b>' + n0(x.qty) + '</b></td><td>' + prog(x.sewnEst, x.pack, x.qty) + '</td>' +
-            '<td class="r">' + n0(x.stitch) + ' / ' + n0(x.iron) + ' / ' + n0(x.fsa) + '</td><td class="r" colspan="2">' + (x.daysLeft == null ? '–' : x.daysLeft + ' d') + (x.needPerDay != null && x.risk !== 'done' ? ' · ' + n0(x.needPerDay) + '/day' : '') + '</td>' +
+            '<td class="r">' + n0(x.cut) + '</td><td class="r"><b>' + n0(x.qty) + '</b></td><td>' + prog(x.sewnEst, x.pack, x.qty) + '</td>' + fsaPo(x) +
+            '<td class="r">' + n0(x.stitch) + ' / ' + n0(x.iron) + '</td><td class="r" colspan="2">' + (x.daysLeft == null ? '–' : x.daysLeft + ' d') + (x.needPerDay != null && x.risk !== 'done' ? ' · ' + n0(x.needPerDay) + '/day' : '') + '</td>' +
             '<td>' + esc(x.status || '–') + '</td><td' + (x.shipOdd ? ' class="odd"' : '') + '>' + shp(x.ship, x.risk) + '</td><td>' + pill(x.risk) + '</td></tr>';
         });
       });
     });
-    $('prod').innerHTML = h || '<tr><td colspan="10" class="empty">' + (act ? 'No PO matches these filters.' : 'No POs found in the plan sheet.') + '</td></tr>';
+    $('prod').innerHTML = h || '<tr><td colspan="11" class="empty">' + (act ? 'No PO matches these filters.' : 'No POs found in the plan sheet.') + '</td></tr>';
   }
 
   function lines(r) {
@@ -336,7 +344,7 @@
   $('prod').addEventListener('click', function (e) { var tr = e.target.closest('tr[data-k]'); if (!tr || active()) return; var k = tr.getAttribute('data-k'); OPEN[k] = !OPEN[k]; table(); });
   $('tabs').addEventListener('click', function (e) { var b = e.target.closest('button[data-b]'); if (!b || b.getAttribute('data-b') === buyer) return;
     buyer = b.getAttribute('data-b'); D = null; OPEN = {}; F.st = ''; history.replaceState(null, '', '?buyer=' + encodeURIComponent(buyer) + (P.get('from') ? '&from=' + encodeURIComponent(P.get('from')) : ''));
-    $('prod').innerHTML = '<tr><td colspan="10"><div class="skel" style="height:160px"></div></td></tr>'; load(); });
+    $('prod').innerHTML = '<tr><td colspan="11"><div class="skel" style="height:160px"></div></td></tr>'; load(); });
   function setSt(s) { F.st = s; if (D) chips(counts()); table(); }
   $('chips').addEventListener('click', function (e) { var b = e.target.closest('[data-st]'); if (b) setSt(b.getAttribute('data-st')); });
   $('leg').addEventListener('click', function (e) { var b = e.target.closest('[data-st]'); if (b) { var s = b.getAttribute('data-st'); setSt(F.st === s ? '' : s); $('prod').closest('section').scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
