@@ -3,73 +3,140 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>TSPL | Finishing live</title>
+<title>TSPL | Finishing Dashboard</title>
 <link rel="icon" href="img/tsilfaviconn.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/pro.css">
 <style>
-  .pro-main{max-width:1180px}
-  form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-  form label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--muted)}
+  :root{--ink:#0b1b33;--sub:#5b6880;--hair:#e3e8f0;--panel:#fff;--accent:#1f4fb8;--accent2:#2f6fed;--soft:#f3f6fb}
+  body.pro{background:#eef2f7}
+  .hdr{background:linear-gradient(180deg,#0b1b33,#10264a);color:#fff;padding:18px 28px 16px;display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end}
+  .hdr h1{margin:0;font-size:21px;font-weight:800;letter-spacing:-.3px} .hdr h1 span{color:#8fb4ff;font-weight:700}
+  .hdr .tag{font-size:12.5px;color:#9fb0cc;margin-top:4px}
+  .hdr .ctl{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .seg{display:inline-flex;background:#13284a;border:1px solid #284066;border-radius:10px;padding:3px;gap:2px}
+  .seg button{border:0;background:none;color:#b9c7de;font:600 13px Inter,Arial;padding:7px 12px;border-radius:7px;cursor:pointer}
+  .seg button.on{background:#fff;color:var(--ink)}
+  .dt{height:38px;border-radius:10px;border:1px solid #284066;background:#13284a;color:#fff;padding:0 10px;font:500 13.5px Inter,Arial;color-scheme:dark}
+  .who{font-size:12px;color:#9fb0cc}
+  .wrap{max-width:1360px;margin:0 auto;padding:22px 28px 48px;display:flex;flex-direction:column;gap:20px}
+  .sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:2px 2px -6px}
+  .sec-h h2{margin:0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:var(--sub)}
+  .sec-h .r{font-size:12.5px;color:var(--sub)}
+  .card{background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:18px 20px;min-width:0}
+  .card h3{margin:0 0 14px;font-size:15px;font-weight:700;color:var(--ink);display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .card h3 small{font-size:12px;font-weight:500;color:var(--sub)}
+  .tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:14px}
+  .tile{background:var(--panel);border:1px solid var(--hair);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden}
+  .tile:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--c,#2f6fed)}
+  .tile .l{font-size:12px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.6px}
+  .tile .v{font-size:30px;font-weight:800;letter-spacing:-1px;color:var(--ink);margin:6px 0 2px;font-variant-numeric:tabular-nums}
+  .tile .n{font-size:12.5px;color:var(--sub)}
+  .two{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(0,1fr);gap:20px}
+  .chart{display:flex;align-items:flex-end;gap:6px;height:220px;padding:10px 4px 0;border-bottom:1px solid var(--hair);position:relative}
+  .chart .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;cursor:pointer;min-width:0}
+  .chart .c i{display:block;width:72%;max-width:34px;background:#c9d8f6;border-radius:5px 5px 0 0;transition:background .15s}
+  .chart .c:hover i{background:#8fb0ee} .chart .c.on i{background:var(--accent2)}
+  .chart .c b{font-size:10.5px;font-weight:700;color:var(--ink);margin-bottom:4px;white-space:nowrap}
+  .xl{display:flex;gap:6px;padding:6px 4px 0} .xl span{flex:1;text-align:center;font-size:11px;color:var(--sub);min-width:0}
+  .avg{position:absolute;left:0;right:0;border-top:1px dashed #e0803a} .avg em{position:absolute;right:0;top:-17px;font-size:10.5px;font-style:normal;color:#b25d1c;background:#fff;padding:0 4px}
+  table.t{width:100%;border-collapse:collapse;font-size:13.5px}
+  table.t th{text-align:left;font-size:11px;font-weight:700;color:var(--sub);text-transform:uppercase;letter-spacing:.6px;padding:9px 8px;border-bottom:1px solid var(--hair);background:#fafbfd}
+  table.t td{padding:10px 8px;border-bottom:1px solid #f0f3f8;font-variant-numeric:tabular-nums}
+  table.t .r{text-align:right} table.t tr.tot td{font-weight:800;background:#f6f8fc;border-top:1px solid var(--hair)}
+  table.t tbody tr.click{cursor:pointer} table.t tbody tr.click:hover td{background:#f7f9fd}
+  .share{display:flex;align-items:center;gap:8px} .share .b{flex:1;height:7px;background:#eef2f8;border-radius:4px;overflow:hidden;min-width:50px} .share .b i{display:block;height:100%;background:var(--accent2)}
+  .kp{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+  .k{border:1px solid var(--hair);border-radius:12px;padding:12px 14px;background:#fbfcfe}
+  .k .l{font-size:11.5px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px} .k .v{font-size:24px;font-weight:800;letter-spacing:-.6px;margin:4px 0 1px;font-variant-numeric:tabular-nums} .k .n{font-size:12px;color:var(--sub)}
+  .hrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(74px,1fr));gap:8px;margin-top:14px}
+  .hrs div{background:var(--soft);border-radius:10px;padding:8px;text-align:center} .hrs b{display:block;font-size:17px;font-variant-numeric:tabular-nums} .hrs small{color:var(--sub);font-size:11px}
+  .hrs div.on{background:#e3ecfd}
+  .note{font-size:12.5px;color:var(--sub);background:var(--soft);border-radius:10px;padding:9px 12px;margin-top:12px}
+  .tabs{display:inline-flex;border:1px solid var(--hair);border-radius:9px;overflow:hidden} .tabs button{border:0;background:#fff;font:600 12.5px Inter,Arial;color:var(--sub);padding:6px 12px;cursor:pointer} .tabs button.on{background:var(--ink);color:#fff}
+  .pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#e8f0fe;color:var(--accent)}
+  details.entry summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;font-size:15px;font-weight:700}
+  details.entry summary::-webkit-details-marker{display:none} details.entry summary:after{content:"Open \25BE";font-size:12.5px;font-weight:600;color:var(--accent2)} details.entry[open] summary:after{content:"Close \25B4"}
+  form{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px}
+  form label{display:flex;flex-direction:column;gap:6px;font-size:12.5px;font-weight:600;color:var(--sub)}
   form .w2{grid-column:span 2} form .full{grid-column:1/-1}
-  form input,form select{height:46px;border-radius:12px;border:1px solid #d5dce8;padding:0 12px;font:500 15px Inter,Arial;color:var(--text);background:#fff;min-width:0;width:100%}
-  form input[type=number]{font-weight:700;font-size:17px}
-  .grp{grid-column:1/-1;font-size:12px;font-weight:700;color:var(--blue-d);text-transform:uppercase;letter-spacing:.6px;margin-top:4px}
-  .flash{font-size:14px;font-weight:600}
-  .kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
-  .hrs{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:8px}
-  .hrs div{background:#f5f7fb;border-radius:10px;padding:8px;text-align:center} .hrs b{display:block;font-size:18px} .hrs small{color:var(--muted);font-size:11px}
-  .hrs div.on{background:#e8f0fe}
+  form input,form select{height:44px;border-radius:10px;border:1px solid #d5dce8;padding:0 12px;font:500 14.5px Inter,Arial;color:var(--ink);background:#fff;min-width:0;width:100%}
+  form input[type=number]{font-weight:700;font-size:16px}
+  .grp{grid-column:1/-1;font-size:11.5px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.7px;margin-top:4px}
+  .flash{font-size:13.5px;font-weight:600}
   .row{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-top:1px solid #f0f3f8;font-size:13.5px}
-  @media (max-width:760px){form{grid-template-columns:repeat(2,minmax(0,1fr))}form .w2{grid-column:1/-1}}
+  .muted{color:var(--sub)}
+  @media (max-width:1100px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}.two{grid-template-columns:1fr}.kp{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media (max-width:640px){.hdr,.wrap{padding-left:12px;padding-right:12px}.tiles,.kp{grid-template-columns:repeat(2,minmax(0,1fr))}form{grid-template-columns:repeat(2,minmax(0,1fr))}form .w2{grid-column:1/-1}.tile .v{font-size:24px}}
 </style>
 </head>
 <body class="pro">
-<header class="pro-top">
-  <div class="brand">TSPL<span> Finishing</span></div>
-  <div class="sp">
-    <input type="date" class="pro-sel" id="selDay" aria-label="Date" style="height:38px">
-    <select class="pro-sel" id="selUnit" aria-label="Unit"><option>AP2</option><option>FIPL</option><option>TS2</option><option>TS4</option><option>TS9</option></select>
-    <span class="small" id="who" style="color:#a9b8d0"></span>
+<header class="hdr">
+  <div>
+    <h1>TSPL <span>Finishing Dashboard</span></h1>
+    <div class="tag" id="tag">Checking, ironing, packing and FSA — month to date and day view</div>
+  </div>
+  <div class="ctl">
+    <div class="seg" id="seg" role="tablist" aria-label="Factory"></div>
+    <input type="date" class="dt" id="selDay" aria-label="Date">
+    <span class="who" id="who"></span>
   </div>
 </header>
-<main class="pro-main">
-  <section class="pro-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0"><span id="kDay">Finishing today</span> - <span id="kUnit"></span></h2><span class="small muted" id="kAt"></span></div>
-    <div class="kp" id="kpis" style="margin-top:12px"><div class="skel" style="height:70px"></div></div>
-    <div class="hrs" id="hrs" style="margin-top:14px"></div>
+
+<main class="wrap">
+  <div class="sec-h"><h2 id="mtdTitle">Month to date</h2><span class="r" id="mtdRange"></span></div>
+  <div class="tiles" id="tiles"><div class="tile skel" style="height:96px"></div><div class="tile skel"></div><div class="tile skel"></div><div class="tile skel"></div><div class="tile skel"></div></div>
+
+  <div class="two">
+    <section class="card">
+      <h3>Daily packed output <small>click a day to open it</small></h3>
+      <div class="chart" id="chart"></div>
+      <div class="xl" id="xl"></div>
+    </section>
+    <section class="card">
+      <h3>Factory comparison <small id="cmpNote">month to date</small></h3>
+      <div class="tbl-wrap"><table class="t"><thead><tr><th>Factory</th><th class="r">Packed</th><th style="width:28%">Share</th><th class="r">Avg / day</th><th class="r">FSA</th></tr></thead><tbody id="cmpT"></tbody></table></div>
+    </section>
+  </div>
+
+  <div class="sec-h"><h2 id="dayTitle">Day view</h2><span class="r" id="dayAt"></span></div>
+  <section class="card">
+    <div class="kp" id="kpis"><div class="k skel" style="height:78px"></div></div>
+    <div id="dayExtra"></div>
   </section>
 
-  <section class="pro-card" id="entryCard">
-    <h2>Enter finishing for one hour</h2>
-    <form id="f" autocomplete="off">
-      <label>Hour<select id="fHour"></select></label>
-      <label>Table / line (optional)<input id="fTable" maxlength="20" placeholder="e.g. Table 3"></label>
-      <label class="w2">Style<input id="fStyle" list="styles" required maxlength="60" placeholder="Pick from today's sewing or type"></label>
-      <datalist id="styles"></datalist>
-      <label class="w2">Buyer<input id="fBuyer" maxlength="40"></label>
-      <label class="w2">Colour<input id="fColour" maxlength="40"></label>
-      <div class="grp">Quantities done in this hour (pcs)</div>
-      <label>Ironed<input id="q_iron" type="number" min="0" inputmode="numeric"></label>
-      <label>Checked<input id="q_chk" type="number" min="0" inputmode="numeric"></label>
-      <label>Passed<input id="q_pass" type="number" min="0" inputmode="numeric"></label>
-      <label>Alter<input id="q_alt" type="number" min="0" inputmode="numeric"></label>
-      <label>Reject<input id="q_rej" type="number" min="0" inputmode="numeric"></label>
-      <label>Packed<input id="q_pack" type="number" min="0" inputmode="numeric"></label>
-      <label>Cartons<input id="q_ctn" type="number" min="0" inputmode="numeric"></label>
-      <label>Note (optional)<input id="fNote" maxlength="200"></label>
-      <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="pro-btn primary" type="submit" id="btnSave" style="height:48px;padding:0 22px">Save hour</button><span class="flash" id="flash"></span></div>
-    </form>
+  <section class="card" id="entryCard">
+    <details class="entry" id="entryBox">
+      <summary>Enter finishing for one hour</summary>
+      <form id="f" autocomplete="off">
+        <label>Hour<select id="fHour"></select></label>
+        <label>Table / line (optional)<input id="fTable" maxlength="20" placeholder="e.g. Table 3"></label>
+        <label class="w2">Style<input id="fStyle" list="styles" required maxlength="60" placeholder="Pick from today's sewing or type"></label>
+        <datalist id="styles"></datalist>
+        <label class="w2">Buyer<input id="fBuyer" maxlength="40"></label>
+        <label class="w2">Colour<input id="fColour" maxlength="40"></label>
+        <div class="grp">Quantities done in this hour (pcs)</div>
+        <label>Ironed<input id="q_iron" type="number" min="0" inputmode="numeric"></label>
+        <label>Checked<input id="q_chk" type="number" min="0" inputmode="numeric"></label>
+        <label>Passed<input id="q_pass" type="number" min="0" inputmode="numeric"></label>
+        <label>Alter<input id="q_alt" type="number" min="0" inputmode="numeric"></label>
+        <label>Reject<input id="q_rej" type="number" min="0" inputmode="numeric"></label>
+        <label>Packed<input id="q_pack" type="number" min="0" inputmode="numeric"></label>
+        <label>Cartons<input id="q_ctn" type="number" min="0" inputmode="numeric"></label>
+        <label>Note (optional)<input id="fNote" maxlength="200"></label>
+        <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="pro-btn primary" type="submit" id="btnSave" style="height:46px;padding:0 22px">Save hour</button><span class="flash" id="flash"></span></div>
+      </form>
+    </details>
   </section>
 
-  <section class="pro-card">
-    <h2>By style and colour</h2>
-    <div class="tbl-wrap"><table><thead><tr><th>Style</th><th>Colour</th><th class="r">Ironed</th><th class="r">Checked</th><th class="r">Pass %</th><th class="r">Alter</th><th class="r">Reject</th><th class="r">Packed</th><th class="r">Cartons</th></tr></thead><tbody id="styleT"></tbody></table></div>
+  <section class="card">
+    <h3><span>Style-wise finishing</span><span class="tabs" id="stTabs"><button type="button" data-v="day" class="on">Selected day</button><button type="button" data-v="mtd">Month to date</button></span></h3>
+    <div class="tbl-wrap"><table class="t"><thead id="styleH"></thead><tbody id="styleT"></tbody></table></div>
   </section>
 
-  <section class="pro-card">
-    <h2>Latest entries</h2>
+  <section class="card" id="listCard">
+    <h3>Entries <small id="listNote"></small></h3>
     <div id="list"><div class="skel" style="height:50px"></div></div>
   </section>
 </main>
@@ -79,37 +146,166 @@
 <script>
 (function () {
   'use strict';
-  var A = window.TSPL_APP, esc = A.esc, P = new URLSearchParams(location.search), STY = {}, sewn = null;
-  if (!A.mem) A.mem = function (k, v) { try { k = 'tsplMem_' + k; if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };   // works with an older cached tspl-app.js
-  var Q = ['iron', 'chk', 'pass', 'alt', 'rej', 'pack', 'ctn'];
+  var A = window.TSPL_APP, esc = A.esc, P = new URLSearchParams(location.search);
+  if (!A.mem) A.mem = function (k, v) { try { k = 'tsplMem_' + k; if (v === undefined) return JSON.parse(localStorage.getItem(k) || 'null'); localStorage.setItem(k, JSON.stringify(v)); } catch (e) { return null; } };
+  var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'], Q = ['iron', 'chk', 'pass', 'alt', 'rej', 'pack', 'ctn'];
+  var STY = {}, sewn = null, MTD = null, DAY = null, stView = 'day';
   function $(id) { return document.getElementById(id); }
-  function fmt(n) { return n == null ? '-' : Math.round(n).toLocaleString('en-IN'); }
-  function today() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function fmt(n) { return n == null || isNaN(n) ? '-' : Math.round(n).toLocaleString('en-IN'); }
+  function ymd(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function today() { return ymd(new Date()); }
+  function nice(s, o) { return new Date(s + 'T00:00:00').toLocaleDateString('en-IN', o || { day: 'numeric', month: 'short', year: 'numeric' }); }
   var u = A.user();
-  $('who').textContent = u ? (u.name || u.email) : 'Sign in needed to save';
-  var unit = (P.get('unit') || (u && u.unit) || 'TS2').toUpperCase(); if (!/^(AP2|FIPL|TS2|TS4|TS9)$/.test(unit)) unit = 'TS2';
-  $('selUnit').value = unit;
-  var day = /^\d{4}-\d{2}-\d{2}$/.test(P.get('date') || '') ? P.get('date') : today();
-  $('selDay').value = day; $('selDay').max = today();
+  $('who').textContent = u ? (u.name || u.email) : 'Sign in to enter data';
+  var unit = (P.get('unit') || (u && UNITS.indexOf(String(u.unit || '').toUpperCase()) >= 0 ? u.unit : 'ALL')).toUpperCase();
+  if (unit !== 'ALL' && UNITS.indexOf(unit) < 0) unit = 'ALL';
+  var day = /^\d{4}-\d{2}-\d{2}$/.test(P.get('date') || '') ? P.get('date') : today(); if (day > today()) day = today();
   function isToday() { return day === today(); }
+  function single() { return unit !== 'ALL'; }
   function setUrl() { history.replaceState(null, '', '?unit=' + unit + (isToday() ? '' : '&date=' + day)); }
-  function dayLabel() { if (isToday()) return 'Finishing today'; var d = new Date(day + 'T00:00:00'); return 'Finishing on ' + d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
-  $('selDay').onchange = function () { day = this.value || today(); if (day > today()) day = today(); this.value = day; setUrl(); sewn = null; window.__fin = null; loadSew(); load(); };
+
+  $('seg').innerHTML = ['ALL'].concat(UNITS).map(function (x) { return '<button type="button" data-u="' + x + '" class="' + (x === unit ? 'on' : '') + '">' + (x === 'ALL' ? 'All factories' : x) + '</button>'; }).join('');
+  $('seg').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; unit = b.dataset.u; [].forEach.call(this.children, function (c) { c.classList.toggle('on', c === b); }); setUrl(); refresh(); };
+  $('selDay').value = day; $('selDay').max = today();
+  $('selDay').onchange = function () { day = this.value || today(); if (day > today()) day = today(); this.value = day; setUrl(); refresh(); };
+  $('stTabs').onclick = function (e) { var b = e.target.closest('button'); if (!b) return; stView = b.dataset.v; [].forEach.call(this.children, function (c) { c.classList.toggle('on', c === b); }); renderStyles(); };
+
   var nowH = Math.min(9, Math.max(1, new Date().getHours() - 8));
   $('fHour').innerHTML = [1,2,3,4,5,6,7,8,9,10,11,12].map(function (h) { return '<option value="' + h + '"' + (h === nowH ? ' selected' : '') + '>Hour ' + h + (h > 9 ? ' (OT)' : '') + '</option>'; }).join('');
-  $('selUnit').onchange = function () { unit = this.value; setUrl(); sewn = null; window.__fin = null; loadSew(); load(); };
 
-  /* today's sewing styles -> pick list, and sewn total for the gap */
+  /* ---------- month to date ---------- */
+  function loadMtd() {
+    var key = 'fmtd_' + unit + day, m = A.mem(key); if (m && m.ok) renderMtd(m);
+    A.jsonp({ action: 'fin_mtd', unit: unit, date: day }, function (r) {
+      if (!r || !r.ok) { if (!MTD) $('tiles').innerHTML = '<div class="card empty" style="grid-column:1/-1">Could not load month-to-date figures. ' + esc(r && r.error || '') + '</div>'; return; }
+      A.mem(key, r); renderMtd(r);
+    }, 60000);
+  }
+  function renderMtd(r) {
+    MTD = r;
+    var t = r.total, wd = r.workDays || 0, mon = nice(r.to, { month: 'long', year: 'numeric' });
+    $('mtdTitle').textContent = 'Month to date · ' + (single() ? unit : 'All factories');
+    $('mtdRange').textContent = nice(r.from, { day: 'numeric', month: 'short' }) + ' – ' + nice(r.to) + ' · ' + wd + ' working day' + (wd === 1 ? '' : 's');
+    var T = [
+      { l: 'Packed', v: fmt(t.pack), n: 'avg ' + fmt(wd ? t.pack / wd : null) + ' / day', c: '#2f6fed' },
+      { l: 'Checked', v: fmt(t.chk), n: t.chk ? Math.round(t.pack / t.chk * 100) + '% of checked is packed' : '', c: '#6b5bd6' },
+      { l: 'Ironed', v: fmt(t.iron), n: 'avg ' + fmt(wd ? t.iron / wd : null) + ' / day', c: '#0f8b8d' },
+      { l: 'FSA passed', v: fmt(t.fsa), n: t.pack ? Math.round(t.fsa / t.pack * 100) + '% of packed' : '', c: '#11613f' },
+      { l: 'Best day', v: fmt(best(r.days)), n: bestDay(r.days), c: '#e0803a' }
+    ];
+    $('tiles').innerHTML = T.map(function (k) { return '<div class="tile" style="--c:' + k.c + '"><div class="l">' + esc(k.l) + '</div><div class="v">' + esc(k.v) + '</div><div class="n">' + esc(k.n) + '</div></div>'; }).join('');
+    // chart: every calendar day from 1st to selected date
+    var d0 = new Date(r.from + 'T00:00:00'), d1 = new Date(r.to + 'T00:00:00'), map = {}, cols = [];
+    (r.days || []).forEach(function (x) { map[x.date] = x; });
+    for (var d = new Date(d0); d <= d1; d.setDate(d.getDate() + 1)) cols.push(ymd(d));
+    var mx = Math.max.apply(null, cols.map(function (c) { return map[c] ? map[c].pack : 0; }).concat([1])), avg = wd ? t.pack / wd : 0;
+    $('chart').innerHTML = cols.map(function (c) {
+      var v = map[c] ? map[c].pack : 0, h = Math.round(v / mx * 170);
+      return '<div class="c' + (c === day ? ' on' : '') + '" data-d="' + c + '" title="' + esc(nice(c)) + ': ' + fmt(v) + ' packed">' + (v ? '<b>' + (v >= 1000 ? (v / 1000).toFixed(v >= 100000 ? 0 : 1) + 'k' : v) + '</b>' : '') + '<i style="height:' + Math.max(v ? 3 : 0, h) + 'px"></i></div>';
+    }).join('') + (avg ? '<div class="avg" style="bottom:' + Math.round(avg / mx * 170) + 'px"><em>avg ' + fmt(avg) + '</em></div>' : '');
+    $('xl').innerHTML = cols.map(function (c) { var dd = new Date(c + 'T00:00:00'); return '<span' + (dd.getDay() === 0 ? ' style="color:#c0392b"' : '') + '>' + dd.getDate() + '</span>'; }).join('');
+    // factory comparison (always all units)
+    var U = r.units || {}, tot = UNITS.reduce(function (s, x) { return s + (U[x] ? U[x].pack : 0); }, 0);
+    $('cmpT').innerHTML = UNITS.map(function (x) {
+      var v = U[x] || {}, sh = tot ? v.pack / tot * 100 : 0;
+      return '<tr class="click" data-u="' + x + '"' + (x === unit ? ' style="background:#f3f7ff"' : '') + '><td><b>' + x + '</b></td><td class="r"><b>' + fmt(v.pack) + '</b></td><td><div class="share"><div class="b"><i style="width:' + sh.toFixed(1) + '%"></i></div><span class="small muted">' + Math.round(sh) + '%</span></div></td><td class="r">' + fmt(wd ? v.pack / wd : null) + '</td><td class="r">' + fmt(v.fsa) + '</td></tr>';
+    }).join('') + '<tr class="tot"><td>Group</td><td class="r">' + fmt(tot) + '</td><td></td><td class="r">' + fmt(wd ? tot / wd : null) + '</td><td class="r">' + fmt(UNITS.reduce(function (s, x) { return s + (U[x] ? U[x].fsa : 0); }, 0)) + '</td></tr>';
+    if (stView === 'mtd') renderStyles();
+  }
+  function best(days) { return (days || []).reduce(function (m, x) { return Math.max(m, x.pack || 0); }, 0) || null; }
+  function bestDay(days) { var b = null; (days || []).forEach(function (x) { if (!b || x.pack > b.pack) b = x; }); return b && b.pack ? nice(b.date, { weekday: 'short', day: 'numeric', month: 'short' }) : ''; }
+  $('chart').onclick = function (e) { var c = e.target.closest('.c'); if (!c) return; day = c.dataset.d; $('selDay').value = day; setUrl(); refresh(true); };
+  $('cmpT').onclick = function (e) { var tr = e.target.closest('tr[data-u]'); if (!tr) return; unit = tr.dataset.u; [].forEach.call($('seg').children, function (c) { c.classList.toggle('on', c.dataset.u === unit); }); setUrl(); refresh(); };
+
+  /* ---------- selected day ---------- */
   function loadSew() {
+    sewn = null; STY = {};
+    if (!single()) return;
     A.jsonp({ action: 'drill', unit: unit, date: day }, function (r) {
       if (!r || !r.ok) return;
-      STY = {}; sewn = 0;
+      sewn = 0;
       (r.lines || []).forEach(function (l) { sewn += l.pro || 0; if (l.style) STY[String(l.style).replace(/^#\s*/, '').trim() + (l.color ? ' · ' + l.color : '')] = { style: String(l.style).replace(/^#\s*/, '').trim(), buyer: l.buyer || '', colour: l.color || '' }; });
       $('styles').innerHTML = Object.keys(STY).map(function (k) { return '<option value="' + esc(k) + '">'; }).join('');
-      if (window.__fin) render(window.__fin);
+      if (DAY) renderDay(DAY);
     }, 60000);
   }
   $('fStyle').addEventListener('change', function () { var s = STY[this.value]; if (s) { this.value = s.style; $('fBuyer').value = s.buyer; $('fColour').value = s.colour; } });
+
+  function loadDay() {
+    $('dayTitle').textContent = (isToday() ? 'Today' : nice(day, { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' })) + ' · ' + (single() ? unit : 'All factories');
+    $('entryCard').style.display = isToday() && single() ? '' : 'none';
+    $('listCard').style.display = single() ? '' : 'none';
+    var act = single() ? { action: 'fin_list', unit: unit, date: day } : { action: 'fin_sum', date: day }, key = 'fday_' + unit + day, m = A.mem(key);
+    if (m && m.ok) renderDay(m);
+    A.jsonp(act, function (r) {
+      if (!r || !r.ok) { if (!DAY) $('kpis').innerHTML = '<div class="empty" style="grid-column:1/-1">Could not load this day. ' + esc(r && r.error || '') + '</div>'; return; }
+      A.mem(key, r); renderDay(r);
+    }, 60000);
+  }
+  function renderDay(r) {
+    DAY = r;
+    var t = r.total, gap = sewn == null ? null : sewn - t.pack;
+    var K = [
+      { l: 'Sewn', v: single() ? fmt(sewn) : '-', n: single() ? 'from the DPR' : 'pick a factory' },
+      { l: 'Checked', v: fmt(t.chk), n: fmt(t.alt) + ' alter · ' + fmt(t.rej) + ' reject' },
+      { l: 'Pass %', v: t.passPct == null ? '-' : t.passPct + '%', n: t.passPct == null ? 'not recorded' : fmt(t.pass) + ' passed', c: t.passPct == null ? '' : t.passPct >= 95 ? 'good' : t.passPct >= 90 ? 'warn' : 'bad' },
+      { l: 'Ironed', v: fmt(t.iron), n: '' },
+      { l: 'Packed', v: fmt(t.pack), n: fmt(t.ctn) + ' cartons' },
+      { l: 'Sewn not packed', v: fmt(gap), n: 'this day only', c: gap == null ? '' : gap > 500 ? 'warn' : 'good' }
+    ];
+    $('kpis').innerHTML = K.map(function (k) { return '<div class="k"><div class="l">' + esc(k.l) + '</div><div class="v"' + (k.c ? ' style="color:var(--' + k.c + ')"' : '') + '>' + esc(k.v) + '</div><div class="n">' + esc(k.n) + '</div></div>'; }).join('');
+    $('dayAt').textContent = r.entries ? r.entries + ' entr' + (r.entries === 1 ? 'y' : 'ies') : (isToday() ? 'No entries yet today' : 'No entries for this day');
+    var x = '';
+    if (single()) {
+      var imported = (r.list || []).length && r.list.every(function (e) { return e.table === 'FSR'; });
+      if (imported) x = '<div class="note">This day was loaded from the factory FSR report as one day total, so there is no hour-by-hour split.</div>';
+      else x = '<div class="hrs">' + r.byHour.map(function (h) { return '<div class="' + (h.hour === r.lastHour ? 'on' : '') + '"><small>H' + h.hour + '</small><b>' + fmt(h.pack) + '</b><small>packed · ' + fmt(h.chk) + ' chk</small></div>'; }).join('') + '</div>';
+    } else {
+      var U = r.units || {};
+      x = '<div class="tbl-wrap" style="margin-top:16px"><table class="t"><thead><tr><th>Factory</th><th class="r">Checked</th><th class="r">Ironed</th><th class="r">Packed</th><th class="r">Pass %</th></tr></thead><tbody>' +
+        UNITS.map(function (k) { var v = U[k] || {}; return '<tr class="click" data-u="' + k + '"><td><b>' + k + '</b></td><td class="r">' + fmt(v.chk) + '</td><td class="r">' + fmt(v.iron) + '</td><td class="r"><b>' + fmt(v.pack) + '</b></td><td class="r">' + (v.passPct == null ? '-' : v.passPct + '%') + '</td></tr>'; }).join('') +
+        '<tr class="tot"><td>Group</td><td class="r">' + fmt(t.chk) + '</td><td class="r">' + fmt(t.iron) + '</td><td class="r">' + fmt(t.pack) + '</td><td class="r">' + (t.passPct == null ? '-' : t.passPct + '%') + '</td></tr></tbody></table></div>';
+    }
+    $('dayExtra').innerHTML = x;
+    if (stView === 'day') renderStyles();
+    renderList(r);
+  }
+  $('dayExtra').onclick = function (e) { var tr = e.target.closest('tr[data-u]'); if (!tr) return; unit = tr.dataset.u; [].forEach.call($('seg').children, function (c) { c.classList.toggle('on', c.dataset.u === unit); }); setUrl(); refresh(); };
+
+  function renderStyles() {
+    var showU = !single();
+    $('styleH').innerHTML = '<tr>' + (showU ? '<th>Factory</th>' : '') + '<th>Style</th><th>Colour</th><th class="r">Checked</th><th class="r">Ironed</th><th class="r">Packed</th>' + (stView === 'mtd' ? '<th class="r">FSA</th>' : '<th class="r">Pass %</th>') + '</tr>';
+    var rows, cols = (showU ? 7 : 6);
+    if (stView === 'mtd') {
+      rows = MTD ? MTD.styles || [] : null;
+      if (!rows) { $('styleT').innerHTML = '<tr><td colspan="' + cols + '" class="empty">Loading…</td></tr>'; return; }
+      $('styleT').innerHTML = rows.length ? rows.map(function (s) { return '<tr>' + (showU ? '<td><span class="pill">' + esc(s.unit) + '</span></td>' : '') + '<td><b>' + esc(s.style) + '</b><div class="small muted">' + esc(s.buyer || '') + '</div></td><td>' + esc(s.colour || '') + '</td><td class="r">' + fmt(s.chk) + '</td><td class="r">' + fmt(s.iron) + '</td><td class="r"><b>' + fmt(s.pack) + '</b></td><td class="r">' + fmt(s.fsa) + '</td></tr>'; }).join('')
+        : '<tr><td colspan="' + cols + '" class="empty">No finishing recorded this month.</td></tr>';
+      return;
+    }
+    if (!single()) { $('styleT').innerHTML = '<tr><td colspan="' + cols + '" class="empty">Pick a factory to see the styles finished on this day, or switch to Month to date.</td></tr>'; return; }
+    rows = DAY ? DAY.styles || [] : [];
+    $('styleT').innerHTML = rows.length ? rows.map(function (s) { return '<tr><td><b>' + esc(s.style) + '</b><div class="small muted">' + esc(s.buyer || '') + '</div></td><td>' + esc(s.colour || '') + '</td><td class="r">' + fmt(s.chk) + '</td><td class="r">' + fmt(s.iron) + '</td><td class="r"><b>' + fmt(s.pack) + '</b></td><td class="r">' + (s.passPct == null ? '-' : s.passPct + '%') + '</td></tr>'; }).join('')
+      : '<tr><td colspan="' + cols + '" class="empty">' + (isToday() ? 'No finishing entered yet today.' : 'No finishing recorded for this day.') + '</td></tr>';
+  }
+
+  function renderList(r) {
+    if (!single()) return;
+    var me = u ? (u.name || u.email) : '';
+    $('listNote').textContent = isToday() ? 'latest first' : nice(day);
+    $('list').innerHTML = (r.list || []).length ? r.list.map(function (x) {
+      var parts = []; Q.forEach(function (k) { if (+x[k]) parts.push({ iron: 'ironed', chk: 'checked', pass: 'passed', alt: 'alter', rej: 'reject', pack: 'packed', ctn: 'cartons' }[k] + ' ' + fmt(x[k])); });
+      return '<div class="row"><div><b>' + (x.table === 'FSR' ? 'Day total' : 'H' + esc(x.hour)) + ' · ' + esc(x.style) + '</b>' + (x.colour ? ' · ' + esc(x.colour) : '') + (x.table && x.table !== 'FSR' ? ' · ' + esc(x.table) : '') +
+        '<div class="small muted">' + esc(parts.join(', ')) + (x.note ? ' · ' + esc(x.note) : '') + ' · ' + esc(x.at) + ' by ' + esc(x.by) + '</div></div>' +
+        (me && isToday() && x.by === me ? '<button class="pro-btn" type="button" data-void="' + esc(x.id) + '">Mistake - remove</button>' : '') + '</div>';
+    }).join('') : '<div class="empty">' + (isToday() ? 'No entries yet today.' : 'No entries for this day.') + '</div>';
+  }
+  $('list').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-void]'); if (!b) return;
+    if (!window.confirm('Remove this entry from today\'s totals? It stays in the sheet marked as a mistake.')) return;
+    b.disabled = true; b.textContent = 'Removing…';
+    A.call({ action: 'fin_void', id: b.dataset.void }, function (r) { if (!r || !r.ok) { b.disabled = false; b.textContent = (r && r.error) || 'Try again'; return; } loadDay(); loadMtd(); });
+  });
 
   function flash(t, ok) { $('flash').textContent = t; $('flash').style.color = ok ? 'var(--good)' : 'var(--bad)'; }
   $('f').addEventListener('submit', function (e) {
@@ -125,50 +321,14 @@
       if (!r.ok) return flash(r.error || 'Could not save', false);
       flash('Saved. It now shows on the finishing and floor screens.', true);
       Q.forEach(function (k) { $('q_' + k).value = ''; }); $('fNote').value = '';
-      load();
+      loadDay(); loadMtd();
     });
   });
 
-  function load() {
-    $('kUnit').textContent = unit; $('kDay').textContent = dayLabel(); $('entryCard').style.display = isToday() ? '' : 'none';
-    var m = A.mem('fin_' + unit + day); if (m && m.ok && !window.__fin) render(m);
-    A.jsonp({ action: 'fin_list', unit: unit, date: day }, function (r) {
-      if (!r || !r.ok) { if (!window.__fin) $('kpis').innerHTML = '<div class="empty">Could not load finishing data. ' + esc(r && r.error || '') + '</div>'; return; }
-      A.mem('fin_' + unit + day, r); render(r);
-    }, 60000);
-  }
-  function render(r) {
-    window.__fin = r;
-    var t = r.total, gap = sewn == null ? null : sewn - t.pack;
-    var K = [
-      { l: isToday() ? 'Sewn today' : 'Sewn that day', v: fmt(sewn), n: 'from the DPR' },
-      { l: 'Ironed', v: fmt(t.iron), n: '' },
-      { l: 'Checked', v: fmt(t.chk), n: fmt(t.alt) + ' alter · ' + fmt(t.rej) + ' reject' },
-      { l: 'Pass %', v: t.passPct == null ? '-' : t.passPct + '%', n: fmt(t.pass) + ' passed', c: t.passPct == null ? '' : t.passPct >= 95 ? 'good' : t.passPct >= 90 ? 'warn' : 'bad' },
-      { l: 'Packed', v: fmt(t.pack), n: fmt(t.ctn) + ' cartons' },
-      { l: 'Sewn not yet packed', v: fmt(gap), n: isToday() ? 'today only' : 'that day only', c: gap == null ? '' : gap > 500 ? 'warn' : 'good' }
-    ];
-    $('kpis').innerHTML = K.map(function (k) { return '<div class="pro-card kpi" style="box-shadow:0 0 0 1px var(--line);padding:12px 14px"><div class="l">' + esc(k.l) + '</div><div class="v"' + (k.c ? ' style="color:var(--' + k.c + ')"' : '') + '>' + esc(k.v) + '</div><div class="n muted">' + esc(k.n) + '</div></div>'; }).join('');
-    $('hrs').innerHTML = r.byHour.map(function (h) { return '<div class="' + (h.hour === r.lastHour ? 'on' : '') + '"><small>H' + h.hour + '</small><b>' + fmt(h.pack) + '</b><small>packed · ' + fmt(h.chk) + ' chk</small></div>'; }).join('');
-    $('kAt').textContent = r.entries ? r.entries + ' entries' + (isToday() ? ' today' : '') : (isToday() ? 'No entries yet today' : 'No entries for this day');
-    $('styleT').innerHTML = r.styles.length ? r.styles.map(function (s) {
-      return '<tr><td><b>' + esc(s.style) + '</b><div class="small muted">' + esc(s.buyer || '') + '</div></td><td>' + esc(s.colour || '') + '</td><td class="r">' + fmt(s.iron) + '</td><td class="r">' + fmt(s.chk) + '</td><td class="r">' + (s.passPct == null ? '-' : s.passPct + '%') + '</td><td class="r">' + fmt(s.alt) + '</td><td class="r">' + fmt(s.rej) + '</td><td class="r"><b>' + fmt(s.pack) + '</b></td><td class="r">' + fmt(s.ctn) + '</td></tr>';
-    }).join('') : '<tr><td colspan="9" class="empty">' + (isToday() ? 'No finishing entered yet today.' : 'No finishing recorded for this day.') + '</td></tr>';
-    var me = u ? (u.name || u.email) : '';
-    $('list').innerHTML = r.list.length ? r.list.map(function (x) {
-      var parts = []; Q.forEach(function (k) { if (+x[k]) parts.push({ iron: 'ironed', chk: 'checked', pass: 'passed', alt: 'alter', rej: 'reject', pack: 'packed', ctn: 'cartons' }[k] + ' ' + x[k]); });
-      return '<div class="row"><div><b>H' + esc(x.hour) + ' · ' + esc(x.style) + '</b>' + (x.colour ? ' · ' + esc(x.colour) : '') + (x.table ? ' · ' + esc(x.table) : '') +
-        '<div class="small muted">' + esc(parts.join(', ')) + (x.note ? ' · ' + esc(x.note) : '') + ' · ' + esc(x.at) + ' by ' + esc(x.by) + '</div></div>' +
-        (me && isToday() && x.by === me ? '<button class="pro-btn" type="button" data-void="' + esc(x.id) + '">Mistake - remove</button>' : '') + '</div>';
-    }).join('') : '<div class="empty">' + (isToday() ? 'No entries yet today.' : 'No entries for this day.') + '</div>';
-  }
-  $('list').addEventListener('click', function (e) {
-    var b = e.target.closest('button[data-void]'); if (!b) return;
-    if (!window.confirm('Remove this entry from today\'s totals? It stays in the sheet marked as a mistake.')) return;
-    b.disabled = true; b.textContent = 'Removing…';
-    A.call({ action: 'fin_void', id: b.dataset.void }, function (r) { if (!r || !r.ok) { b.disabled = false; b.textContent = (r && r.error) || 'Try again'; return; } load(); });
-  });
-  loadSew(); load(); setInterval(function () { if (isToday()) load(); }, 60000); setInterval(function () { if (isToday()) loadSew(); }, 300000);
+  function refresh(keepMtd) { DAY = null; if (!keepMtd) MTD = null; loadSew(); loadDay(); if (!keepMtd) loadMtd(); else if (MTD) renderMtd(MTD); }
+  refresh();
+  setInterval(function () { if (isToday()) { loadDay(); loadMtd(); } }, 60000);
+  setInterval(function () { if (isToday()) loadSew(); }, 300000);
 })();
 </script>
 </body>

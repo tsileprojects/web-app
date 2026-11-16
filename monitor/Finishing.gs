@@ -123,3 +123,34 @@ function fnSum_(date) {
   try { c.put(key, JSON.stringify(out), 60); } catch (e) {}
   return out;
 }
+
+/** month-to-date (1st of the month .. date): day-wise, per-unit and per-style totals. unit = '' or 'ALL' for every unit */
+function fnMtd_(unit, date) {
+  unit = String(unit || '').toUpperCase(); if (unit === 'ALL') unit = '';
+  date = String(date || '') || tdToday_();
+  const from = date.slice(0, 8) + '01';
+  const c = CacheService.getScriptCache(), key = 'fn_mtd_' + unit + '_' + date, hit = c.get(key);
+  if (hit) return JSON.parse(hit);
+  const sh = fnSheet_(), n = sh.getLastRow() - 1;
+  const rows = n < 1 ? [] : sh.getRange(Math.max(2, n - 8000 + 2), 1, Math.min(n, 8000), FN_HEAD.length).getValues();
+  const z = () => ({ iron: 0, chk: 0, pass: 0, pack: 0, ctn: 0, fsa: 0 });
+  const add = (t, r, fsa) => { t.iron += +r[8] || 0; t.chk += +r[9] || 0; t.pass += +r[10] || 0; t.pack += +r[13] || 0; t.ctn += +r[14] || 0; t.fsa += fsa; };
+  const days = {}, units = {}, styles = {}, total = z();
+  KPI_UNITS.forEach(u => units[u] = z());
+  rows.forEach(r => {
+    if (String(r[18] || 'OK') !== 'OK') return;
+    const d = r[1] instanceof Date ? kpiFmt_(r[1]) : String(r[1]).slice(0, 10);
+    if (d < from || d > date) return;
+    const u = String(r[2]).toUpperCase(), m = String(r[15] || '').match(/FSA (\d+)/), fsa = m ? +m[1] : 0;
+    if (units[u]) add(units[u], r, fsa);
+    if (unit && u !== unit) return;
+    add(days[d] = days[d] || z(), r, fsa); add(total, r, fsa);
+    const k = [u, r[6], r[7]].join('|');
+    add(styles[k] = styles[k] || Object.assign(z(), { unit: u, buyer: r[5], style: r[6], colour: r[7] }), r, fsa);
+  });
+  const dl = Object.keys(days).sort().map(d => Object.assign({ date: d }, days[d]));
+  const out = { ok: true, unit: unit || 'ALL', from: from, to: date, days: dl, workDays: dl.filter(x => x.pack || x.chk || x.iron).length,
+    total: total, units: units, styles: Object.keys(styles).map(k => styles[k]).sort((a, b) => b.pack - a.pack).slice(0, 60) };
+  try { c.put(key, JSON.stringify(out), 120); } catch (e) {}
+  return out;
+}
