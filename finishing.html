@@ -29,18 +29,19 @@
 <header class="pro-top">
   <div class="brand">TSPL<span> Finishing</span></div>
   <div class="sp">
+    <input type="date" class="pro-sel" id="selDay" aria-label="Date" style="height:38px">
     <select class="pro-sel" id="selUnit" aria-label="Unit"><option>AP2</option><option>FIPL</option><option>TS2</option><option>TS4</option><option>TS9</option></select>
     <span class="small" id="who" style="color:#a9b8d0"></span>
   </div>
 </header>
 <main class="pro-main">
   <section class="pro-card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0">Finishing today - <span id="kUnit"></span></h2><span class="small muted" id="kAt"></span></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><h2 style="margin:0"><span id="kDay">Finishing today</span> - <span id="kUnit"></span></h2><span class="small muted" id="kAt"></span></div>
     <div class="kp" id="kpis" style="margin-top:12px"><div class="skel" style="height:70px"></div></div>
     <div class="hrs" id="hrs" style="margin-top:14px"></div>
   </section>
 
-  <section class="pro-card">
+  <section class="pro-card" id="entryCard">
     <h2>Enter finishing for one hour</h2>
     <form id="f" autocomplete="off">
       <label>Hour<select id="fHour"></select></label>
@@ -88,13 +89,19 @@
   $('who').textContent = u ? (u.name || u.email) : 'Sign in needed to save';
   var unit = (P.get('unit') || (u && u.unit) || 'TS2').toUpperCase(); if (!/^(AP2|FIPL|TS2|TS4|TS9)$/.test(unit)) unit = 'TS2';
   $('selUnit').value = unit;
+  var day = /^\d{4}-\d{2}-\d{2}$/.test(P.get('date') || '') ? P.get('date') : today();
+  $('selDay').value = day; $('selDay').max = today();
+  function isToday() { return day === today(); }
+  function setUrl() { history.replaceState(null, '', '?unit=' + unit + (isToday() ? '' : '&date=' + day)); }
+  function dayLabel() { if (isToday()) return 'Finishing today'; var d = new Date(day + 'T00:00:00'); return 'Finishing on ' + d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }); }
+  $('selDay').onchange = function () { day = this.value || today(); if (day > today()) day = today(); this.value = day; setUrl(); sewn = null; window.__fin = null; loadSew(); load(); };
   var nowH = Math.min(9, Math.max(1, new Date().getHours() - 8));
   $('fHour').innerHTML = [1,2,3,4,5,6,7,8,9,10,11,12].map(function (h) { return '<option value="' + h + '"' + (h === nowH ? ' selected' : '') + '>Hour ' + h + (h > 9 ? ' (OT)' : '') + '</option>'; }).join('');
-  $('selUnit').onchange = function () { unit = this.value; history.replaceState(null, '', '?unit=' + unit); sewn = null; window.__fin = null; loadSew(); load(); };
+  $('selUnit').onchange = function () { unit = this.value; setUrl(); sewn = null; window.__fin = null; loadSew(); load(); };
 
   /* today's sewing styles -> pick list, and sewn total for the gap */
   function loadSew() {
-    A.jsonp({ action: 'drill', unit: unit, date: today() }, function (r) {
+    A.jsonp({ action: 'drill', unit: unit, date: day }, function (r) {
       if (!r || !r.ok) return;
       STY = {}; sewn = 0;
       (r.lines || []).forEach(function (l) { sewn += l.pro || 0; if (l.style) STY[String(l.style).replace(/^#\s*/, '').trim() + (l.color ? ' · ' + l.color : '')] = { style: String(l.style).replace(/^#\s*/, '').trim(), buyer: l.buyer || '', colour: l.color || '' }; });
@@ -123,37 +130,37 @@
   });
 
   function load() {
-    $('kUnit').textContent = unit;
-    var m = A.mem('fin_' + unit + today()); if (m && m.ok && !window.__fin) render(m);
-    A.jsonp({ action: 'fin_list', unit: unit, date: today() }, function (r) {
+    $('kUnit').textContent = unit; $('kDay').textContent = dayLabel(); $('entryCard').style.display = isToday() ? '' : 'none';
+    var m = A.mem('fin_' + unit + day); if (m && m.ok && !window.__fin) render(m);
+    A.jsonp({ action: 'fin_list', unit: unit, date: day }, function (r) {
       if (!r || !r.ok) { if (!window.__fin) $('kpis').innerHTML = '<div class="empty">Could not load finishing data. ' + esc(r && r.error || '') + '</div>'; return; }
-      A.mem('fin_' + unit + today(), r); render(r);
+      A.mem('fin_' + unit + day, r); render(r);
     }, 60000);
   }
   function render(r) {
     window.__fin = r;
     var t = r.total, gap = sewn == null ? null : sewn - t.pack;
     var K = [
-      { l: 'Sewn today', v: fmt(sewn), n: 'from the hourly DPR' },
+      { l: isToday() ? 'Sewn today' : 'Sewn that day', v: fmt(sewn), n: 'from the DPR' },
       { l: 'Ironed', v: fmt(t.iron), n: '' },
       { l: 'Checked', v: fmt(t.chk), n: fmt(t.alt) + ' alter · ' + fmt(t.rej) + ' reject' },
       { l: 'Pass %', v: t.passPct == null ? '-' : t.passPct + '%', n: fmt(t.pass) + ' passed', c: t.passPct == null ? '' : t.passPct >= 95 ? 'good' : t.passPct >= 90 ? 'warn' : 'bad' },
       { l: 'Packed', v: fmt(t.pack), n: fmt(t.ctn) + ' cartons' },
-      { l: 'Sewn not yet packed', v: fmt(gap), n: 'today only', c: gap == null ? '' : gap > 500 ? 'warn' : 'good' }
+      { l: 'Sewn not yet packed', v: fmt(gap), n: isToday() ? 'today only' : 'that day only', c: gap == null ? '' : gap > 500 ? 'warn' : 'good' }
     ];
     $('kpis').innerHTML = K.map(function (k) { return '<div class="pro-card kpi" style="box-shadow:0 0 0 1px var(--line);padding:12px 14px"><div class="l">' + esc(k.l) + '</div><div class="v"' + (k.c ? ' style="color:var(--' + k.c + ')"' : '') + '>' + esc(k.v) + '</div><div class="n muted">' + esc(k.n) + '</div></div>'; }).join('');
     $('hrs').innerHTML = r.byHour.map(function (h) { return '<div class="' + (h.hour === r.lastHour ? 'on' : '') + '"><small>H' + h.hour + '</small><b>' + fmt(h.pack) + '</b><small>packed · ' + fmt(h.chk) + ' chk</small></div>'; }).join('');
-    $('kAt').textContent = r.entries ? r.entries + ' entries today' : 'No entries yet today';
+    $('kAt').textContent = r.entries ? r.entries + ' entries' + (isToday() ? ' today' : '') : (isToday() ? 'No entries yet today' : 'No entries for this day');
     $('styleT').innerHTML = r.styles.length ? r.styles.map(function (s) {
       return '<tr><td><b>' + esc(s.style) + '</b><div class="small muted">' + esc(s.buyer || '') + '</div></td><td>' + esc(s.colour || '') + '</td><td class="r">' + fmt(s.iron) + '</td><td class="r">' + fmt(s.chk) + '</td><td class="r">' + (s.passPct == null ? '-' : s.passPct + '%') + '</td><td class="r">' + fmt(s.alt) + '</td><td class="r">' + fmt(s.rej) + '</td><td class="r"><b>' + fmt(s.pack) + '</b></td><td class="r">' + fmt(s.ctn) + '</td></tr>';
-    }).join('') : '<tr><td colspan="9" class="empty">No finishing entered yet today.</td></tr>';
+    }).join('') : '<tr><td colspan="9" class="empty">' + (isToday() ? 'No finishing entered yet today.' : 'No finishing recorded for this day.') + '</td></tr>';
     var me = u ? (u.name || u.email) : '';
     $('list').innerHTML = r.list.length ? r.list.map(function (x) {
       var parts = []; Q.forEach(function (k) { if (+x[k]) parts.push({ iron: 'ironed', chk: 'checked', pass: 'passed', alt: 'alter', rej: 'reject', pack: 'packed', ctn: 'cartons' }[k] + ' ' + x[k]); });
       return '<div class="row"><div><b>H' + esc(x.hour) + ' · ' + esc(x.style) + '</b>' + (x.colour ? ' · ' + esc(x.colour) : '') + (x.table ? ' · ' + esc(x.table) : '') +
         '<div class="small muted">' + esc(parts.join(', ')) + (x.note ? ' · ' + esc(x.note) : '') + ' · ' + esc(x.at) + ' by ' + esc(x.by) + '</div></div>' +
-        (me && x.by === me ? '<button class="pro-btn" type="button" data-void="' + esc(x.id) + '">Mistake - remove</button>' : '') + '</div>';
-    }).join('') : '<div class="empty">No entries yet today.</div>';
+        (me && isToday() && x.by === me ? '<button class="pro-btn" type="button" data-void="' + esc(x.id) + '">Mistake - remove</button>' : '') + '</div>';
+    }).join('') : '<div class="empty">' + (isToday() ? 'No entries yet today.' : 'No entries for this day.') + '</div>';
   }
   $('list').addEventListener('click', function (e) {
     var b = e.target.closest('button[data-void]'); if (!b) return;
@@ -161,7 +168,7 @@
     b.disabled = true; b.textContent = 'Removing…';
     A.call({ action: 'fin_void', id: b.dataset.void }, function (r) { if (!r || !r.ok) { b.disabled = false; b.textContent = (r && r.error) || 'Try again'; return; } load(); });
   });
-  loadSew(); load(); setInterval(load, 60000); setInterval(loadSew, 300000);
+  loadSew(); load(); setInterval(function () { if (isToday()) load(); }, 60000); setInterval(function () { if (isToday()) loadSew(); }, 300000);
 })();
 </script>
 </body>
