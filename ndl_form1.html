@@ -3,37 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My App</title>
-
-  
+    <title>Needle Issue System</title>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
-        .iframe-container {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; font-family: Segoe UI, Arial, sans-serif; }
+        .bar { height: 52px; background: linear-gradient(120deg, #0f2747, #1b3a63); border-bottom: 3px solid #c9a24a;
+               display: flex; align-items: center; gap: 8px; padding: 0 10px; box-sizing: border-box; }
+        .bar .t { color: #fff; font-weight: 700; font-size: 15px; margin-right: auto; white-space: nowrap; }
+        .bar button { border: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff; border-radius: 8px;
+                      padding: 8px 14px; font: 600 13px Segoe UI, Arial; cursor: pointer; white-space: nowrap; }
+        .bar button.on { background: #c9a24a; border-color: #c9a24a; color: #1f1a0e; }
+        .bar select { border-radius: 8px; border: 0; padding: 7px 8px; font: 600 13px Segoe UI, Arial; }
+        .frames { position: absolute; top: 55px; left: 0; right: 0; bottom: 0; }
+        iframe { width: 100%; height: 100%; border: none; display: none; }
+        iframe.on { display: block; }
+        @media (max-width: 520px) { .bar .t { display: none; } .bar button { padding: 8px 10px; } }
     </style>
 </head>
 <body>
-    <div class="iframe-container">
-        <iframe src="https://script.google.com/macros/s/AKfycbwv1cpBglWcZlF-7Gs9nt8c78sdMD5TsMJSEsZekw0Cl86g78vMylK2vVxBH-v0hL_MSw/exec"></iframe>
+    <div class="bar">
+        <div class="t">Needle Issue System</div>
+        <button id="bForm" class="on" onclick="show('form')">Needle Issue Form</button>
+        <button id="bDash" onclick="show('dash')">Dashboard</button>
+        <select id="unit" title="Factory for the dashboard" onchange="setUnit()" style="display:none">
+            <option>FIPL</option><option>TS2</option><option>TS4</option><option>TS9</option><option>AP2</option><option>EMB</option><option>SMP</option>
+        </select>
     </div>
+    <div class="frames">
+        <iframe id="fForm" class="on" src="https://script.google.com/macros/s/AKfycbwv1cpBglWcZlF-7Gs9nt8c78sdMD5TsMJSEsZekw0Cl86g78vMylK2vVxBH-v0hL_MSw/exec"></iframe>
+        <iframe id="fDash"></iframe>
+    </div>
+    <script>
+        // Dashboard: live needle issue tracking (read-only). The form above is unchanged.
+        var DASH = 'https://script.google.com/macros/s/AKfycbwSQPZyNVGIaqtkLeGa2gmi0lzFl9b5INTZQbcFuqzuihaM-OxdcT3i8hbGkH5XYfe6/exec?view=issue&unit=';
+        var u = new URLSearchParams(location.search).get('unit');
+        try { u = (u || localStorage.getItem('ndlUnit') || 'FIPL').toUpperCase(); } catch (e) { u = (u || 'FIPL').toUpperCase(); }
+        document.getElementById('unit').value = u;
+        function setUnit() {
+            u = document.getElementById('unit').value;
+            try { localStorage.setItem('ndlUnit', u); } catch (e) {}
+            document.getElementById('fDash').src = DASH + u;
+        }
+        function show(w) {
+            var d = w === 'dash';
+            document.getElementById('fForm').classList.toggle('on', !d);
+            document.getElementById('fDash').classList.toggle('on', d);
+            document.getElementById('bForm').classList.toggle('on', !d);
+            document.getElementById('bDash').classList.toggle('on', d);
+            document.getElementById('unit').style.display = d ? '' : 'none';
+            if (d && !document.getElementById('fDash').src) document.getElementById('fDash').src = DASH + u;
+        }
+    </script>
 </body>
 </html>
