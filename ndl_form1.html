@@ -16,6 +16,7 @@
         .frames { position: absolute; top: 55px; left: 0; right: 0; bottom: 0; }
         iframe { width: 100%; height: 100%; border: none; display: none; }
         iframe.on { display: block; }
+        #dMsg { position: absolute; top: 40%; left: 0; right: 0; text-align: center; font: 600 15px Segoe UI, Arial; color: #555; display: none; }
         @media (max-width: 520px) { .bar .t { display: none; } .bar button { padding: 8px 10px; } }
     </style>
 </head>
@@ -24,13 +25,15 @@
         <div class="t">Needle Issue System</div>
         <button id="bForm" class="on" onclick="show('form')">Needle Issue Form</button>
         <button id="bDash" onclick="show('dash')">Dashboard</button>
+        <button id="bRe" onclick="reloadDash()" title="Reload dashboard" style="display:none">&#x21bb; Reload</button>
         <select id="unit" title="Factory for the dashboard" onchange="setUnit()" style="display:none">
             <option>FIPL</option><option>TS2</option><option>TS4</option><option>TS9</option><option>AP2</option><option>EMB</option><option>SMP</option>
         </select>
     </div>
     <div class="frames">
         <iframe id="fForm" class="on" src="https://script.google.com/macros/s/AKfycbwv1cpBglWcZlF-7Gs9nt8c78sdMD5TsMJSEsZekw0Cl86g78vMylK2vVxBH-v0hL_MSw/exec"></iframe>
-        <iframe id="fDash"></iframe>
+        <div id="dMsg">Loading dashboard&hellip; (if it does not open, press &#x21bb; Reload)</div>
+        <iframe id="fDash" onload="document.getElementById('dMsg').style.display='none'"></iframe>
     </div>
     <script>
         // Dashboard: live needle issue tracking (read-only). The form above is unchanged.
@@ -41,16 +44,24 @@
         function setUnit() {
             u = document.getElementById('unit').value;
             try { localStorage.setItem('ndlUnit', u); } catch (e) {}
-            document.getElementById('fDash').src = DASH + u;
+            loadDash();
         }
+        function loadDash() {
+            var m = document.getElementById('dMsg'), f = document.getElementById('fDash');
+            if (f.classList.contains('on')) m.style.display = 'block';
+            f.src = DASH + u + '&t=' + Date.now();
+        }
+        function reloadDash() { loadDash(); }
         function show(w) {
-            var d = w === 'dash';
+            var d = w === 'dash', wasDash = document.getElementById('fDash').classList.contains('on');
             document.getElementById('fForm').classList.toggle('on', !d);
             document.getElementById('fDash').classList.toggle('on', d);
             document.getElementById('bForm').classList.toggle('on', !d);
             document.getElementById('bDash').classList.toggle('on', d);
             document.getElementById('unit').style.display = d ? '' : 'none';
-            if (d && !document.getElementById('fDash').src) document.getElementById('fDash').src = DASH + u;
+            document.getElementById('bRe').style.display = d ? '' : 'none';
+            if (!d) document.getElementById('dMsg').style.display = 'none';
+            if (d && (!document.getElementById('fDash').src || wasDash)) loadDash();
         }
     </script>
 </body>
