@@ -150,7 +150,7 @@
         return '<div class="bell-item sev-' + esc(sev) + (read[n.id] === (n.count || 1) ? '' : ' unread') + '" data-id="' + esc(n.id) + '">' +
           '<div class="bell-item-top"><span class="bell-dot"></span><span class="bell-prog">' + esc(n.program || 'Program') + '</span>' +
           '<span class="bell-time">' + esc(ago(n.last || n.first)) + '</span></div>' +
-          '<div class="bell-msg">' + esc(n.message) + '</div>' +
+          '<div class="bell-msg">' + linkify(esc(n.message)) + '</div>' +
           '<div class="bell-meta">' + esc(n.source || '') + (n.count > 1 ? ' · seen ' + esc(n.count) + '×' : '') +
             (!isOpen ? ' · ' + esc(n.status) + (n.note ? ': ' + esc(n.note) : '') : '') + '</div>' +
           (isOpen ? '<div class="bell-actions">' +
@@ -235,6 +235,7 @@
   }
 
   /* ---------- Poll central monitor ---------- */
+  function linkify(h) { var k = 0; return h.replace(/https:\/\/drive\.google\.com\/[^\s<]+/g, function (u) { k++; return '<a href="' + u + '" target="_blank" rel="noopener" style="color:#1D4ED8;font-weight:600">Photo ' + k + '</a>'; }); }
   function poll() {
     if (!TSPL_MONITOR_URL) { render(); return; }
     api({ action: 'list' }, function (r) {
@@ -323,5 +324,6 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 
   // allow other scripts on this page to raise a notification: TSPLNotify('Error','Program','message')
+  window.TSPLNotifyPoll = function () { try { poll(); } catch (e) {} };
   window.TSPLNotify = function (sev, program, message) { try { addLocal(sev || 'Error', program || 'Program', message || ''); } catch (e) {} };
 })();
