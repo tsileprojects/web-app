@@ -20,7 +20,7 @@ const userGroups = {
     users18: { redirect: "main_ho_test.html", users: [{ username: "man", password: "man2975" }] },
     users19: { redirect: "dept_gsd_fc.html", users: [{ username: "gsdfc", password: "fc123" }] },
     users20: { redirect: "dept_fsa.html", users: [{ username: "sathish", password: "2008" }] },
-    users21: { redirect: "ceo.html", users: [{ username: "ceo", hash: "c93610353155a6ff1b507414cb9951e07a17fc4cad32029f0349b106e2608f11" }] }   // Director & CEO - password kept only as a SHA-256 hash
+    users21: { redirect: "ceo.html", users: [{ username: "ceo", hash: "9039256e1679e7d2f8611670c6775a1ffc66e28a47246b66fe0757431990d517" }] }   // Director & CEO - password kept only as a SHA-256 hash
 };
 
 async function sha256Hex(text) {
