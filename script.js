@@ -19,8 +19,16 @@ const userGroups = {
     users17: { redirect: "unit_bi.html", users: [{ username: "bi", password: "bi740" }] },
     users18: { redirect: "main_ho_test.html", users: [{ username: "man", password: "man2975" }] },
     users19: { redirect: "dept_gsd_fc.html", users: [{ username: "gsdfc", password: "fc123" }] },
-    users20: { redirect: "dept_fsa.html", users: [{ username: "sathish", password: "2008" }] }
+    users20: { redirect: "dept_fsa.html", users: [{ username: "sathish", password: "2008" }] },
+    users21: { redirect: "ceo.html", users: [{ username: "ceo", hash: "c93610353155a6ff1b507414cb9951e07a17fc4cad32029f0349b106e2608f11" }] }   // Director & CEO - password kept only as a SHA-256 hash
 };
+
+async function sha256Hex(text) {
+    try {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+        return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    } catch (e) { return ""; }
+}
     
 
 // DOM elements
@@ -125,14 +133,15 @@ function handleLogin() {
         loginButton.classList.add("loading");
         loginButton.disabled = true;
 
-        setTimeout(() => {
+        setTimeout(async () => {
             const username = usernameInput.value;
             const password = passwordInput.value;
+            const passHash = await sha256Hex(password);
             let authenticated = false;
 
             for (const group in userGroups) {
                 const matchedUser = userGroups[group].users.find(user =>
-                    user.username === username && user.password === password
+                    user.username === username && (user.hash ? (passHash !== "" && user.hash === passHash) : user.password === password)
                 );
 
                 if (matchedUser) {
