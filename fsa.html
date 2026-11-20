@@ -23,7 +23,9 @@ select{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;fon
 .chip.on{background:#E6EEFB;border-color:var(--b);color:#1E3A8A}
 .lbl{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
 main{max-width:1440px;margin:0 auto;padding:18px 22px 40px;display:flex;flex-direction:column;gap:16px}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(min-width:1300px){.kpis{grid-template-columns:repeat(9,1fr)}.kpis .kpi .v{font-size:22px}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr}}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-top:3px solid var(--c,#0B2545)}
 .kpi .l{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase}
 .kpi .v{font-size:26px;font-weight:700;margin:6px 0 2px}.kpi .n{font-size:12.5px;color:var(--mute)}
@@ -166,7 +168,7 @@ tr.fail td{background:#FEF2F2}
     var to = P.kind === 'month' ? (P.m === D.today.slice(0, 7) ? D.today : addDays(P.m + '-01', 40).slice(0, 7) + '-01') : P.to;
     if (P.kind === 'month' && P.m !== D.today.slice(0, 7)) to = addDays(to, -1);
     var from = P.kind === 'month' ? P.m + '-01' : addDays(P.to, -29);
-    if (P.kind === 'days' && P.from < from) from = P.from;
+    if (P.kind === 'days' && P.from !== P.to) from = P.from;
     if (P.kind === 'days' && from < D.dayFrom && P.from >= D.dayFrom) from = D.dayFrom;
     if (from < D.dayFrom) return '<div class="note">Day-wise detail is kept for the last ' + Math.round((new Date(D.today) - new Date(D.dayFrom)) / 864e5) + ' days. Pick a recent month to see it.</div>';
     var pts = []; for (var d = from; d <= to; d = addDays(d, 1)) { var s = sum(D.day, function (p) { return p[0] === d && okDims(p); }); pts.push({ d: d, n: s[0], p: s[1], f: s[2], off: s[3], pq: s[9] }); }
