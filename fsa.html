@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | FSA Dashboard</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--g:#15803D;--a:#B45309;--r:#B91C1C;--b:#1D4ED8;--soft:#F8FAFC}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff}
+.hw{max-width:1440px;margin:0 auto;padding:12px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.hw h1{margin:0;font-size:18px;font-weight:700}.hw h1 span{color:var(--gold)}.hw .sub{font-size:12px;color:#CBD5E1;margin-top:2px}
+.hb{height:38px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.bar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:4}
+.bw{max-width:1440px;margin:0 auto;padding:10px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:#EEF2F7;padding:4px;border-radius:10px}
+.seg button{height:36px;min-width:58px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#334155;font:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.seg button.on{background:var(--navy);color:#fff}.seg button small{font-size:11px;opacity:.75}
+select{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{height:32px;padding:0 11px;border-radius:999px;border:1px solid #CBD5E1;background:#fff;color:#334155;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.chip.on{background:#E6EEFB;border-color:var(--b);color:#1E3A8A}
+.lbl{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+main{max-width:1440px;margin:0 auto;padding:18px 22px 40px;display:flex;flex-direction:column;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-top:3px solid var(--c,#0B2545)}
+.kpi .l{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase}
+.kpi .v{font-size:26px;font-weight:700;margin:6px 0 2px}.kpi .n{font-size:12.5px;color:var(--mute)}
+.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}.m{color:#64748B}
+.grid{display:flex;flex-wrap:wrap;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--mute);font-size:12px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:700;color:var(--mute);text-align:right;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;cursor:pointer}
+td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
+tr.fail td{background:#FEF2F2}
+.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}.tag.g{background:#DCFCE7;color:#166534}.tag.r{background:#FEE2E2;color:#991B1B}
+.pbar{display:inline-block;width:70px;height:6px;background:var(--line);border-radius:999px;vertical-align:middle;margin-left:8px;overflow:hidden}.pbar i{display:block;height:100%}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-top:6px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.def{display:grid;grid-template-columns:minmax(120px,190px) 1fr 60px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+.def .t{height:14px;background:#EEF2F7;border-radius:4px;overflow:hidden;display:flex}.def .t i{display:block;height:100%}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.tools input{height:38px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;width:240px}
+.load{padding:60px;text-align:center;color:var(--mute)}.spin{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 12px}@keyframes s{to{transform:rotate(360deg)}}
+.note{font-size:12px;color:var(--mute)}
+@media(max-width:700px){main,.bw,.hw{padding-left:12px;padding-right:12px}}
+</style>
+</head>
+<body>
+<header><div class="hw">
+  <div><h1>FSA Dashboard <span>| all factories</span></h1><div class="sub" id="sub">Loading live FSA data…</div></div>
+  <div style="display:flex;gap:8px"><button class="hb" id="btnRefresh" type="button">Refresh</button></div>
+</div></header>
+<div class="bar"><div class="bw">
+  <div class="seg" id="fac" role="group" aria-label="Factory"></div>
+  <label class="lbl" for="per">Period</label><select id="per"></select>
+  <label class="lbl" for="buy">Buyer</label><select id="buy"><option value="">All buyers</option></select>
+  <div class="chips" id="typ" role="group" aria-label="Audit type"></div>
+</div></div>
+<main id="app"><div class="load"><div class="spin"></div>Loading live FSA data…</div></main>
+
+<script src="security.js"></script>
+<script src="js/tspl-config.js"></script>
+<script>
+(function () {
+  'use strict';
+  var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'], TYPES = ['FSA', 'Re-FSA', 'Final', 'Re-Final', 'DUPRO', 'Carton', 'Reviews', '100% Check', 'Other'];
+  var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var D = null, F = { unit: '', per: 'mtd', buyer: '', types: { 'FSA': 1, 'Re-FSA': 1 } }, SORT = { k: 0, d: -1 }, DQ = '', DR = '';
+  try { var sv = JSON.parse(localStorage.getItem('fsaDashF') || 'null'); if (sv) F = Object.assign(F, sv); } catch (e) {}
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function n0(v) { return Math.round(v || 0).toLocaleString('en-IN'); }
+  function p1(v) { return v == null || isNaN(v) ? '–' : (Math.round(v * 10) / 10).toFixed(1) + '%'; }
+  function cls(v, g, a) { return v == null || isNaN(v) ? 'm' : v >= g ? 'g' : v >= a ? 'a' : 'r'; }
+  function ml(k) { return MN[+k.slice(5, 7) - 1] + '-' + k.slice(2, 4); }
+  function dl(d) { return d.slice(8) + '-' + MN[+d.slice(5, 7) - 1]; }
+  function addDays(d, n) { var x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); }
+  function save() { try { localStorage.setItem('fsaDashF', JSON.stringify(F)); } catch (e) {} }
+  function jsonp(params, cb, ms) {
+    var name = '__fsa' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 180000);
+    document.body.appendChild(s);
+  }
+
+  /* ---------- period ---------- */
+  function months() { var s = {}; Object.keys(D.month).forEach(function (k) { s[k.slice(0, 7)] = 1; }); return Object.keys(s).sort().reverse(); }
+  function period() { // {kind:'month', m} or {kind:'days', from, to}
+    var t = D.today, p = F.per;
+    if (p === 'today') return { kind: 'days', from: t, to: t, label: 'Today ' + dl(t) };
+    if (p === 'yday') { var y = addDays(t, -1); return { kind: 'days', from: y, to: y, label: 'Yesterday ' + dl(y) }; }
+    if (p === '7d') return { kind: 'days', from: addDays(t, -6), to: t, label: 'Last 7 days' };
+    if (p === '30d') return { kind: 'days', from: addDays(t, -29), to: t, label: 'Last 30 days' };
+    if (p === 'mtd') return { kind: 'month', m: t.slice(0, 7), label: 'This month (' + ml(t.slice(0, 7)) + ')' };
+    if (/^m:/.test(p)) return { kind: 'month', m: p.slice(2), label: ml(p.slice(2)) };
+    return { kind: 'month', m: t.slice(0, 7), label: ml(t.slice(0, 7)) };
+  }
+  function pmonths(P) { if (P.kind === 'month') return [P.m]; var s = {}; for (var d = P.from; d <= P.to; d = addDays(d, 1)) s[d.slice(0, 7)] = 1; return Object.keys(s); }
+  function inP(P, date) { return P.kind === 'month' ? date.slice(0, 7) === P.m : date >= P.from && date <= P.to; }
+
+  /* key = time|unit|type|buyer ; values: n pass fail offered sample major minor failQty orderQty */
+  function sum(map, test) { var o = [0, 0, 0, 0, 0, 0, 0, 0, 0]; Object.keys(map).forEach(function (k) { var p = k.split('|'); if (test(p)) { var v = map[k]; for (var i = 0; i < 9; i++) o[i] += v[i]; } }); return o; }
+  function okDims(p, skip) { return (skip === 'unit' || !F.unit || p[1] === F.unit) && (skip === 'type' || F.types[p[2]]) && (skip === 'buyer' || !F.buyer || p[3] === F.buyer); }
+  function pick(P, skip) { return P.kind === 'month' ? function (p) { return p[0] === P.m && okDims(p, skip); } : function (p) { return p[0] >= P.from && p[0] <= P.to && okDims(p, skip); }; }
+  function src(P) { return P.kind === 'month' ? D.month : D.day; }
+
+  /* ---------- filters UI ---------- */
+  function drawFilters() {
+    var P = period(), cnt = {}; UNITS.forEach(function (u) { cnt[u] = sum(src(P), function (p) { return pick(P, 'unit')(p) && p[1] === u; })[0]; });
+    document.getElementById('fac').innerHTML = [''].concat(UNITS).map(function (u) {
+      var c = u ? cnt[u] : UNITS.reduce(function (a, x) { return a + cnt[x]; }, 0);
+      return '<button type="button" data-u="' + u + '" class="' + (F.unit === u ? 'on' : '') + '">' + (u || 'All') + ' <small>' + c + '</small></button>';
+    }).join('');
+    var opts = [['today', 'Today'], ['yday', 'Yesterday'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['mtd', 'This month']].concat(months().slice(1).map(function (m) { return ['m:' + m, ml(m)]; }));
+    document.getElementById('per').innerHTML = opts.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === F.per ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
+    var bs = {}; Object.keys(D.month).forEach(function (k) { bs[k.split('|')[3]] = 1; });
+    document.getElementById('buy').innerHTML = '<option value="">All buyers</option>' + Object.keys(bs).sort().map(function (b) { return '<option' + (b === F.buyer ? ' selected' : '') + '>' + esc(b) + '</option>'; }).join('');
+    var all = TYPES.every(function (t) { return F.types[t]; });
+    document.getElementById('typ').innerHTML = '<button type="button" class="chip' + (all ? ' on' : '') + '" data-t="*">All audits</button>' +
+      TYPES.map(function (t) { return '<button type="button" class="chip' + (F.types[t] && !all ? ' on' : '') + '" data-t="' + t + '">' + t + '</button>'; }).join('');
+  }
+  document.getElementById('fac').addEventListener('click', function (e) { var b = e.target.closest('[data-u]'); if (!b) return; F.unit = b.getAttribute('data-u'); save(); render(); });
+  document.getElementById('per').addEventListener('change', function () { F.per = this.value; save(); render(); });
+  document.getElementById('buy').addEventListener('change', function () { F.buyer = this.value; save(); render(); });
+  document.getElementById('typ').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-t]'); if (!b) return; var t = b.getAttribute('data-t');
+    if (t === '*') { F.types = {}; TYPES.forEach(function (x) { F.types[x] = 1; }); }
+    else { var all = TYPES.every(function (x) { return F.types[x]; }); if (all) F.types = {}; if (F.types[t]) delete F.types[t]; else F.types[t] = 1; if (!Object.keys(F.types).length) TYPES.forEach(function (x) { F.types[x] = 1; }); }
+    save(); render();
+  });
+  document.getElementById('btnRefresh').addEventListener('click', function () { load(true); });
+
+  /* ---------- charts ---------- */
+  function dayChart(P) {
+    var to = P.kind === 'month' ? (P.m === D.today.slice(0, 7) ? D.today : addDays(P.m + '-01', 40).slice(0, 7) + '-01') : P.to;
+    if (P.kind === 'month' && P.m !== D.today.slice(0, 7)) to = addDays(to, -1);
+    var from = P.kind === 'month' ? P.m + '-01' : addDays(P.to, -29);
+    if (P.kind === 'days' && P.from < from) from = P.from;
+    if (from < D.dayFrom) return '<div class="note">Day-wise detail is kept for the last ' + Math.round((new Date(D.today) - new Date(D.dayFrom)) / 864e5) + ' days. Pick a recent month to see it.</div>';
+    var pts = []; for (var d = from; d <= to; d = addDays(d, 1)) { var s = sum(D.day, function (p) { return p[0] === d && okDims(p); }); pts.push({ d: d, n: s[0], p: s[1], f: s[2], off: s[3] }); }
+    var W = 760, H = 230, pl = 36, pr = 40, pt = 12, pb = 26, mx = 1; pts.forEach(function (x) { mx = Math.max(mx, x.n); });
+    var bw = (W - pl - pr) / pts.length, g = '', y = function (v) { return pt + (H - pt - pb) * (1 - v / mx); }, yp = function (v) { return pt + (H - pt - pb) * (1 - v / 100); };
+    for (var i = 0; i <= 4; i++) { var yy = pt + (H - pt - pb) * i / 4; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + yy + '" y2="' + yy + '" stroke="#EEF2F7"/><text x="' + (pl - 6) + '" y="' + (yy + 4) + '" font-size="10" fill="#64748B" text-anchor="end">' + Math.round(mx * (4 - i) / 4) + '</text><text x="' + (W - pr + 6) + '" y="' + (yy + 4) + '" font-size="10" fill="#1D4ED8">' + (100 - i * 25) + '%</text>'; }
+    var line = '';
+    pts.forEach(function (x, i) {
+      var X = pl + i * bw + bw * 0.15, w = Math.max(2, bw * 0.7);
+      if (x.n) {
+        g += '<rect x="' + X + '" y="' + y(x.p) + '" width="' + w + '" height="' + (H - pb - y(x.p)) + '" fill="#15803D" rx="1.5"><title>' + dl(x.d) + ': ' + x.n + ' audits · ' + x.p + ' pass · ' + x.f + ' fail · ' + n0(x.off) + ' pcs offered</title></rect>';
+        if (x.f) g += '<rect x="' + X + '" y="' + y(x.p + x.f) + '" width="' + w + '" height="' + (y(x.p) - y(x.p + x.f)) + '" fill="#B91C1C" rx="1.5"><title>' + dl(x.d) + ': ' + x.f + ' fail</title></rect>';
+        var pp = x.p + x.f ? x.p / (x.p + x.f) * 100 : null; if (pp != null) line += (line ? ' L' : 'M') + (X + w / 2) + ' ' + yp(pp);
+      }
+      if (i % Math.ceil(pts.length / 10) === 0) g += '<text x="' + (X + w / 2) + '" y="' + (H - 8) + '" font-size="10" fill="#64748B" text-anchor="middle">' + dl(x.d) + '</text>';
+    });
+    if (line) g += '<path d="' + line + '" fill="none" stroke="#1D4ED8" stroke-width="2"/>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="Audits per day">' + g + '</svg><div class="legend"><span><i style="background:#15803D"></i>Pass</span><span><i style="background:#B91C1C"></i>Fail</span><span><i style="background:#1D4ED8"></i>Pass % (right axis)</span></div>';
+  }
+  function monthChart() {
+    var ms = months().slice(0, 12).reverse(), pts = ms.map(function (m) { var s = sum(D.month, function (p) { return p[0] === m && okDims(p); }); return { m: m, n: s[0], p: s[1], f: s[2], off: s[3] }; });
+    var W = 760, H = 230, pl = 52, pr = 40, pt = 14, pb = 26, mx = 1; pts.forEach(function (x) { mx = Math.max(mx, x.off); }); mx *= 1.1;
+    var bw = (W - pl - pr) / Math.max(1, pts.length), g = '', line = '';
+    for (var i = 0; i <= 4; i++) { var yy = pt + (H - pt - pb) * i / 4; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + yy + '" y2="' + yy + '" stroke="#EEF2F7"/><text x="' + (pl - 6) + '" y="' + (yy + 4) + '" font-size="10" fill="#64748B" text-anchor="end">' + (mx * (4 - i) / 4 >= 1e5 ? (mx * (4 - i) / 4 / 1e5).toFixed(1) + 'L' : n0(mx * (4 - i) / 4)) + '</text><text x="' + (W - pr + 6) + '" y="' + (yy + 4) + '" font-size="10" fill="#1D4ED8">' + (100 - i * 25) + '%</text>'; }
+    pts.forEach(function (x, i) {
+      var X = pl + i * bw + bw * 0.2, w = bw * 0.6, h = (H - pt - pb) * x.off / mx, pp = x.p + x.f ? x.p / (x.p + x.f) * 100 : null;
+      g += '<rect x="' + X + '" y="' + (H - pb - h) + '" width="' + w + '" height="' + h + '" fill="#0B2545" rx="3"><title>' + ml(x.m) + ': ' + n0(x.off) + ' pcs offered · ' + x.n + ' audits · pass ' + p1(pp) + '</title></rect>';
+      if (pp != null) { var yy2 = pt + (H - pt - pb) * (1 - pp / 100); line += (line ? ' L' : 'M') + (X + w / 2) + ' ' + yy2; g += '<circle cx="' + (X + w / 2) + '" cy="' + yy2 + '" r="3.5" fill="#1D4ED8"/><text x="' + (X + w / 2) + '" y="' + (yy2 - 8) + '" font-size="10" fill="#1D4ED8" text-anchor="middle" font-weight="700">' + Math.round(pp) + '%</text>'; }
+      g += '<text x="' + (X + w / 2) + '" y="' + (H - 8) + '" font-size="10" fill="#64748B" text-anchor="middle">' + ml(x.m) + '</text>';
+    });
+    if (line) g += '<path d="' + line + '" fill="none" stroke="#1D4ED8" stroke-width="2"/>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="Month-wise offered quantity and pass percent">' + g + '</svg><div class="legend"><span><i style="background:#0B2545"></i>Offered qty</span><span><i style="background:#1D4ED8"></i>Pass %</span></div>';
+  }
+
+  /* ---------- tables ---------- */
+  function rowsBy(P, dim, skip) {
+    var idx = { unit: 1, type: 2, buyer: 3 }[dim], g = {};
+    Object.keys(src(P)).forEach(function (k) { var p = k.split('|'); if (!pick(P, skip)(p)) return; var v = src(P)[k], o = g[p[idx]] || (g[p[idx]] = [0, 0, 0, 0, 0, 0, 0, 0, 0]); for (var i = 0; i < 9; i++) o[i] += v[i]; });
+    return Object.keys(g).map(function (k) { return [k].concat(g[k]); });
+  }
+  function statTable(rows, label, clickDim) {
+    rows.sort(function (a, b) { return b[1] - a[1]; });
+    var t = [0, 0, 0, 0, 0, 0, 0, 0, 0]; rows.forEach(function (r) { for (var i = 0; i < 9; i++) t[i] += r[i + 1]; });
+    var line = function (r, tot) {
+      var pp = r[2] + r[3] ? r[2] / (r[2] + r[3]) * 100 : null, oql = r[5] ? (r[6] + r[7]) / r[5] * 100 : null, c = cls(pp, 90, 75);
+      return '<tr' + (tot ? ' style="background:#F1F5F9;font-weight:700"' : clickDim ? ' class="click" data-' + clickDim + '="' + esc(r[0]) + '"' : '') + '><td class="l"><b>' + esc(r[0]) + '</b></td><td>' + n0(r[1]) + '</td><td class="g">' + n0(r[2]) + '</td><td class="r">' + n0(r[3]) + '</td>' +
+        '<td><b class="' + c + '">' + p1(pp) + '</b><span class="pbar"><i style="width:' + (pp || 0) + '%;background:' + (c === 'g' ? '#15803D' : c === 'a' ? '#B45309' : '#B91C1C') + '"></i></span></td>' +
+        '<td>' + n0(r[4]) + '</td><td>' + n0(r[9]) + '</td><td>' + n0(r[5]) + '</td><td class="' + cls(oql == null ? null : 100 - oql, 97, 94) + '">' + p1(oql) + '</td><td class="r">' + n0(r[8]) + '</td></tr>';
+    };
+    return '<div class="tw"><table><thead><tr><th class="l">' + label + '</th><th>Audits</th><th>Pass</th><th>Fail</th><th>Pass %</th><th>Offered qty</th><th>Order qty</th><th>Sample</th><th>Defect %</th><th>Fail qty</th></tr></thead><tbody>' +
+      rows.map(function (r) { return line(r); }).join('') + (rows.length > 1 ? line(['Total'].concat(t), true) : '') + '</tbody></table></div>';
+  }
+  function defects(P) {
+    var ms = pmonths(P), g = {}, cat = {};
+    var ok = function (p) { return ms.indexOf(p[0]) > -1 && (!F.unit || p[1] === F.unit); };
+    Object.keys(D.def).forEach(function (k) { var p = k.split('|'); if (!ok(p)) return; var v = D.def[k]; g[p[2]] = (g[p[2]] || [0, 0]); g[p[2]][0] += v[0]; g[p[2]][1] += v[1]; });
+    Object.keys(D.cat || {}).forEach(function (k) { var p = k.split('|'); if (ok(p)) cat[p[2]] = (cat[p[2]] || 0) + D.cat[k]; });
+    var list = Object.keys(g).filter(function (k) { return k !== 'Others'; }).map(function (k) { return [k, g[k][0], g[k][1]]; }).sort(function (a, b) { return (b[1] + b[2]) - (a[1] + a[2]); }).slice(0, 10);
+    if (!list.length) return '<div class="note">No defects recorded.</div>';
+    var mx = list[0][1] + list[0][2], tot = Object.keys(cat).reduce(function (a, k) { return a + cat[k]; }, 0);
+    return list.map(function (x) { return '<div class="def"><span>' + esc(x[0]) + '</span><div class="t"><i style="width:' + (x[1] / mx * 100) + '%;background:#B91C1C"></i><i style="width:' + (x[2] / mx * 100) + '%;background:#F59E0B"></i></div><b style="text-align:right">' + n0(x[1] + x[2]) + '</b></div>'; }).join('') +
+      '<div class="legend"><span><i style="background:#B91C1C"></i>Major</span><span><i style="background:#F59E0B"></i>Minor</span></div>' +
+      '<div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px">' + Object.keys(cat).sort(function (a, b) { return cat[b] - cat[a]; }).map(function (k) { return '<span class="tag" style="background:#EEF2F7;color:#334155">' + esc(k) + ' ' + Math.round(cat[k] / tot * 100) + '%</span>'; }).join('') + '</div>' +
+      '<div class="note" style="margin-top:8px">' + (ms.length > 1 ? ms.map(ml).join(' + ') : ml(ms[0])) + ' · all audit types' + (F.buyer ? ', all buyers' : '') + '</div>';
+  }
+  function auditors(P) {
+    var ms = pmonths(P), g = {};
+    Object.keys(D.aud).forEach(function (k) { var p = k.split('|'); if (ms.indexOf(p[0]) < 0 || (F.unit && p[1] !== F.unit)) return; var key = p[2] + '|' + p[1], v = D.aud[k], o = g[key] || (g[key] = [0, 0, 0, 0]); for (var i = 0; i < 4; i++) o[i] += v[i]; });
+    var list = Object.keys(g).map(function (k) { return k.split('|').concat(g[k]); }).sort(function (a, b) { return b[2] - a[2]; }).slice(0, 15);
+    return '<div class="tw"><table><thead><tr><th class="l">Auditor</th><th class="l">Factory</th><th>Audits</th><th>Pass %</th><th>Offered</th></tr></thead><tbody>' + list.map(function (x) { var pp = x[3] + x[4] ? x[3] / (x[3] + x[4]) * 100 : null; return '<tr><td class="l">' + esc(x[0]) + '</td><td class="l">' + esc(x[1]) + '</td><td>' + n0(x[2]) + '</td><td class="' + cls(pp, 90, 75) + '">' + p1(pp) + '</td><td>' + n0(x[5]) + '</td></tr>'; }).join('') + '</tbody></table></div><div class="note">All audit types · ' + ms.map(ml).join(' + ') + '</div>';
+  }
+  function detail(P) {
+    var startOk = P.kind === 'month' ? P.m + '-01' >= D.detFrom || P.m === D.detFrom.slice(0, 7) : P.from >= D.detFrom;
+    var rows = D.det.filter(function (r) { return inP(P, r[0]) && (!F.unit || r[2] === F.unit) && F.types[r[5]] && (!F.buyer || r[6] === F.buyer) && (!DR || r[12] === DR) &&
+      (!DQ || (r[1] + ' ' + r[4] + ' ' + r[6] + ' ' + r[7] + ' ' + r[8] + ' ' + r[3]).toLowerCase().indexOf(DQ) > -1); });
+    var head = '<div class="tools" style="margin-bottom:10px"><label for="dq" style="position:absolute;left:-9999px">Search reports</label><input id="dq" type="search" placeholder="Search report, style, PO, auditor" value="' + esc(DQ) + '">' +
+      '<select id="dr" aria-label="Result"><option value="">All results</option><option' + (DR === 'PASS' ? ' selected' : '') + '>PASS</option><option' + (DR === 'FAIL' ? ' selected' : '') + '>FAIL</option></select><span class="note">' + rows.length + ' reports' + (rows.length > 300 ? ' · showing first 300' : '') + '</span></div>';
+    if (!startOk && !rows.length) return head + '<div class="note">Report list is kept for the last ' + Math.round((new Date(D.today) - new Date(D.detFrom)) / 864e5) + ' days.</div>';
+    return head + '<div class="tw" style="max-height:520px;overflow:auto"><table><thead><tr><th class="l">Date</th><th class="l">Report</th><th class="l">Factory</th><th class="l">Auditor</th><th class="l">Type</th><th class="l">Buyer</th><th class="l">Style</th><th class="l">PO</th><th>Order</th><th>Offered</th><th>Sample</th><th>Maj</th><th>Min</th><th class="l">Result</th></tr></thead><tbody>' +
+      rows.slice(0, 300).map(function (r) { return '<tr class="' + (r[12] === 'FAIL' ? 'fail' : '') + '"><td class="l">' + dl(r[0]) + '</td><td class="l">' + esc(r[1]) + '</td><td class="l">' + esc(r[2]) + '</td><td class="l">' + esc(r[4]) + '</td><td class="l">' + esc(r[5]) + '</td><td class="l">' + esc(r[6]) + '</td><td class="l">' + esc(r[7] || '–') + '</td><td class="l">' + esc(r[8] || '–') + '</td><td>' + n0(r[9]) + '</td><td>' + n0(r[10]) + '</td><td>' + n0(r[11]) + '</td><td>' + n0(r[13]) + '</td><td>' + n0(r[14]) + '</td><td class="l"><span class="tag ' + (r[12] === 'PASS' ? 'g' : 'r') + '">' + esc(r[12] || '–') + '</span></td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+
+  /* ---------- page ---------- */
+  function kpi(l, v, c, n, col) { return '<div class="kpi" style="--c:' + (col || '#0B2545') + '"><div class="l">' + l + '</div><div class="v ' + c + '">' + v + '</div><div class="n">' + n + '</div></div>'; }
+  function render() {
+    if (!D) return; drawFilters();
+    var P = period(), s = sum(src(P), pick(P)), pp = s[1] + s[2] ? s[1] / (s[1] + s[2]) * 100 : null, oql = s[4] ? (s[5] + s[6]) / s[4] * 100 : null;
+    var re = sum(src(P), function (p) { return pick(P, 'type')(p) && (p[2] === 'Re-FSA' || p[2] === 'Re-Final'); })[0];
+    var scope = (F.unit || 'All factories') + ' · ' + P.label + (F.buyer ? ' · ' + F.buyer : '');
+    var C = { g: '#15803D', a: '#B45309', r: '#B91C1C' };
+    var h = '<section class="kpis">' +
+      kpi('Audits', n0(s[0]), '', scope, '#0B2545') +
+      kpi('Pass %', p1(pp), cls(pp, 90, 75), n0(s[1]) + ' pass · ' + n0(s[2]) + ' fail', C[cls(pp, 90, 75)] || '#64748B') +
+      kpi('Offered qty', n0(s[3]), '', 'pieces offered for audit', '#1D4ED8') +
+      kpi('Order qty', n0(s[8]), '', 'of the POs audited', '#0B2545') +
+      kpi('Sample checked', n0(s[4]), '', s[3] ? (s[4] / s[3] * 100).toFixed(1) + '% of offered' : '', '#0B2545') +
+      kpi('Defect %', p1(oql), cls(oql == null ? null : 100 - oql, 97, 94), n0(s[5]) + ' major · ' + n0(s[6]) + ' minor', '#B45309') +
+      kpi('Fail qty', n0(s[7]), s[7] ? 'r' : 'g', 'pcs in failed audits (rework)', '#B91C1C') +
+      kpi('Re-audits', n0(re), re ? 'a' : 'g', 'Re-FSA + Re-Final in period', '#B45309') + '</section>';
+    h += '<div class="grid"><section class="card" style="flex:1 1 560px"><h2>Day-wise audits <small>pass / fail per day</small></h2>' + dayChart(P) + '</section>' +
+         '<section class="card" style="flex:1 1 560px"><h2>Month-wise <small>offered qty and pass % · last 12 months</small></h2>' + monthChart() + '</section></div>';
+    h += '<section class="card"><h2>Factory comparison <small>' + esc(P.label) + ' · click a factory to focus</small></h2>' + statTable(rowsBy(P, 'unit', 'unit'), 'Factory', 'unit') + '</section>';
+    h += '<div class="grid"><section class="card" style="flex:1 1 560px"><h2>By buyer <small>click to filter</small></h2>' + statTable(rowsBy(P, 'buyer', 'buyer'), 'Buyer', 'buyer') + '</section>' +
+         '<section class="card" style="flex:1 1 420px"><h2>By audit type</h2>' + statTable(rowsBy(P, 'type', 'type'), 'Audit type') + '</section></div>';
+    h += '<div class="grid"><section class="card" style="flex:1 1 480px"><h2>Top defects</h2>' + defects(P) + '</section>' +
+         '<section class="card" style="flex:1 1 480px"><h2>Auditors</h2>' + auditors(P) + '</section></div>';
+    h += '<section class="card"><h2>Audit reports <small>' + esc(scope) + '</small></h2><div id="det">' + detail(P) + '</div></section>';
+    h += '<div class="note">Source: 00_FSA_C_Datamaster_7 · Pass % = pass ÷ (pass + fail) · Defect % = (major + minor) ÷ sample · Fail qty = offered qty of failed audits · Order qty counts each PO once per day/month.</div>';
+    document.getElementById('app').innerHTML = h; bindDet();
+  }
+  function bindDet() {
+    var q = document.getElementById('dq'), r = document.getElementById('dr');
+    if (q) q.addEventListener('input', function () { DQ = this.value.toLowerCase().trim(); var p = q.selectionStart; document.getElementById('det').innerHTML = detail(period()); bindDet(); var n = document.getElementById('dq'); n.focus(); n.setSelectionRange(p, p); });
+    if (r) r.addEventListener('change', function () { DR = this.value; document.getElementById('det').innerHTML = detail(period()); bindDet(); });
+  }
+  document.getElementById('app').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-unit]'), b = e.target.closest('[data-buyer]');
+    if (t) { F.unit = F.unit === t.getAttribute('data-unit') ? '' : t.getAttribute('data-unit'); save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    else if (b) { F.buyer = F.buyer === b.getAttribute('data-buyer') ? '' : b.getAttribute('data-buyer'); save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  });
+
+  var loadedAt = 0;
+  function sub() { if (!D) return; var m = Math.floor((Date.now() - (D.builtAt || Date.now())) / 60000); document.getElementById('sub').textContent = 'Live from the FSA datamaster · data as of ' + D.generated + (m > 1 ? ' (' + m + ' min ago)' : '') + ' · ' + Object.keys(D.month).length + ' groups'; }
+  function load(fresh) {
+    document.getElementById('sub').textContent = fresh ? 'Refreshing…' : 'Loading live FSA data…';
+    jsonp(fresh ? { action: 'fsa_dash', fresh: 1 } : { action: 'fsa_dash' }, function (r) {
+      if (!r || !r.month) { if (!D) document.getElementById('app').innerHTML = '<div class="load">Could not load FSA data' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please refresh in a minute.</div>'; else sub(); return; }
+      D = r; if (F.per !== 'today' && F.per !== 'yday' && F.per !== '7d' && F.per !== '30d' && F.per !== 'mtd' && months().indexOf(F.per.slice(2)) < 0) F.per = 'mtd';
+      render(); sub();
+      if (!fresh && Date.now() - (r.builtAt || 0) > 10 * 60000) load(true);
+    });
+  }
+  load(false); setInterval(sub, 30000); setInterval(function () { if (!document.hidden) load(true); }, 15 * 60000);
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>
