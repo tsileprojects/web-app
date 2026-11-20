@@ -57,6 +57,7 @@ tr.fail td{background:#FEF2F2}
 <div class="bar"><div class="bw">
   <div class="seg" id="fac" role="group" aria-label="Factory"></div>
   <label class="lbl" for="per">Period</label><select id="per"></select>
+  <label class="lbl" for="dt">Date</label><input type="date" id="dt" style="height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit">
   <label class="lbl" for="buy">Buyer</label><select id="buy"><option value="">All buyers</option></select>
   <div class="chips" id="typ" role="group" aria-label="Audit type"></div>
 </div></div>
@@ -98,6 +99,7 @@ tr.fail td{background:#FEF2F2}
     if (p === '7d') return { kind: 'days', from: addDays(t, -6), to: t, label: 'Last 7 days' };
     if (p === '30d') return { kind: 'days', from: addDays(t, -29), to: t, label: 'Last 30 days' };
     if (p === 'mtd') return { kind: 'month', m: t.slice(0, 7), label: 'This month (' + ml(t.slice(0, 7)) + ')' };
+    if (/^d:/.test(p)) { var dd = p.slice(2); return { kind: 'days', from: dd, to: dd, label: dl(dd) + '-' + dd.slice(0, 4) }; }
     if (/^m:/.test(p)) return { kind: 'month', m: p.slice(2), label: ml(p.slice(2)) };
     return { kind: 'month', m: t.slice(0, 7), label: ml(t.slice(0, 7)) };
   }
@@ -118,6 +120,8 @@ tr.fail td{background:#FEF2F2}
       return '<button type="button" data-u="' + u + '" class="' + (F.unit === u ? 'on' : '') + '">' + (u || 'All') + ' <small>' + c + '</small></button>';
     }).join('');
     var opts = [['today', 'Today'], ['yday', 'Yesterday'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['mtd', 'This month']].concat(months().slice(1).map(function (m) { return ['m:' + m, ml(m)]; }));
+    if (/^d:/.test(F.per)) opts.unshift([F.per, 'Date: ' + dl(F.per.slice(2)) + '-' + F.per.slice(2, 6)]);
+    var dt = document.getElementById('dt'); dt.min = D.dayFrom; dt.max = D.today; dt.value = /^d:/.test(F.per) ? F.per.slice(2) : '';
     document.getElementById('per').innerHTML = opts.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === F.per ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
     var bs = {}; Object.keys(D.month).forEach(function (k) { bs[k.split('|')[3]] = 1; });
     document.getElementById('buy').innerHTML = '<option value="">All buyers</option>' + Object.keys(bs).sort().map(function (b) { return '<option' + (b === F.buyer ? ' selected' : '') + '>' + esc(b) + '</option>'; }).join('');
@@ -127,6 +131,8 @@ tr.fail td{background:#FEF2F2}
   }
   document.getElementById('fac').addEventListener('click', function (e) { var b = e.target.closest('[data-u]'); if (!b) return; F.unit = b.getAttribute('data-u'); save(); render(); });
   document.getElementById('per').addEventListener('change', function () { F.per = this.value; save(); render(); });
+  document.getElementById('dt').addEventListener('change', function () { if (!this.value) { F.per = 'mtd'; } else if (this.value < D.dayFrom || this.value > D.today) { alertBox('Pick a date between ' + dl(D.dayFrom) + '-' + D.dayFrom.slice(0, 4) + ' and today.'); return; } else F.per = 'd:' + this.value; save(); render(); });
+  function alertBox(m) { var a = document.getElementById('app'); var n = document.createElement('div'); n.className = 'note'; n.style.cssText = 'background:#FEF3C7;border:1px solid #F59E0B;padding:10px 14px;border-radius:8px;color:#92400E'; n.textContent = m; a.insertBefore(n, a.firstChild); setTimeout(function () { n.remove(); }, 5000); }
   document.getElementById('buy').addEventListener('change', function () { F.buyer = this.value; save(); render(); });
   document.getElementById('typ').addEventListener('click', function (e) {
     var b = e.target.closest('[data-t]'); if (!b) return; var t = b.getAttribute('data-t');
@@ -268,7 +274,7 @@ tr.fail td{background:#FEF2F2}
     document.getElementById('sub').textContent = fresh ? 'Refreshing…' : 'Loading live FSA data…';
     jsonp(fresh ? { action: 'fsa_dash', fresh: 1 } : { action: 'fsa_dash' }, function (r) {
       if (!r || !r.month) { if (!D) document.getElementById('app').innerHTML = '<div class="load">Could not load FSA data' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please refresh in a minute.</div>'; else sub(); return; }
-      D = r; if (F.per !== 'today' && F.per !== 'yday' && F.per !== '7d' && F.per !== '30d' && F.per !== 'mtd' && months().indexOf(F.per.slice(2)) < 0) F.per = 'mtd';
+      D = r; if (F.per !== 'today' && F.per !== 'yday' && F.per !== '7d' && F.per !== '30d' && F.per !== 'mtd' && months().indexOf(F.per.slice(2)) < 0 && !(/^d:/.test(F.per) && F.per.slice(2) >= r.dayFrom && F.per.slice(2) <= r.today)) F.per = 'mtd';
       render(); sub();
       if (!fresh && Date.now() - (r.builtAt || 0) > 10 * 60000) load(true);
     });

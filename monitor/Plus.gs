@@ -120,6 +120,7 @@ function alertsSetup_() {
 
 /** Runs every 30 minutes; emails only NEW problems (each one at most once a day). */
 function checkAlerts() {
+  try { fsaMailFlush(); } catch (e) { console.log('fsaMailFlush: ' + e.message); }
   const tz = Session.getScriptTimeZone(), now = new Date();
   const hm = +Utilities.formatDate(now, tz, 'H') * 60 + +Utilities.formatDate(now, tz, 'm');
   if (now.getDay() === 0 || hm < 9 * 60 + 30 || hm > 18 * 60 + 30) return 'outside working hours';
