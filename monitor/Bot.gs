@@ -255,6 +255,14 @@ function botCallback_(q) {
     botLog_(p[0] === 'ap' ? 'approved' : 'rejected', r[0] + ' by ' + a.name);
     return edit((p[0] === 'ap' ? '✅ Approved: ' : '✖ Rejected: ') + botEsc_(r[1]) + ' (' + botEsc_(r[0]) + ') by ' + botEsc_(a.name));
   }
+  if (p[0] === 't' && a) { // admin test of the worker flow – nothing is saved
+    const lang = p[p.length - 1] === 'kn' || p[p.length - 1] === 'hi' ? p[p.length - 1] : 'en';
+    if (p[1] === 'Y') return edit('🧪 Test · ' + bt_(lang, 'okY', { n: botEsc_(a.name), d: botNice_(d) }) + '\n\n(Nothing saved. Workers who say Yes are only counted in the summary.)');
+    if (p[1] === 'N') return edit('🧪 Test · ' + bt_(lang, 'why'), { inline_keyboard: bt_(lang, 'reasons').map((t, i) => [{ text: t, callback_data: 't|r|' + i + '|' + lang }]) });
+    const reason = bt_(lang, 'reasons')[+p[2]] || 'Other';
+    edit('🧪 Test · ' + bt_(lang, 'okN', { n: botEsc_(a.name), d: botNice_(d), r: reason }));
+    return tgSend_(id, '🧪 <b>Sample admin alert</b> (sent to HR/GM when a worker says No)\n\n❌ <b>Not coming today</b>\n<b>' + botEsc_(a.name) + '</b> (TEST) · ' + botEsc_(a.unit) + '\nReason: ' + botEsc_(BT.en.reasons[+p[2]] || 'Other'));
+  }
   if (p[0] === 'px' && a) { // supervisor marks a worker of their line
     const wr = botRows_('Workers'); let row = 0; for (let i = 0; i < wr.length; i++) if (String(wr[i][0]) === p[1]) { row = i + 2; break; }
     if (!row) return edit('Worker not found');
@@ -267,7 +275,7 @@ function botCallback_(q) {
 
 /* ---------------- admins ---------------- */
 function botAdminHelp_(a) {
-  return 'Admin commands:\n/today – attendance now (your units)\n/absent [unit] – who is not coming\n/notreplied [unit] – who has not answered' + (/super/i.test(a.role) ? '\n/line – mark workers of your line who have not answered' : '') + '\n/help – this list';
+  return 'Admin commands:\n/today – attendance now (your units)\n/absent [unit] – who is not coming\n/notreplied [unit] – who has not answered' + (/super/i.test(a.role) ? '\n/line – mark workers of your line who have not answered' : '') + '\n/test – try the worker question yourself (nothing is saved)\n/asknow – send today\'s question now to registered workers' + '\n/help – this list';
 }
 function botAdminSees_(a, w) { return (a.unit.toUpperCase() === 'ALL' || a.unit.toUpperCase() === String(w.unit).toUpperCase()) && (!a.line || a.line === String(w.line)); }
 function botAdminCmd_(id, a, text) {
@@ -275,6 +283,18 @@ function botAdminCmd_(id, a, text) {
   if (/^\/today/.test(text)) return tgLong_(id, botSummaryText_(a, d, arg));
   if (/^\/absent/.test(text)) return tgLong_(id, botListText_(a, d, 'No', arg));
   if (/^\/notreplied/.test(text)) return tgLong_(id, botListText_(a, d, '', arg));
+  if (/^\/test/.test(text)) {
+    const lang = /^(kn|hi)$/.test(arg) ? arg : 'en';
+    return tgSend_(id, '🧪 <b>Test – this is what workers see at 7:00 AM</b>\n\n' + bt_(lang, 'ask', { n: botEsc_(a.name), d: botNice_(d) }), { inline_keyboard: [[{ text: bt_(lang, 'yes'), callback_data: 't|Y|' + lang }, { text: bt_(lang, 'no'), callback_data: 't|N|' + lang }]] });
+  }
+  if (/^\/asknow/.test(text)) {
+    if (!botWorkingDay_(d)) return tgSend_(id, 'Today is a holiday / weekly off – no question sent.');
+    const lat = botLatest_(d), ws = botActive_().filter(w => botAdminSees_(a, w) && !lat[w.code]);
+    if (!ws.length) return tgSend_(id, 'No registered workers are waiting to answer (in your units).');
+    const r = tgBulk_(ws.map(w => ({ chat: w.tg, text: bt_(w.lang, 'ask', { n: botEsc_(w.name), d: botNice_(d) }), kb: askKb_(w.lang, d) })));
+    botLog_('ask now', a.name + ' · ' + ws.length + ' workers · sent ' + r.sent);
+    return tgSend_(id, '📨 Question sent to ' + r.sent + ' worker(s)' + (r.failed || r.blocked ? ' · failed ' + (r.failed + r.blocked) : '') + '. Send /today to see replies.');
+  }
   if (/^\/line/.test(text)) {
     const lat = botLatest_(d), todo = botActive_().filter(w => botAdminSees_(a, w) && !lat[w.code]).slice(0, 40);
     if (!todo.length) return tgSend_(id, 'Everyone in your line has answered for today. 👍');
