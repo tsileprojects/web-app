@@ -148,6 +148,7 @@ tr.fail td{background:#FEF2F2}
     if (P.kind === 'month' && P.m !== D.today.slice(0, 7)) to = addDays(to, -1);
     var from = P.kind === 'month' ? P.m + '-01' : addDays(P.to, -29);
     if (P.kind === 'days' && P.from < from) from = P.from;
+    if (P.kind === 'days' && from < D.dayFrom && P.from >= D.dayFrom) from = D.dayFrom;
     if (from < D.dayFrom) return '<div class="note">Day-wise detail is kept for the last ' + Math.round((new Date(D.today) - new Date(D.dayFrom)) / 864e5) + ' days. Pick a recent month to see it.</div>';
     var pts = []; for (var d = from; d <= to; d = addDays(d, 1)) { var s = sum(D.day, function (p) { return p[0] === d && okDims(p); }); pts.push({ d: d, n: s[0], p: s[1], f: s[2], off: s[3] }); }
     var W = 760, H = 230, pl = 36, pr = 40, pt = 12, pb = 26, mx = 1; pts.forEach(function (x) { mx = Math.max(mx, x.n); });
