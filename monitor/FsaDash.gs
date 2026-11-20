@@ -42,8 +42,8 @@ function fsadBuild_() {
   const rows = fsadCsv_("select D,E,F,G,H,I,K,L,M,R,S,V,AN,AU,AV where AW = 1 and D >= date '" + FSAD.from + "'");
   const M = {}, D = {}, A = {}, det = [], poSeen = {};
   const add = (map, key, r, po) => {
-    const o = map[key] || (map[key] = [0, 0, 0, 0, 0, 0, 0, 0, 0]); // n pass fail offered sample major minor failQty orderQty
-    o[0]++; if (r.res === 'PASS') o[1]++; else if (r.res === 'FAIL') { o[2]++; o[7] += r.off; }
+    const o = map[key] || (map[key] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); // n pass fail offered sample major minor failQty orderQty passQty
+    o[0]++; if (r.res === 'PASS') { o[1]++; o[9] += r.off; } else if (r.res === 'FAIL') { o[2]++; o[7] += r.off; }
     o[3] += r.off; o[4] += r.smp; o[5] += r.maj; o[6] += r.min;
     const pk = key + '|' + po; if (po && !poSeen[pk]) { poSeen[pk] = 1; o[8] += r.ord; }
   };
@@ -78,7 +78,7 @@ function fsadBuild_() {
   Object.keys(raw).forEach(k => { const p = k.split('|'), nk = keep[p[0] + '|' + p[2]] ? k : p[0] + '|' + p[1] + '|Others', o = DF[nk] || (DF[nk] = [0, 0]); o[0] += raw[k][0]; o[1] += raw[k][1]; });
   return { builtAt: Date.now(), generated: Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd-MMM-yyyy HH:mm'), today: today, dayFrom: dayFrom, detFrom: detFrom,
     month: M, day: D, aud: A, def: DF, cat: CAT, det: det,
-    fields: ['audits', 'pass', 'fail', 'offered', 'sample', 'major', 'minor', 'failQty', 'orderQty'] };
+    fields: ['audits', 'pass', 'fail', 'offered', 'sample', 'major', 'minor', 'failQty', 'orderQty', 'passQty'] };
 }
 
 function fsaDash_(p) {
