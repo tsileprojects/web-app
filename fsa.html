@@ -51,7 +51,8 @@ tr.fail td{background:#FEF2F2}
 </head>
 <body>
 <header><div class="hw">
-  <div><h1>FSA Dashboard <span>| all factories</span></h1><div class="sub" id="sub">Loading live FSA data…</div></div>
+  <div style="display:flex;align-items:center;gap:14px"><a id="tsplHomeBtn" class="hb" href="main_ho.html" title="Back to the main dashboard" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:var(--gold);border-color:var(--gold);color:#0B2545">&#8962; Home</a>
+  <div><h1>FSA Dashboard <span>| all factories</span></h1><div class="sub" id="sub">Loading live FSA data…</div></div></div>
   <div style="display:flex;gap:8px"><button class="hb" id="btnRefresh" type="button">Refresh</button></div>
 </div></header>
 <div class="bar"><div class="bw">
@@ -68,6 +69,11 @@ tr.fail td{background:#FEF2F2}
 <script>
 (function () {
   'use strict';
+  (function () { var h = document.getElementById('tsplHomeBtn'), d = 'main_ho.html';
+    if (window.top !== window.self) d = 'home.html';
+    else if (/\/m\.html/.test(document.referrer) || /[?&]from=app\b/.test(location.search)) d = 'm.html';
+    else { try { var s = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (s.redirect) d = s.redirect; } catch (e) {} }
+    h.href = d; })();
   var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'], TYPES = ['FSA', 'Re-FSA', 'Final', 'Re-Final', 'DUPRO', 'Carton', 'Reviews', '100% Check', 'Other'];
   var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var D = null, F = { unit: '', per: 'mtd', buyer: '', types: { 'FSA': 1, 'Re-FSA': 1 } }, SORT = { k: 0, d: -1 }, DQ = '', DR = '';
