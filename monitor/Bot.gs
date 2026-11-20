@@ -184,7 +184,7 @@ function botMessage_(m) {
   if (/^\/start/.test(text) || (!w && !a)) {
     if (w && /active/i.test(w.status)) return tgSend_(id, bt_(w.lang, 'joined', { n: botEsc_(w.name), u: w.unit, l: w.line ? 'L' + w.line : '' }) + '\n\n' + bt_(w.lang, 'help'));
     if (a) return tgSend_(id, botAdminHelp_(a));
-    return tgSend_(id, 'Welcome to <b>TSPL Attendance</b>.\nನಮಸ್ಕಾರ · नमस्ते\n\nTo register, tap the button below to share your phone number.\nನೋಂದಣಿಗಾಗಿ ಕೆಳಗಿನ ಬಟನ್ ಒತ್ತಿ · पंजीकरण के लिए नीचे बटन दबाएँ',
+    return tgSend_(id, '🙏 Welcome to <b>TSPL Attendance</b>\nನಮಸ್ಕಾರ · नमस्ते\n\n👇 Tap the big button <b>📱 Share my phone number</b> at the bottom of the screen, then tap <b>OK / Share</b>.\n\n👇 ಕೆಳಗಿನ <b>📱 Share my phone number</b> ಬಟನ್ ಒತ್ತಿ\n👇 नीचे <b>📱 Share my phone number</b> बटन दबाएँ\n\n(If you do not see the button, tap the ⌨️ / ▦ icon next to the message box.)',
       { keyboard: [[{ text: '📱 Share my phone number', request_contact: true }]], resize_keyboard: true, one_time_keyboard: true });
   }
   if (a) return botAdminCmd_(id, a, text);
@@ -399,3 +399,36 @@ function botConnect() {
   return { ok: !!hook.ok, bot: '@' + me.result.username, webhook: hook.description || '' };
 }
 function botStatus() { return { token: !!PropertiesService.getScriptProperties().getProperty('TG_TOKEN'), hook: tg_('getWebhookInfo', {}).result }; }
+
+/* ---------------- polling mode (no webhook: Apps Script answers webhooks with 302, which stalls Telegram's queue) ---------------- */
+function botPoll() {
+  const P = PropertiesService.getScriptProperties();
+  if (!P.getProperty('TG_TOKEN')) return 'no token';
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(500)) return 'busy';
+  let n = 0;
+  try {
+    const hm = botNow_(), busy = hm >= '06:45' && hm < '08:45';   // morning answers: check every few seconds for 20 s
+    const end = Date.now() + (busy ? 20000 : 0);
+    let off = +(P.getProperty('BOT_OFFSET') || 0);
+    for (;;) {
+      const r = tg_('getUpdates', { offset: off, timeout: 0, limit: 100, allowed_updates: ['message', 'callback_query'] });
+      const list = (r && r.result) || [];
+      list.forEach(u => {
+        off = u.update_id + 1; P.setProperty('BOT_OFFSET', String(off));
+        try { if (u.callback_query) botCallback_(u.callback_query); else if (u.message) botMessage_(u.message); n++; }
+        catch (x) { botLog_('update error', x && x.stack || x); }
+      });
+      if (list.length) continue;
+      if (Date.now() + 4000 >= end) break;
+      Utilities.sleep(4000);
+    }
+  } finally { lock.releaseLock(); }
+  return n;
+}
+function botUsePolling() {
+  tg_('deleteWebhook', { drop_pending_updates: false });
+  ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'botPoll').forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger('botPoll').timeBased().everyMinutes(1).create();
+  botLog_('mode', 'polling every minute');
+  return botPoll();
+}
