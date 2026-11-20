@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | COT Dashboard</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--g:#15803D;--a:#B45309;--r:#B91C1C;--b:#1D4ED8;--soft:#F8FAFC}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff}
+.hw{max-width:1440px;margin:0 auto;padding:12px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.hw h1{margin:0;font-size:18px;font-weight:700}.hw h1 span{color:var(--gold)}.hw .sub{font-size:12px;color:#CBD5E1;margin-top:2px}
+.hb{height:38px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.bar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:4}
+.bw{max-width:1440px;margin:0 auto;padding:10px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:#EEF2F7;padding:4px;border-radius:10px}
+.seg button{height:36px;min-width:58px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#334155;font:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.seg button.on{background:var(--navy);color:#fff}.seg button small{font-size:11px;opacity:.75}
+select{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{height:32px;padding:0 11px;border-radius:999px;border:1px solid #CBD5E1;background:#fff;color:#334155;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.chip.on{background:#E6EEFB;border-color:var(--b);color:#1E3A8A}
+.lbl{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+main{max-width:1440px;margin:0 auto;padding:18px 22px 40px;display:flex;flex-direction:column;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(min-width:1300px){.kpis{grid-template-columns:repeat(9,1fr)}.kpis .kpi .v{font-size:22px}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-top:3px solid var(--c,#0B2545)}
+.kpi .l{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase}
+.kpi .v{font-size:26px;font-weight:700;margin:6px 0 2px}.kpi .n{font-size:12.5px;color:var(--mute)}
+.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}.m{color:#64748B}
+.grid{display:flex;flex-wrap:wrap;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--mute);font-size:12px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:700;color:var(--mute);text-align:right;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;cursor:pointer}
+td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
+tr.fail td{background:#FEF2F2}
+.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}.tag.g{background:#DCFCE7;color:#166534}.tag.r{background:#FEE2E2;color:#991B1B}
+.pbar{display:inline-block;width:70px;height:6px;background:var(--line);border-radius:999px;vertical-align:middle;margin-left:8px;overflow:hidden}.pbar i{display:block;height:100%}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-top:6px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.def{display:grid;grid-template-columns:minmax(120px,190px) 1fr 60px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+.def .t{height:14px;background:#EEF2F7;border-radius:4px;overflow:hidden;display:flex}.def .t i{display:block;height:100%}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.tools input{height:38px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;width:240px}
+.load{padding:60px;text-align:center;color:var(--mute)}.spin{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 12px}@keyframes s{to{transform:rotate(360deg)}}
+.note{font-size:12px;color:var(--mute)}
+.din{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 8px;font:inherit;background:#fff;color:var(--ink)}
+@media(max-width:700px){main,.bw,.hw{padding-left:12px;padding-right:12px}}
+.chipR{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.chipR.A{background:#DCFCE7;color:#166534}.chipR.N{background:#FEE2E2;color:#991B1B}.chipR.U{background:#FEF3C7;color:#92400E}.chipR.X{background:#EEF2F7;color:#475569}
+.eb{display:inline-block;position:relative;width:90px;height:8px;background:#EEF2F7;border-radius:999px;vertical-align:middle;margin-left:8px}.eb i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}.eb b{position:absolute;top:-3px;width:2px;height:14px;background:#0F172A}
+.spark{vertical-align:middle}
+</style>
+</head>
+<body>
+<header><div class="hw">
+  <div style="display:flex;align-items:center;gap:14px"><a id="tsplHomeBtn" class="hb" href="main_ho.html" title="Back to the main dashboard" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:var(--gold);border-color:var(--gold);color:#0B2545">&#8962; Home</a>
+  <div><h1>COT Dashboard <span>| style change-over tracking</span></h1><div class="sub" id="sub">Loading live COT data…</div></div></div>
+  <div style="display:flex;gap:8px"><button class="hb" id="btnRefresh" type="button">Refresh</button></div>
+</div></header>
+<div class="bar"><div class="bw">
+  <div class="seg" id="fac" role="group" aria-label="Factory"></div>
+  <label class="lbl" for="per">Period</label><select id="per"></select>
+  <span class="lbl">Dates</span><span style="display:inline-flex;align-items:center;gap:6px"><label for="dfrom" style="font-size:12px;color:#475569">From</label><input type="date" id="dfrom" class="din"><label for="dto" style="font-size:12px;color:#475569">To</label><input type="date" id="dto" class="din"></span>
+  <label class="lbl" for="buy">Buyer</label><select id="buy"><option value="">All buyers</option></select>
+</div></div>
+<main id="app"><div class="load"><div class="spin"></div>Loading live COT data…</div></main>
+<script src="security.js"></script>
+<script src="js/tspl-config.js"></script>
+<script>
+(function () {
+  'use strict';
+  (function () { var h = document.getElementById('tsplHomeBtn'), d = 'main_ho.html';
+    if (window.top !== window.self) d = 'home.html';
+    else if (/\/m\.html/.test(document.referrer) || /[?&]from=app\b/.test(location.search)) d = 'm.html';
+    else { try { var s = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (s.redirect) d = s.redirect; } catch (e) {} }
+    h.href = d; })();
+  var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'], MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  /* bat: 0 unit 1 line 2 buyer 3 style 4 color 5 sam 6 mp 7 date 8 days 9 eff 10 slab 11 dayRes 12 overRes 13 pro 14 target 15 res 16 startupFail 17 effByDay
+     live: 0 unit 1 line 2 buyer 3 style 4 color 5 sam 6 mp 7 util 8 target 9 pro 10 eff 11 days 12 slab 13 dayRes 14 overRes 15 batchSt */
+  var D = null, F = { unit: '', per: 'mtd', buyer: '' }, BQ = '', BR = '';
+  try { var sv = JSON.parse(localStorage.getItem('cotDashF') || 'null'); if (sv) F = Object.assign(F, sv); } catch (e) {}
+  var qu = (location.search.match(/[?&]unit=([A-Z0-9]+)/i) || [])[1]; if (qu) F.unit = qu.toUpperCase();
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function n0(v) { return Math.round(v || 0).toLocaleString('en-IN'); }
+  function p1(v) { return v == null || isNaN(v) ? '–' : (Math.round(v * 10) / 10).toFixed(1) + '%'; }
+  function cls(v, g, a) { return v == null || isNaN(v) ? 'm' : v >= g ? 'g' : v >= a ? 'a' : 'r'; }
+  function ml(k) { return MN[+k.slice(5, 7) - 1] + '-' + k.slice(2, 4); }
+  function dl(d) { return d.slice(8) + '-' + MN[+d.slice(5, 7) - 1]; }
+  function addDays(d, n) { var x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); }
+  function save() { try { localStorage.setItem('cotDashF', JSON.stringify(F)); } catch (e) {} }
+  function jsonp(params, cb, ms) {
+    var name = '__cot' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 180000);
+    document.body.appendChild(s);
+  }
+  function months() { var s = {}; D.bat.forEach(function (b) { s[b[7].slice(0, 7)] = 1; }); return Object.keys(s).sort().reverse(); }
+  function period() {
+    var t = D.latest, p = F.per;
+    if (/^r:/.test(p)) { var a = p.split(':'); return { from: a[1], to: a[2], label: a[1] === a[2] ? dl(a[1]) + '-' + a[1].slice(0, 4) : dl(a[1]) + ' to ' + dl(a[2]) + '-' + a[2].slice(0, 4) }; }
+    if (p === 'last') return { from: t, to: t, label: 'Latest day ' + dl(t) };
+    if (p === '7d') return { from: addDays(t, -6), to: t, label: 'Last 7 days' };
+    if (p === '30d') return { from: addDays(t, -29), to: t, label: 'Last 30 days' };
+    var m = /^m:/.test(p) ? p.slice(2) : t.slice(0, 7);
+    return { from: m + '-01', to: m + '-31', label: p === 'mtd' || !/^m:/.test(p) ? 'This month (' + ml(m) + ')' : ml(m), m: m };
+  }
+  function inP(P, d) { return d >= P.from && d <= P.to; }
+  function okB(b, skip) { return (skip === 'unit' || !F.unit || b[0] === F.unit) && (skip === 'buyer' || !F.buyer || b[2] === F.buyer); }
+  function batches(P, skip) { return D.bat.filter(function (b) { return inP(P, b[7]) && okB(b, skip); }); }
+  function stat(list) {
+    var o = { n: list.length, A: 0, N: 0, U: 0, su: 0, eff: 0, effN: 0 };
+    list.forEach(function (b) { if (b[15] === 'A' || b[15] === 'N' || b[15] === 'U') o[b[15]]++; o.su += b[16] ? 1 : 0; if (b[15] === 'A' || b[15] === 'N') { o.eff += b[9]; o.effN++; } });
+    o.ach = o.A + o.N ? o.A / (o.A + o.N) * 100 : null; o.avg = o.effN ? o.eff / o.effN : null; return o;
+  }
+  function chip(r) { return r === 'A' ? '<span class="chipR A">Achieved</span>' : r === 'N' ? '<span class="chipR N">Not achieved</span>' : r === 'U' ? '<span class="chipR U">Under COT</span>' : '<span class="chipR X">–</span>'; }
+  function dchip(s) { return /^ach/i.test(s) ? '<span class="chipR A">Achieved</span>' : /^not/i.test(s) ? '<span class="chipR N">Not achieved</span>' : '<span class="chipR X">' + (s && s !== 'NA' ? esc(s) : 'NA') + '</span>'; }
+  function effBar(eff, slab) {
+    var c = !slab ? '#64748B' : eff >= slab ? '#15803D' : eff >= slab * 0.85 ? '#B45309' : '#B91C1C';
+    return '<b class="' + (!slab ? 'm' : eff >= slab ? 'g' : eff >= slab * 0.85 ? 'a' : 'r') + '">' + p1(eff) + '</b><span class="eb" title="Target ' + p1(slab) + '"><i style="width:' + Math.min(100, eff / 80 * 100) + '%;background:' + c + '"></i>' + (slab ? '<b style="left:' + Math.min(100, slab / 80 * 100) + '%"></b>' : '') + '</span>';
+  }
+  function slabFor(day, fin) { return day <= 5 ? day * 10 : fin || 55; }
+  function spark(effs, fin) {
+    if (!effs || !effs.length) return '<span class="note">–</span>';
+    var n = Math.min(effs.length, 30), W = 120, H = 30, x = function (i) { return 2 + i * (W - 4) / Math.max(1, n - 1); }, y = function (v) { return H - 2 - Math.min(80, Math.max(0, v)) / 80 * (H - 4); };
+    var t = '', l = '';
+    for (var i = 0; i < n; i++) { t += (i ? ' L' : 'M') + x(i) + ' ' + y(slabFor(i + 1, fin)); if (effs[i] != null) l += (l ? ' L' : 'M') + x(i) + ' ' + y(effs[i]); }
+    return '<svg class="spark" width="' + W + '" height="' + H + '" role="img" aria-label="Efficiency by day"><path d="' + t + '" fill="none" stroke="#94A3B8" stroke-dasharray="3 2"/><path d="' + l + '" fill="none" stroke="#1D4ED8" stroke-width="1.6"/></svg>';
+  }
+  function drawFilters() {
+    var P = period(), cnt = {}; UNITS.forEach(function (u) { cnt[u] = batches(P, 'unit').filter(function (b) { return b[0] === u; }).length; });
+    document.getElementById('fac').innerHTML = [''].concat(UNITS).map(function (u) {
+      var c = u ? cnt[u] : UNITS.reduce(function (a, x) { return a + cnt[x]; }, 0);
+      return '<button type="button" data-u="' + u + '" class="' + (F.unit === u ? 'on' : '') + '">' + (u || 'All') + ' <small>' + c + '</small></button>';
+    }).join('');
+    var opts = [['last', 'Latest day'], ['7d', 'Last 7 days'], ['30d', 'Last 30 days'], ['mtd', 'This month']].concat(months().filter(function (m) { return m !== D.latest.slice(0, 7); }).map(function (m) { return ['m:' + m, ml(m)]; }));
+    var isR = /^r:/.test(F.per); if (isR) opts.unshift([F.per, P.label]);
+    ['dfrom', 'dto'].forEach(function (id, i) { var e = document.getElementById(id); e.max = D.latest; e.value = isR ? (i ? P.to : P.from) : ''; });
+    document.getElementById('per').innerHTML = opts.map(function (o) { return '<option value="' + o[0] + '"' + (o[0] === F.per ? ' selected' : '') + '>' + o[1] + '</option>'; }).join('');
+    var bs = {}; D.bat.forEach(function (b) { bs[b[2]] = 1; });
+    document.getElementById('buy').innerHTML = '<option value="">All buyers</option>' + Object.keys(bs).sort().map(function (b) { return '<option' + (b === F.buyer ? ' selected' : '') + '>' + esc(b) + '</option>'; }).join('');
+  }
+  document.getElementById('fac').addEventListener('click', function (e) { var b = e.target.closest('[data-u]'); if (!b) return; F.unit = b.getAttribute('data-u'); save(); render(); });
+  document.getElementById('per').addEventListener('change', function () { F.per = this.value; save(); render(); });
+  document.getElementById('buy').addEventListener('change', function () { F.buyer = this.value; save(); render(); });
+  function setRange(src) {
+    var f = document.getElementById('dfrom'), t = document.getElementById('dto'), a = f.value, b = t.value;
+    if (!a && !b) { F.per = 'mtd'; save(); render(); return; }
+    if (!a) a = b; if (!b) b = a; if (a > b) { if (src === 'from') b = a; else a = b; }
+    F.per = 'r:' + a + ':' + b; save(); render();
+  }
+  document.getElementById('dfrom').addEventListener('change', function () { setRange('from'); });
+  document.getElementById('dto').addEventListener('change', function () { setRange('to'); });
+  document.getElementById('btnRefresh').addEventListener('click', function () { load(true); });
+
+  function monthChart() {
+    var ms = months().slice(0, 12).reverse(), pts = ms.map(function (m) { var s = stat(D.bat.filter(function (b) { return b[7].slice(0, 7) === m && okB(b); })); s.m = m; return s; });
+    var W = 760, H = 240, pl = 40, pr = 40, pt = 16, pb = 26, mx = 1; pts.forEach(function (x) { mx = Math.max(mx, x.A + x.N + x.U); }); mx = Math.ceil(mx * 1.1);
+    var bw = (W - pl - pr) / Math.max(1, pts.length), g = '', line = '', Y = function (v) { return H - pb - (H - pt - pb) * v / mx; };
+    for (var i = 0; i <= 4; i++) { var yy = pt + (H - pt - pb) * i / 4; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + yy + '" y2="' + yy + '" stroke="#EEF2F7"/><text x="' + (pl - 6) + '" y="' + (yy + 4) + '" font-size="10" fill="#64748B" text-anchor="end">' + Math.round(mx * (4 - i) / 4) + '</text><text x="' + (W - pr + 6) + '" y="' + (yy + 4) + '" font-size="10" fill="#1D4ED8">' + (100 - i * 25) + '%</text>'; }
+    pts.forEach(function (x, i) {
+      var X = pl + i * bw + bw * 0.2, w = bw * 0.6, tip = '<title>' + ml(x.m) + ': ' + x.A + ' achieved · ' + x.N + ' not achieved · ' + x.U + ' under COT · COT ' + p1(x.ach) + '</title>', base = 0;
+      [['A', '#15803D'], ['N', '#B91C1C'], ['U', '#F59E0B']].forEach(function (s) { var v = x[s[0]]; if (!v) return; g += '<rect x="' + X + '" y="' + Y(base + v) + '" width="' + w + '" height="' + (Y(base) - Y(base + v)) + '" fill="' + s[1] + '">' + tip + '</rect>'; base += v; });
+      if (x.ach != null) { var yy2 = pt + (H - pt - pb) * (1 - x.ach / 100); line += (line ? ' L' : 'M') + (X + w / 2) + ' ' + yy2; g += '<circle cx="' + (X + w / 2) + '" cy="' + yy2 + '" r="3.5" fill="#1D4ED8"/><text x="' + (X + w / 2) + '" y="' + (yy2 - 8) + '" font-size="10" fill="#1D4ED8" text-anchor="middle" font-weight="700">' + Math.round(x.ach) + '%</text>'; }
+      g += '<text x="' + (X + w / 2) + '" y="' + (H - 8) + '" font-size="10" fill="#64748B" text-anchor="middle">' + ml(x.m) + '</text>';
+    });
+    if (line) g += '<path d="' + line + '" fill="none" stroke="#1D4ED8" stroke-width="2"/>';
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="Month-wise COT results">' + g + '</svg><div class="legend"><span><i style="background:#15803D"></i>Achieved</span><span><i style="background:#B91C1C"></i>Not achieved</span><span><i style="background:#F59E0B"></i>Under COT</span><span><i style="background:#1D4ED8"></i>COT achievement % (right axis)</span></div>';
+  }
+  function rampChart(P) {
+    var ms = {}; for (var d = P.from.slice(0, 7); d <= P.to.slice(0, 7); d = addDays(d + '-01', 32).slice(0, 7)) ms[d] = 1;
+    var acc = []; for (var i = 0; i < 15; i++) acc.push([0, 0, 0]);
+    Object.keys(D.ramp).forEach(function (k) { var p = k.split('|'); if (!ms[p[0]] || (F.unit && p[1] !== F.unit) || +p[2] > 15) return; var v = D.ramp[k], a = acc[+p[2] - 1]; a[0] += v[0]; a[1] += v[1]; a[2] += v[2]; });
+    if (!acc.some(function (a) { return a[1]; })) return '<div class="note">No ramp-up data for this period.</div>';
+    var W = 760, H = 230, pl = 40, pr = 16, pt = 14, pb = 28, mx = 80, X = function (i) { return pl + (W - pl - pr) * i / 14; }, Y = function (v) { return pt + (H - pt - pb) * (1 - Math.min(mx, v) / mx); }, g = '', l = '', t = '';
+    for (var j = 0; j <= 4; j++) { var v = mx * j / 4; g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(v) + '" y2="' + Y(v) + '" stroke="#EEF2F7"/><text x="' + (pl - 6) + '" y="' + (Y(v) + 4) + '" font-size="10" fill="#64748B" text-anchor="end">' + v + '%</text>'; }
+    acc.forEach(function (a, i) {
+      g += '<text x="' + X(i) + '" y="' + (H - 10) + '" font-size="10" fill="#64748B" text-anchor="middle">D' + (i + 1) + '</text>';
+      if (a[1]) { var e = a[0] / a[1], s = a[2] / a[1]; l += (l ? ' L' : 'M') + X(i) + ' ' + Y(e); t += (t ? ' L' : 'M') + X(i) + ' ' + Y(s);
+        g += '<circle cx="' + X(i) + '" cy="' + Y(e) + '" r="4" fill="' + (e >= s ? '#15803D' : '#B91C1C') + '"><title>Day ' + (i + 1) + ': average efficiency ' + p1(e) + ' · target ' + p1(s) + ' · ' + a[1] + ' line-days</title></circle>'; }
+    });
+    return '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" role="img" aria-label="Ramp-up curve">' + '<path d="' + t + '" fill="none" stroke="#94A3B8" stroke-width="2" stroke-dasharray="5 4"/>' + g.replace(/<circle/, '<path d="' + l + '" fill="none" stroke="#1D4ED8" stroke-width="2.5"/><circle') + '</svg>' +
+      '<div class="legend"><span><i style="background:#1D4ED8"></i>Average efficiency</span><span><i style="background:#94A3B8"></i>COT target slab</span><span><i style="background:#15803D"></i>On target</span><span><i style="background:#B91C1C"></i>Below target</span></div>';
+  }
+  function unitTable(P) {
+    var rows = UNITS.map(function (u) { var s = stat(batches(P, 'unit').filter(function (b) { return b[0] === u; })); s.k = u; return s; }).filter(function (s) { return s.n; });
+    var T = stat(batches(P, 'unit')); T.k = 'Total';
+    var line = function (s, tot) { var c = cls(s.ach, 80, 60);
+      return '<tr' + (tot ? ' style="background:#F1F5F9;font-weight:700"' : ' class="click" data-unit="' + s.k + '"') + '><td class="l"><b>' + s.k + '</b></td><td>' + s.n + '</td><td class="g">' + s.A + '</td><td class="r">' + s.N + '</td><td class="a">' + s.U + '</td>' +
+        '<td><b class="' + c + '">' + p1(s.ach) + '</b><span class="pbar"><i style="width:' + (s.ach || 0) + '%;background:' + (c === 'g' ? '#15803D' : c === 'a' ? '#B45309' : '#B91C1C') + '"></i></span></td><td class="' + (s.su ? 'r' : 'g') + '">' + s.su + '</td><td>' + p1(s.avg) + '</td></tr>'; };
+    return '<div class="tw"><table><thead><tr><th class="l">Factory</th><th>Line batches</th><th>Achieved</th><th>Not achieved</th><th>Under COT</th><th>COT achievement</th><th>Start-up fail</th><th>Avg eff (latest day)</th></tr></thead><tbody>' + rows.map(function (s) { return line(s); }).join('') + (rows.length > 1 ? line(T, true) : '') + '</tbody></table></div>';
+  }
+  function buyerTable(P) {
+    var g = {}; batches(P, 'buyer').forEach(function (b) { (g[b[2]] = g[b[2]] || []).push(b); });
+    var rows = Object.keys(g).map(function (k) { var s = stat(g[k]); s.k = k; return s; }).sort(function (a, b) { return b.n - a.n; });
+    return '<div class="tw"><table><thead><tr><th class="l">Buyer</th><th>Batches</th><th>Achieved</th><th>Not</th><th>Under COT</th><th>COT achievement</th></tr></thead><tbody>' + rows.map(function (s) { return '<tr class="click" data-buyer="' + esc(s.k) + '"><td class="l"><b>' + esc(s.k) + '</b></td><td>' + s.n + '</td><td class="g">' + s.A + '</td><td class="r">' + s.N + '</td><td class="a">' + s.U + '</td><td class="' + cls(s.ach, 80, 60) + '"><b>' + p1(s.ach) + '</b></td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  function liveTable() {
+    var rows = D.live.filter(function (r) { return (!F.unit || r[0] === F.unit) && (!F.buyer || r[2] === F.buyer); })
+      .sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : (parseFloat(a[1]) || 0) - (parseFloat(b[1]) || 0) || (a[1] < b[1] ? -1 : 1); });
+    var onT = rows.filter(function (r) { return r[12] && r[10] >= r[12]; }).length, cot = rows.filter(function (r) { return r[12]; }).length;
+    return '<div class="note" style="margin-bottom:8px">' + rows.length + ' lines reported · ' + cot + ' on COT tracking · <b class="g">' + onT + ' on target</b> · <b class="r">' + (cot - onT) + ' below target</b></div>' +
+      '<div class="tw" style="max-height:520px;overflow:auto"><table><thead><tr><th class="l">Factory</th><th class="l">Line</th><th class="l">Buyer</th><th class="l">Style</th><th class="l">Colour</th><th>SAM</th><th>MP</th><th>Target</th><th>Produced</th><th class="l">Eff % vs COT target</th><th>Day</th><th class="l">Day result</th><th class="l">Overall</th></tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr' + (r[12] && r[10] < r[12] * 0.85 ? ' class="fail"' : '') + '><td class="l">' + esc(r[0]) + '</td><td class="l"><b>' + esc(r[1]) + '</b></td><td class="l">' + esc(r[2]) + '</td><td class="l">' + esc(r[3]) + '</td><td class="l">' + esc(r[4]) + '</td><td>' + r[5] + '</td><td>' + n0(r[7] || r[6]) + '</td><td>' + n0(r[8]) + '</td><td>' + n0(r[9]) + '</td><td class="l">' + effBar(r[10], r[12]) + (r[12] ? ' <span class="note">/ ' + Math.round(r[12]) + '%</span>' : '') + '</td><td>' + (r[11] || '–') + '</td><td class="l">' + dchip(r[13]) + '</td><td class="l">' + dchip(r[14]) + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  function batchTable(P) {
+    var rows = batches(P).filter(function (b) { return (!BR || (BR === 'SU' ? b[16] : b[15] === BR)) && (!BQ || (b[1] + ' ' + b[2] + ' ' + b[3] + ' ' + b[4]).toLowerCase().indexOf(BQ) > -1); });
+    var head = '<div class="tools" style="margin-bottom:10px"><label for="bq" style="position:absolute;left:-9999px">Search batches</label><input id="bq" type="search" placeholder="Search line, buyer, style, colour" value="' + esc(BQ) + '">' +
+      '<select id="br" aria-label="Result"><option value="">All results</option><option value="A"' + (BR === 'A' ? ' selected' : '') + '>Achieved</option><option value="N"' + (BR === 'N' ? ' selected' : '') + '>Not achieved</option><option value="U"' + (BR === 'U' ? ' selected' : '') + '>Under COT</option><option value="SU"' + (BR === 'SU' ? ' selected' : '') + '>Start-up fail</option></select><span class="note">' + rows.length + ' batches' + (rows.length > 300 ? ' · showing first 300' : '') + '</span></div>';
+    return head + '<div class="tw" style="max-height:560px;overflow:auto"><table><thead><tr><th class="l">Date</th><th class="l">Factory</th><th class="l">Line</th><th class="l">Buyer</th><th class="l">Style</th><th class="l">Colour</th><th>SAM</th><th>Days run</th><th class="l">Eff % vs target</th><th class="l">Ramp-up (eff by day)</th><th class="l">COT result</th></tr></thead><tbody>' +
+      rows.slice(0, 300).map(function (b) { return '<tr' + (b[15] === 'N' ? ' class="fail"' : '') + '><td class="l">' + dl(b[7]) + '</td><td class="l">' + esc(b[0]) + '</td><td class="l"><b>' + esc(b[1]) + '</b></td><td class="l">' + esc(b[2]) + '</td><td class="l">' + esc(b[3]) + '</td><td class="l">' + esc(b[4]) + '</td><td>' + b[5] + '</td><td>' + b[8] + '</td><td class="l">' + effBar(b[9], b[10]) + '</td><td class="l">' + spark(b[17], b[10] >= 45 ? b[10] : 55) + '</td><td class="l">' + chip(b[15]) + (b[16] ? ' <span class="chipR N" title="Missed target in the start-up days (day 6-8)">Start-up fail</span>' : '') + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  }
+  function kpi(l, v, c, n, col) { return '<div class="kpi" style="--c:' + (col || '#0B2545') + '"><div class="l">' + l + '</div><div class="v ' + c + '">' + v + '</div><div class="n">' + n + '</div></div>'; }
+  function render() {
+    if (!D) return; drawFilters();
+    var P = period(), s = stat(batches(P)), scope = (F.unit || 'All factories') + ' · ' + P.label + (F.buyer ? ' · ' + F.buyer : '');
+    var lv = D.live.filter(function (r) { return (!F.unit || r[0] === F.unit) && (!F.buyer || r[2] === F.buyer) && r[12]; }), lvOn = lv.filter(function (r) { return r[10] >= r[12]; }).length;
+    var C = { g: '#15803D', a: '#B45309', r: '#B91C1C', m: '#64748B' };
+    var h = '<section class="kpis">' +
+      kpi('Line batches', n0(s.n), '', scope, '#0B2545') +
+      kpi('COT achieved', n0(s.A), 'g', s.A + s.N ? Math.round(s.A / (s.A + s.N) * 100) + '% of batches evaluated' : 'reached the COT target', '#15803D') +
+      kpi('Not achieved', n0(s.N), s.N ? 'r' : 'g', 'below the COT target', '#B91C1C') +
+      kpi('Under COT', n0(s.U), 'a', 'in ramp-up (day 1–5)', '#F59E0B') +
+      kpi('COT achievement', p1(s.ach), cls(s.ach, 80, 60), 'achieved ÷ (achieved + not)', C[cls(s.ach, 80, 60)]) +
+      kpi('Start-up fail', n0(s.su), s.su ? 'r' : 'g', 'missed target on day 6–8', '#B91C1C') +
+      kpi('Avg efficiency', p1(s.avg), '', 'latest day of evaluated batches', '#1D4ED8') +
+      kpi('Lines on target', lv.length ? lvOn + ' / ' + lv.length : '–', lv.length && lvOn / lv.length >= 0.7 ? 'g' : 'a', 'on ' + dl(D.latest) + ' (COT lines)', '#15803D') +
+      kpi('Lines reported', n0(D.live.filter(function (r) { return (!F.unit || r[0] === F.unit) && (!F.buyer || r[2] === F.buyer); }).length), '', 'in the DPR on ' + dl(D.latest), '#0B2545') + '</section>';
+    h += '<section class="card"><h2>Factory comparison <small>' + esc(P.label) + ' · click a factory to focus</small></h2>' + unitTable(P) + '</section>';
+    h += '<div class="grid"><section class="card" style="flex:1 1 560px"><h2>Month-wise COT results <small>last 12 months</small></h2>' + monthChart() + '</section>' +
+         '<section class="card" style="flex:1 1 560px"><h2>Ramp-up curve <small>average efficiency by day of a new style vs COT target</small></h2>' + rampChart(P) + '</section></div>';
+    h += '<section class="card"><h2>Live line status <small>' + dl(D.latest) + '-' + D.latest.slice(0, 4) + ' · latest DPR day · ' + esc(F.unit || 'all factories') + '</small></h2>' + liveTable() + '</section>';
+    h += '<div class="grid"><section class="card" style="flex:1 1 420px"><h2>By buyer <small>click to filter</small></h2>' + buyerTable(P) + '</section>' +
+         '<section class="card" style="flex:2 1 640px"><h2>Line batches <small>' + esc(scope) + '</small></h2><div id="bt">' + batchTable(P) + '</div></section></div>';
+    h += '<div class="note">Source: 00_COT_Datamaster_Live_1.0 (COT_Result and DPR_Data). COT target slab: day 1 = 10%, day 2 = 20% … day 5 = 50%, day 6 onwards = 55% (or the style\'s own slab). A batch is judged on its latest day: Achieved / Not achieved from the Over Result, Under COT while still in days 1–5. Start-up fail = latest day is day 6–8 and the day target was missed.</div>';
+    document.getElementById('app').innerHTML = h; bindB();
+  }
+  function bindB() {
+    var q = document.getElementById('bq'), r = document.getElementById('br');
+    if (q) q.addEventListener('input', function () { BQ = this.value.toLowerCase().trim(); var p = q.selectionStart; document.getElementById('bt').innerHTML = batchTable(period()); bindB(); var n = document.getElementById('bq'); n.focus(); n.setSelectionRange(p, p); });
+    if (r) r.addEventListener('change', function () { BR = this.value; document.getElementById('bt').innerHTML = batchTable(period()); bindB(); });
+  }
+  document.getElementById('app').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-unit]'), b = e.target.closest('[data-buyer]');
+    if (t) { F.unit = F.unit === t.getAttribute('data-unit') ? '' : t.getAttribute('data-unit'); save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    else if (b) { F.buyer = F.buyer === b.getAttribute('data-buyer') ? '' : b.getAttribute('data-buyer'); save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+  });
+  function sub() { if (!D) return; var m = Math.floor((Date.now() - (D.builtAt || Date.now())) / 60000); document.getElementById('sub').textContent = 'Live from the COT datamaster · latest DPR day ' + dl(D.latest) + ' · refreshed ' + D.generated + (m > 1 ? ' (' + m + ' min ago)' : ''); }
+  function load(fresh) {
+    document.getElementById('sub').textContent = fresh ? 'Refreshing…' : 'Loading live COT data…';
+    jsonp(fresh ? { action: 'cot_dash', fresh: 1 } : { action: 'cot_dash' }, function (r) {
+      if (!r || !r.bat) { if (!D) document.getElementById('app').innerHTML = '<div class="load">Could not load COT data' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please refresh in a minute.</div>'; else sub(); return; }
+      D = r; if (/^m:/.test(F.per) && months().indexOf(F.per.slice(2)) < 0) F.per = 'mtd';
+      render(); sub();
+      if (!fresh && Date.now() - (r.builtAt || 0) > 30 * 60000) load(true);
+    });
+  }
+  load(false); setInterval(sub, 30000); setInterval(function () { if (!document.hidden) load(true); }, 30 * 60000);
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>
