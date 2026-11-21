@@ -21,7 +21,7 @@ const userGroups = {
     users19: { redirect: "dept_gsd_fc.html", users: [{ username: "gsdfc", password: "fc123" }] },
     users20: { redirect: "dept_fsa.html", users: [{ username: "sathish", password: "2008" }] },
     users21: { redirect: "ceo.html", users: [{ username: "ceo", hash: "9039256e1679e7d2f8611670c6775a1ffc66e28a47246b66fe0757431990d517" }] },   // Director & CEO - password kept only as a SHA-256 hash
-    users22: { redirect: "merchant.html", users: [{ username: "namitha", hash: "52aa362f9fc6634995cf958402f5a976683cfcd4c5e692c8aecfd8a5eea08c4f" }, { username: "mani", hash: "5feefe8c8aedadd30bf760e867c2a0cb06870c1d5ab5cbbc9c5fad190899447d" }, { username: "mithun", hash: "cfba1d2620add3156c338799503fe2b122200e0975535e464d3b0f4f4f02c50f" }, { username: "rajesh", hash: "99ef3ecebffe3e4dc37b2351f50fe877a2be4e0b9512296c1fe248983cef4bb4" }] }   // Merchants - FSA dashboard only (passwords kept as SHA-256 hashes)
+    users22: { redirect: "merchant.html", users: [{ username: "merchant", hash: "e135c8b07a7d130925b07c6a935bdc34d1cf71842d10b3df3fd7b148d51eadae" }] }   // Merchants (one shared login) - FSA dashboard only, password kept as a SHA-256 hash
 };
 
 async function sha256Hex(text) {

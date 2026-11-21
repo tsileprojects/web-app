@@ -38,11 +38,10 @@
 <script>
   (function () {
     var u = {}; try { u = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); } catch (e) {}
-    var names = { namitha: 'Ms. Namitha', mani: 'Mr. Mani', mithun: 'Mr. Mithun', rajesh: 'Mr. Rajesh' };
+    var names = { merchant: 'Merchant team' };
     var n = names[u.username] || (u.username ? u.username.charAt(0).toUpperCase() + u.username.slice(1) : 'Merchant');
     document.getElementById('nm').textContent = 'Welcome, ' + n;
-    document.getElementById('av').textContent = n.replace(/^(Mr|Ms|Mrs)\.\s*/, '').charAt(0).toUpperCase();
-    try { if (!localStorage.getItem('tsplHelpName')) localStorage.setItem('tsplHelpName', n); } catch (e) {}
+    document.getElementById('av').textContent = 'M';
     document.getElementById('btnOut').addEventListener('click', function () { if (typeof logout === 'function') logout(); else { sessionStorage.clear(); location.href = 'index.html'; } });
   })();
 </script>
