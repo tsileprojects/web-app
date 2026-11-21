@@ -3,6 +3,9 @@
  * The report goes straight to the HO bell (TSPL Error Monitor, source "Help desk"), which
  * runs automatic checks / safe fixes and answers with a ticket number. */
 (function () {
+  // Merchant logins may only open the merchant portal and the FSA dashboard
+  try { var _mu = JSON.parse(sessionStorage.getItem('userLoggedIn') || 'null'), _pg = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+    if (_mu && _mu.redirect === 'merchant.html' && ['merchant.html', 'fsa.html', 'index.html', ''].indexOf(_pg) < 0) { location.replace('merchant.html'); return; } } catch (e) {}
   'use strict';
   // one button per screen: pages shown inside a portal frame use the portal's button
   try { if (window.top !== window && (window.top.TSPLHelp || window.top.document.getElementById('mainFrame') || window.top.document.getElementById('vFrame'))) return; } catch (e) {}

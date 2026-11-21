@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Merchant Portal</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<script>
+  (function () { // merchants, HO and the CEO only
+    var u = null; try { u = JSON.parse(sessionStorage.getItem('userLoggedIn') || 'null'); } catch (e) {}
+    if (!u || ['merchant.html', 'main_ho.html', 'ceo.html'].indexOf(u.redirect) < 0) location.replace(u && u.redirect ? u.redirect : 'index.html');
+  })();
+</script>
+<style>
+  html,body{margin:0;height:100%;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:#F4F6FA}
+  .top{height:56px;background:#071a33;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 18px;gap:12px}
+  .brand{display:flex;align-items:center;gap:12px;min-width:0}
+  .brand img{height:30px;width:auto;background:#fff;border-radius:6px;padding:3px}
+  .brand b{font-size:16px;white-space:nowrap}.brand b span{color:#C8962E}
+  .brand small{display:block;font-size:12px;color:#CBD5E1;font-weight:400}
+  .who{display:flex;align-items:center;gap:12px;font-size:13px;color:#E2E8F0}
+  .who .av{width:32px;height:32px;border-radius:50%;background:#C8962E;color:#071a33;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .btn{height:36px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.3);background:transparent;color:#fff;font:600 13px Inter,"Segoe UI",Arial,sans-serif;cursor:pointer}
+  .btn:hover{background:rgba(255,255,255,.08)}
+  #mainFrame{position:fixed;top:56px;left:0;right:0;bottom:0;width:100%;height:calc(100% - 56px);border:0;background:#F4F6FA}
+  .menu-link{display:none}
+  @media(max-width:600px){.brand small,.who .nm{display:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><img src="img/logo.png" alt="TSPL" onerror="this.style.display='none'"><div><b>Merchant Portal <span>| FSA</span></b><small>Final & pre-final audit results, live from the factories</small></div></div>
+  <div class="who"><span class="nm" id="nm"></span><span class="av" id="av" aria-hidden="true">M</span><button class="btn" type="button" id="btnOut">Log out</button></div>
+</header>
+<a class="menu-link active" href="#"><span>FSA Dashboard</span></a>
+<iframe id="mainFrame" title="FSA Dashboard" src="fsa.html?embed=merchant"></iframe>
+<script src="security.js"></script>
+<script>
+  (function () {
+    var u = {}; try { u = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); } catch (e) {}
+    var names = { namitha: 'Ms. Namitha', mani: 'Mr. Mani', mithun: 'Mr. Mithun', rajesh: 'Mr. Rajesh' };
+    var n = names[u.username] || (u.username ? u.username.charAt(0).toUpperCase() + u.username.slice(1) : 'Merchant');
+    document.getElementById('nm').textContent = 'Welcome, ' + n;
+    document.getElementById('av').textContent = n.replace(/^(Mr|Ms|Mrs)\.\s*/, '').charAt(0).toUpperCase();
+    try { if (!localStorage.getItem('tsplHelpName')) localStorage.setItem('tsplHelpName', n); } catch (e) {}
+    document.getElementById('btnOut').addEventListener('click', function () { if (typeof logout === 'function') logout(); else { sessionStorage.clear(); location.href = 'index.html'; } });
+  })();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>

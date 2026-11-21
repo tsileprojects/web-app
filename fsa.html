@@ -76,7 +76,7 @@ tr.fail td{background:#FEF2F2}
     if (window.top !== window.self) d = 'home.html';
     else if (/\/m\.html/.test(document.referrer) || /[?&]from=app\b/.test(location.search)) d = 'm.html';
     else { try { var s = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (s.redirect) d = s.redirect; } catch (e) {} }
-    h.href = d; })();
+    h.href = d; if (/[?&]embed=merchant\b/.test(location.search)) h.style.display = 'none'; })();
   var UNITS = ['AP2', 'FIPL', 'TS2', 'TS4', 'TS9'], TYPES = ['FSA', 'Re-FSA', 'Final', 'Re-Final', 'DUPRO', 'Carton', 'Reviews', '100% Check', 'Other'];
   var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var D = null, F = { unit: '', per: 'mtd', buyer: '', types: { 'FSA': 1, 'Re-FSA': 1 } }, SORT = { k: 0, d: -1 }, DQ = '', DR = '';
