@@ -105,7 +105,7 @@ main{max-width:1600px;margin:0 auto;padding:20px 24px 90px;display:flex;flex-dir
 <div class="ticker" id="ticker" aria-hidden="true"></div>
 <main id="app"><div class="load"><div class="spin"></div>Loading live DPR…</div></main>
 
-<script src="security.js?v=20261122a"></script>
+<script src="security.js?v=20261122b"></script>
 <script src="js/tspl-config.js"></script>
 <script>
 (function () {
@@ -113,7 +113,8 @@ main{max-width:1600px;margin:0 auto;padding:20px 24px 90px;display:flex;flex-dir
   var UNITS = ['TS9', 'TS4', 'FIPL', 'AP2', 'TS2'], MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var D = null, VIEW = 'room', F = { unit: '', sig: '' }, K = 1, animTimer = null;
   var COL = { g: '#4ADE80', a: '#FBBF24', r: '#F87171' }, BG = { g: '#16A34A', a: '#D97706', r: '#DC2626' }, HC = { g: '#22C55E', a: '#F59E0B', r: '#EF4444' };
-  try { var hb = document.getElementById('homeBtn'), u = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (window.top !== window.self) hb.href = 'home.html'; else if (u.redirect) hb.href = u.redirect; } catch (e) {}
+  var FRAMED = window.top !== window.self;
+  try { var hb = document.getElementById('homeBtn'), u = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (FRAMED) { hb.style.display = 'none'; document.getElementById('btnBell').style.display = 'none'; } else if (u.redirect) hb.href = u.redirect; } catch (e) {}
   var qu = (location.search.match(/[?&]unit=([A-Z0-9]+)/i) || [])[1]; if (qu) { F.unit = qu.toUpperCase(); VIEW = 'lines'; }
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -245,7 +246,7 @@ main{max-width:1600px;margin:0 auto;padding:20px 24px 90px;display:flex;flex-dir
   setInterval(function () { if (!document.hidden && D && D.live && !sel.dataset.picked) jsonp({ action: 'live_dash' }, function (r) { if (r && r.ok) { D = r; ticker(); render(); } }); }, 5 * 60000);
 })();
 </script>
-<script src="js/notify.js"></script>
+<script>if (window.top === window.self) { var _n = document.createElement('script'); _n.src = 'js/notify.js'; document.body.appendChild(_n); }</script>
 <script src="js/help.js?v=20261121m" defer></script>
 </body>
 </html>
