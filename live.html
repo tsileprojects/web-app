@@ -105,13 +105,13 @@ main{max-width:1600px;margin:0 auto;padding:20px 24px 90px;display:flex;flex-dir
 <div class="ticker" id="ticker" aria-hidden="true"></div>
 <main id="app"><div class="load"><div class="spin"></div>Loading live DPR…</div></main>
 
-<script src="security.js?v=20261122b"></script>
+<script src="security.js?v=20261122c"></script>
 <script src="js/tspl-config.js"></script>
 <script>
 (function () {
   'use strict';
   var UNITS = ['TS9', 'TS4', 'FIPL', 'AP2', 'TS2'], MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var D = null, PART = null, VIEW = 'room', F = { unit: '', sig: '' }, K = 1, animTimer = null;
+  var D = null, PART = null, TODAY = null, VIEW = 'room', F = { unit: '', sig: '' }, K = 1, animTimer = null;
   var COL = { g: '#4ADE80', a: '#FBBF24', r: '#F87171' }, BG = { g: '#16A34A', a: '#D97706', r: '#DC2626' }, HC = { g: '#22C55E', a: '#F59E0B', r: '#EF4444' };
   var FRAMED = window.top !== window.self;
   try { var hb = document.getElementById('homeBtn'), u = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (FRAMED) { hb.style.display = 'none'; document.getElementById('btnBell').style.display = 'none'; } else if (u.redirect) hb.href = u.redirect; } catch (e) {}
@@ -121,13 +121,27 @@ main{max-width:1600px;margin:0 auto;padding:20px 24px 90px;display:flex;flex-dir
   function fmt(n) { return Math.round(n || 0).toLocaleString('en-IN'); }
   function dl(d) { return d.slice(8) + '-' + MN[+d.slice(5, 7) - 1] + '-' + d.slice(0, 4); }
   function sig(x) { if (!x.av) return 'n'; return x.e >= x.sl ? 'g' : x.e >= x.sl - 10 ? 'a' : 'r'; }
+  // Data call: fetch without cookies first (works even when the browser's Google sign-in needs re-verification),
+  // then the classic script-tag call as a fallback.
   function jsonp(params, cb, ms) {
-    var name = '__live' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
-    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
-    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
-    s.onerror = function () { if (!done) { done = true; cb(null); } };
-    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 120000);
-    document.body.appendChild(s);
+    var q = Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&'), done = false;
+    var url = (window.TSPL_MONITOR_URL || '') + '?' + q + '&callback=cbLive&_=' + Date.now();
+    var finish = function (r) { if (!done) { done = true; cb(r); } };
+    var timer = setTimeout(function () { finish(null); }, ms || 90000);
+    var viaScript = function () {
+      if (done) return;
+      var name = '__live' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script');
+      window[name] = function (r) { window[name] = function () {}; clearTimeout(timer); finish(r); };
+      s.src = (window.TSPL_MONITOR_URL || '') + '?' + q + '&callback=' + name + '&_=' + Date.now();
+      s.onerror = function () { clearTimeout(timer); finish(null); };
+      document.body.appendChild(s);
+    };
+    if (!window.fetch) return viaScript();
+    fetch(url, { credentials: 'omit', cache: 'no-store' }).then(function (res) { return res.text(); }).then(function (t) {
+      var m = t.match(/^\s*cbLive\(([\s\S]*)\)\s*;?\s*$/);
+      var r = JSON.parse(m ? m[1] : t);
+      clearTimeout(timer); finish(r);
+    }).catch(function () { viaScript(); });
   }
   function agg(ls) {
     var o = { n: ls.length, p: 0, t: 0, mp: 0, er: 0, av: 0, g: 0, a: 0, r: 0, h: [0, 0, 0, 0, 0, 0, 0, 0, 0] };
@@ -236,17 +250,28 @@ main{max-width:1600px;margin:0 auto;padding:20px 24px 90px;display:flex;flex-dir
     var opts = ['<option value="latest">Latest day</option>'].concat((D.days || []).map(function (d) { return '<option value="' + d + '"' + (d === D.date && sel.dataset.picked ? ' selected' : '') + '>' + dl(d) + '</option>'; }));
     sel.innerHTML = opts.join(''); if (!sel.dataset.picked) sel.value = 'latest';
   }
-  function load(fresh, date) {
-    document.getElementById('sub').textContent = 'Loading live DPR…';
+  function show(r) { D = r; fillDates(); ticker(); render(); if (VIEW === 'room') countUp(); }
+  function load(fresh, date, tries) {
+    tries = tries || 0;
+    document.getElementById('sub').textContent = tries ? 'Still loading… (try ' + (tries + 1) + ')' : 'Loading live DPR…';
     var p = { action: 'live_dash' }; if (fresh) p.fresh = 1; if (date && date !== 'latest') { p.date = date; sel.dataset.picked = '1'; } else delete sel.dataset.picked;
     jsonp(p, function (r) {
-      if (!r || !r.ok) { if (!D) document.getElementById('app').innerHTML = '<div class="load">Could not load live data' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please press Refresh in a minute.</div>'; else render(); return; }
-      if (!date && !fresh && r.live && r.lines.length < 25 && r.days && r.days[1] && !sel.dataset.today) {   // today just started (or Sunday): show the last full day
-        PART = { n: r.lines.length, p: r.lines.reduce(function (a, x) { return a + x.p; }, 0) }; load(false, r.days[1]); return;
+      if (!r || !r.ok) {
+        if (tries < 3) { setTimeout(function () { load(fresh, date, tries + 1); }, 2500 * (tries + 1)); return; }   // the server sometimes needs a second try
+        if (TODAY) { PART = null; show(TODAY); return; }
+        if (D) { render(); return; }
+        document.getElementById('sub').textContent = 'Not loaded';
+        document.getElementById('app').innerHTML = '<div class="load">Could not load live data' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please press Refresh in a minute.</div>'; return;
       }
-      D = r; fillDates(); ticker(); render(); if (VIEW === 'room') countUp();
-    });
+      try { localStorage.setItem('tsplLiveLast', JSON.stringify(r)); } catch (e) {}
+      if (!date && !fresh && r.live && r.lines.length < 25 && r.days && r.days[1] && !sel.dataset.today) {   // today just started (or Sunday): show the last full day
+        TODAY = r; PART = { n: r.lines.length, p: r.lines.reduce(function (a, x) { return a + x.p; }, 0) }; load(false, r.days[1]); return;
+      }
+      TODAY = null; show(r);
+    }, 60000);
   }
+  // show the last good data instantly while the fresh copy loads
+  try { var last = JSON.parse(localStorage.getItem('tsplLiveLast') || 'null'); if (last && last.ok && last.lines && last.lines.length) { show(last); document.getElementById('sub').textContent += ' · refreshing…'; } } catch (e) {}
   load(false);
   setInterval(function () { if (!document.hidden && D && D.live && !sel.dataset.picked) jsonp({ action: 'live_dash' }, function (r) { if (r && r.ok) { D = r; ticker(); render(); } }); }, 5 * 60000);
 })();
