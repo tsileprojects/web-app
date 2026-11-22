@@ -63,16 +63,9 @@ function changeView(url, name) {
     if (!url) return;
     try {
         if (isAppsScript(url)) {
-            url = url.replace('/embed/reporting/', '/reporting/');   // Looker: full report view in its own tab
-            const w = window.open(url, '_blank');
-            const safe = String(name || 'This program').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-            const u = url.replace(/"/g, '&quot;');
-            frame.srcdoc = '<!doctype html><html><body style="margin:0;font-family:Segoe UI,Roboto,Arial,sans-serif;background:#f4f6fa;color:#0f172a;display:flex;align-items:center;justify-content:center;height:100vh">' +
-                '<div style="max-width:460px;text-align:center;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:28px 30px;box-shadow:0 8px 24px rgba(15,23,42,.08)">' +
-                '<div style="font-size:18px;font-weight:700;margin-bottom:8px">' + safe + '</div>' +
-                '<div style="font-size:14px;color:#475569;margin-bottom:18px">' + (w ? 'opened in a new browser tab.' : 'Your browser blocked the new tab. Click below to open it.') + '</div>' +
-                '<a href="' + u + '" target="_blank" rel="noopener" style="display:inline-block;background:#0b2545;color:#fff;text-decoration:none;font-weight:600;padding:11px 18px;border-radius:8px">Open ' + safe + ' \u2197</a>' +
-                '<div style="font-size:12px;color:#64748b;margin-top:14px">Google programs open in their own tab so your Google sign-in always works.</div></div></body></html>';
+            // Google programs open in this same tab (outside the portal frame, where Google sign-in works);
+            // the browser Back button returns to the portal.
+            window.location.href = url.replace('/embed/reporting/', '/reporting/');
             return;
         }
         frame.removeAttribute('srcdoc');

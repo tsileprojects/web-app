@@ -49,6 +49,7 @@ svg text{font-family:inherit}.load{padding:80px;text-align:center;color:var(--mu
 <script src="js/tspl-config.js?v=20261122e"></script>
 <script>
 var D=null,UNIT='ALL',MON='',SORT={k:'st',d:1};
+(function(){var q=(location.search.match(/[?&]unit=([A-Za-z0-9]+)/)||[])[1];if(q&&['FIPL','TS2','TS4','TS9','AP2'].indexOf(q.toUpperCase())>-1)UNIT=q.toUpperCase()})();
 var UNITS=['FIPL','TS2','TS4','TS9','AP2'];
 var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 function f(n){n=Math.round(n||0);return n.toLocaleString('en-IN')}
