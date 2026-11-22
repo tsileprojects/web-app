@@ -58,11 +58,12 @@ btnLogout.addEventListener('click', () => {
 const frame = $('#mainFrame');
 // Google Apps Script programs are opened in their own browser tab: inside the portal frame Chrome blocks
 // Google's sign-in cookies (third-party cookies), which shows "Sorry, unable to open the file at present".
-function isAppsScript(url) { return /^https:\/\/script\.google\.com\//.test(url); }
+function isAppsScript(url) { return /^https:\/\/(script\.google\.com|lookerstudio\.google\.com|datastudio\.google\.com)\//.test(url); }
 function changeView(url, name) {
     if (!url) return;
     try {
         if (isAppsScript(url)) {
+            url = url.replace('/embed/reporting/', '/reporting/');   // Looker: full report view in its own tab
             const w = window.open(url, '_blank');
             const safe = String(name || 'This program').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
             const u = url.replace(/"/g, '&quot;');
