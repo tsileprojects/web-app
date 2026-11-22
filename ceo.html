@@ -309,9 +309,10 @@ body.board .hide-board{display:none}
   document.getElementById('apps').addEventListener('click', function (e) {
     var b = e.target.closest('.app'); if (!b) return;
     var a = APPS[+b.getAttribute('data-i')]; if (!a) return;
-    if (!a.embed || /^https:\/\/(script|lookerstudio|datastudio)\.google\.com\//.test(a.url)) { if (!a.embed) { window.open(a.url, '_blank', 'noopener'); return; } window.location.href = a.url.replace('/embed/reporting/', '/reporting/'); return; }   // Google Apps Script programs need their own tab (sign-in cookies)
+    if (!a.embed) { window.open(a.url, '_blank', 'noopener'); return; }
     document.getElementById('vTitle').textContent = a.name;
-    document.getElementById('vFrame').src = a.url;
+    var pu = a.url; if (/^https:\/\/script\.google\.com\/macros\/s\//.test(pu)) pu = pu.replace('/macros/s/', '/macros/u/0/s/'); else if (/^https:\/\/(lookerstudio|datastudio)\.google\.com\//.test(pu) && !/[?&]authuser=/.test(pu)) pu += (pu.indexOf('?') > -1 ? '&' : '?') + 'authuser=0';
+    document.getElementById('vFrame').src = pu;
     document.getElementById('viewer').classList.add('on');
   });
   document.getElementById('vClose').addEventListener('click', function () {

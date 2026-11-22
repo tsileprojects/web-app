@@ -56,18 +56,18 @@ btnLogout.addEventListener('click', () => {
 
 // ===== Navigation: load into iframe via data-embed (links only) =====
 const frame = $('#mainFrame');
-// Google Apps Script programs are opened in their own browser tab: inside the portal frame Chrome blocks
-// Google's sign-in cookies (third-party cookies), which shows "Sorry, unable to open the file at present".
-function isAppsScript(url) { return /^https:\/\/(script\.google\.com|lookerstudio\.google\.com|datastudio\.google\.com)\//.test(url); }
+// Google programs: when Chrome is signed in to more than one Google account, Google sends Apps Script
+// links to the 2nd account (/macros/u/1/...) and shows "Sorry, unable to open the file at present".
+// Pinning the first account (/u/0, authuser=0) keeps every program opening inside the portal as before.
+function pinAccount(url) {
+    if (/^https:\/\/script\.google\.com\/macros\/s\//.test(url)) return url.replace('/macros/s/', '/macros/u/0/s/');
+    if (/^https:\/\/(lookerstudio|datastudio)\.google\.com\//.test(url) && !/[?&]authuser=/.test(url)) return url + (url.indexOf('?') > -1 ? '&' : '?') + 'authuser=0';
+    return url;
+}
 function changeView(url, name) {
     if (!url) return;
     try {
-        if (isAppsScript(url)) {
-            // Google programs open in this same tab (outside the portal frame, where Google sign-in works);
-            // the browser Back button returns to the portal.
-            window.location.href = url.replace('/embed/reporting/', '/reporting/');
-            return;
-        }
+        url = pinAccount(url);
         frame.removeAttribute('srcdoc');
         frame.src = url;
     } catch (e) {
