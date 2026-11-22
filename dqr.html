@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | DQR Dashboard</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--g:#15803D;--a:#B45309;--r:#B91C1C;--b:#1D4ED8;--soft:#F8FAFC}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff}
+.hw{max-width:1440px;margin:0 auto;padding:12px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.hw h1{margin:0;font-size:18px;font-weight:700}.hw h1 span{color:var(--gold)}.hw .sub{font-size:12px;color:#CBD5E1;margin-top:2px}
+.hb{height:38px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.bar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:4}
+.bw{max-width:1440px;margin:0 auto;padding:10px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:#EEF2F7;padding:4px;border-radius:10px}
+.seg button{height:36px;min-width:58px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#334155;font:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.seg button.on{background:var(--navy);color:#fff}.seg button small{font-size:11px;opacity:.75}
+select{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{height:32px;padding:0 11px;border-radius:999px;border:1px solid #CBD5E1;background:#fff;color:#334155;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.chip.on{background:#E6EEFB;border-color:var(--b);color:#1E3A8A}
+.lbl{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+main{max-width:1440px;margin:0 auto;padding:18px 22px 40px;display:flex;flex-direction:column;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(min-width:1300px){.kpis{grid-template-columns:repeat(9,1fr)}.kpis .kpi .v{font-size:22px}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-top:3px solid var(--c,#0B2545)}
+.kpi .l{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase}
+.kpi .v{font-size:26px;font-weight:700;margin:6px 0 2px}.kpi .n{font-size:12.5px;color:var(--mute)}
+.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}.m{color:#64748B}
+.grid{display:flex;flex-wrap:wrap;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--mute);font-size:12px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:700;color:var(--mute);text-align:right;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;cursor:pointer}
+td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
+tr.fail td{background:#FEF2F2}
+.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}.tag.g{background:#DCFCE7;color:#166534}.tag.r{background:#FEE2E2;color:#991B1B}
+.pbar{display:inline-block;width:70px;height:6px;background:var(--line);border-radius:999px;vertical-align:middle;margin-left:8px;overflow:hidden}.pbar i{display:block;height:100%}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-top:6px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.def{display:grid;grid-template-columns:minmax(120px,190px) 1fr 60px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+.def .t{height:14px;background:#EEF2F7;border-radius:4px;overflow:hidden;display:flex}.def .t i{display:block;height:100%}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.tools input{height:38px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;width:240px}
+.load{padding:60px;text-align:center;color:var(--mute)}.spin{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 12px}@keyframes s{to{transform:rotate(360deg)}}
+.note{font-size:12px;color:var(--mute)}
+.din{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 8px;font:inherit;background:#fff;color:var(--ink)}
+@media(max-width:700px){main,.bw,.hw{padding-left:12px;padding-right:12px}}
+.chipR{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.chipR.A{background:#DCFCE7;color:#166534}.chipR.N{background:#FEE2E2;color:#991B1B}.chipR.U{background:#FEF3C7;color:#92400E}.chipR.X{background:#EEF2F7;color:#475569}
+.eb{display:inline-block;position:relative;width:90px;height:8px;background:#EEF2F7;border-radius:999px;vertical-align:middle;margin-left:8px}.eb i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}.eb b{position:absolute;top:-3px;width:2px;height:14px;background:#0F172A}
+.spark{vertical-align:middle}
+
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,.12);padding:4px;border-radius:10px}
+.tabs button{height:36px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:#E2E8F0;font:inherit;font-weight:700;cursor:pointer}
+.tabs button.on{background:#fff;color:var(--navy)}
+.hbars{display:flex;align-items:flex-end;gap:10px;height:190px;padding:8px 4px 0;border-bottom:1px solid var(--line)}
+.hbars .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.hbars .pair{display:flex;gap:3px;align-items:flex-end;height:150px;width:100%;justify-content:center}
+.hbars .pair i{display:block;width:42%;max-width:26px;border-radius:4px 4px 0 0;min-height:1px;transition:height .5s}
+.hbars .v{font-size:11px;color:var(--mute);margin-bottom:3px;white-space:nowrap}
+.hlab{display:flex;gap:10px;padding:4px}.hlab span{flex:1;text-align:center;font-size:11.5px;color:var(--mute);font-weight:600}
+.mini{display:inline-flex;gap:2px;align-items:flex-end;height:22px;vertical-align:middle}.mini i{display:block;width:6px;background:#93C5FD;border-radius:1px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:0}
+.dot.g{background:#16A34A}.dot.a{background:#F59E0B}.dot.r{background:#DC2626}.dot.m{background:#CBD5E1}
+.cats{display:flex;height:16px;border-radius:999px;overflow:hidden;background:#EEF2F7;margin:6px 0 10px}.cats i{display:block;height:100%}
+.trend{width:100%;height:180px}
+</style>
+</head>
+<body>
+<header><div class="hw">
+  <div style="display:flex;align-items:center;gap:14px"><a id="tsplHomeBtn" class="hb" href="main_ho.html" title="Back to the main dashboard" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:var(--gold);border-color:var(--gold);color:#0B2545">&#8962; Home</a>
+  <div><h1>DQR Dashboard <span>| end-line quality</span></h1><div class="sub" id="sub">Loading live DQR data…</div></div></div>
+  <div style="display:flex;gap:8px;align-items:center"><div class="tabs" id="tabs"><button type="button" data-v="qty">Quantity &amp; FTR</button><button type="button" data-v="dft">Defects</button></div><button class="hb" id="btnRefresh" type="button">Refresh</button></div>
+</div></header>
+<div class="bar"><div class="bw">
+  <div class="seg" id="fac" role="group" aria-label="Unit"></div>
+  <label class="lbl" for="per">Period</label><select id="per"></select>
+  <span class="lbl">Dates</span><span style="display:inline-flex;align-items:center;gap:6px"><label for="dfrom" style="font-size:12px;color:#475569">From</label><input type="date" id="dfrom" class="din"><label for="dto" style="font-size:12px;color:#475569">To</label><input type="date" id="dto" class="din"></span>
+  <label class="lbl" for="lin">Line</label><select id="lin"><option value="">All lines</option></select>
+</div></div>
+<main id="app"><div class="load"><div class="spin"></div>Loading live DQR data…</div></main>
+<script src="security.js"></script>
+<script src="js/tspl-config.js?v=20261122e"></script>
+<script>
+(function () {
+  'use strict';
+  (function () { var h = document.getElementById('tsplHomeBtn'), d = 'main_ho.html';
+    if (window.top !== window.self) d = 'home.html';
+    else if (/\/m\.html/.test(document.referrer) || /[?&]from=app\b/.test(location.search)) d = 'm.html';
+    else { try { var s = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (s.redirect) d = s.redirect; } catch (e) {} }
+    h.href = d; })();
+  /* q: 0 date 1 unit 2 line 3 style 4 colour 5 chk 6 pass 7 dft 8 rej 9 altChk 10 altPass 11 altDft 12 altBacklog 13 totChk 14 totPass 15..22 h1..h8 23 ot
+     d: 0 date 1 unit 2 line 3 style 4 colour 5 category 6 total 7 [[defIdx,n]] */
+  var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], HL = ['H1','H2','H3','H4','H5','H6','H7','H8','OT'];
+  var CATC = { Man: '#1D4ED8', Machine: '#B45309', Wash: '#0891B2', Material: '#7C3AED', NA: '#94A3B8' };
+  var D = null, F = { unit: '', per: 'last', line: '', view: 'qty' }, LQ = '';
+  try { var sv = JSON.parse(localStorage.getItem('dqrDashF') || 'null'); if (sv) F = Object.assign(F, sv); } catch (e) {}
+  var qu = (location.search.match(/[?&]unit=([A-Z0-9]+)/i) || [])[1]; if (qu) { F.unit = qu.toUpperCase(); F.line = ''; }
+  var qv = (location.search.match(/[?&]view=(qty|dft)/i) || [])[1]; if (qv) F.view = qv.toLowerCase();
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function n0(v) { return Math.round(v || 0).toLocaleString('en-IN'); }
+  function p1(v) { return v == null || isNaN(v) ? '–' : (Math.round(v * 10) / 10).toFixed(1) + '%'; }
+  function pct(a, b) { return b ? a / b * 100 : null; }
+  function ftrC(v) { return v == null ? 'm' : v >= 95 ? 'g' : v >= 90 ? 'a' : 'r'; }
+  function dhuC(v) { return v == null ? 'm' : v <= 5 ? 'g' : v <= 10 ? 'a' : 'r'; }
+  function ml(k) { return MN[+k.slice(5, 7) - 1] + '-' + k.slice(2, 4); }
+  function dl(d) { return d.slice(8) + '-' + MN[+d.slice(5, 7) - 1]; }
+  function addDays(d, n) { var x = new Date(d + 'T12:00:00'); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); }
+  function save() { try { localStorage.setItem('dqrDashF', JSON.stringify(F)); } catch (e) {} }
+  function jsonp(params, cb, ms) {
+    var name = '__dqr' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 120000);
+    document.body.appendChild(s);
+  }
+  function units() { var s = {}; D.q.forEach(function (r) { s[r[1]] = 1; }); D.d.forEach(function (r) { s[r[1]] = 1; }); return Object.keys(s).sort(); }
+  function months() { var s = {}; D.q.forEach(function (r) { s[r[0].slice(0, 7)] = 1; }); return Object.keys(s).sort().reverse(); }
+  function latestFor() { var t = ''; D.q.forEach(function (r) { if ((!F.unit || r[1] === F.unit) && r[0] > t) t = r[0]; }); return t || D.latest; }
+  function period() {
+    var t = latestFor(), p = F.per;
+    if (/^r:/.test(p)) { var a = p.split(':'); return { from: a[1], to: a[2], label: a[1] === a[2] ? dl(a[1]) + '-' + a[1].slice(0, 4) : dl(a[1]) + ' to ' + dl(a[2]) + '-' + a[2].slice(0, 4) }; }
+    if (p === 'last') return { from: t, to: t, label: 'Latest day ' + dl(t), day: true };
+    if (p === '7d') return { from: addDays(t, -6), to: t, label: 'Last 7 days' };
+    if (p === '30d') return { from: addDays(t, -29), to: t, label: 'Last 30 days' };
+    var m = /^m:/.test(p) ? p.slice(2) : t.slice(0, 7);
+    return { from: m + '-01', to: m + '-31', label: !/^m:/.test(p) ? 'This month (' + ml(m) + ')' : ml(m) };
+  }
+  function ok(r, P, skip) { return r[0] >= P.from && r[0] <= P.to && (skip === 'unit' || !F.unit || r[1] === F.unit) && (skip === 'line' || !F.line || r[1] + '|' + r[2] === F.line); }
+  function sum(list) {
+    var o = { chk: 0, pass: 0, dft: 0, rej: 0, altChk: 0, altPass: 0, altDft: 0, back: 0, h: [0,0,0,0,0,0,0,0,0], lines: {}, days: {} };
+    list.forEach(function (r) { o.chk += r[5]; o.pass += r[6]; o.dft += r[7]; o.rej += r[8]; o.altChk += r[9]; o.altPass += r[10]; o.altDft += r[11]; o.back += r[12];
+      for (var i = 0; i < 9; i++) o.h[i] += r[15 + i] || 0; o.lines[r[1] + '|' + r[2]] = 1; o.days[r[0]] = 1; });
+    o.ftr = pct(o.pass, o.chk); o.dhu = pct(o.dft, o.chk); o.rejP = pct(o.rej, o.chk); o.nl = Object.keys(o.lines).length; o.nd = Object.keys(o.days).length; return o;
+  }
+  function kpi(l, v, n, c, col) { return '<div class="kpi" style="--c:' + (col || '#0B2545') + '"><div class="l">' + l + '</div><div class="v ' + (c || '') + '">' + v + '</div><div class="n">' + n + '</div></div>'; }
+  function hourly(h, title) {
+    var mx = 1; h.forEach(function (x) { mx = Math.max(mx, x); });
+    return '<div class="hbars">' + h.map(function (x, i) { return '<div class="c"><div class="v">' + (x ? n0(x) : '') + '</div><div class="pair"><i style="height:' + (x / mx * 100) + '%;background:' + (i === 8 ? '#C8962E' : '#1D4ED8') + '"></i></div></div>'; }).join('') + '</div><div class="hlab">' + HL.map(function (x) { return '<span>' + x + '</span>'; }).join('') + '</div>';
+  }
+  function trendSvg(rows) {
+    var by = {}; rows.forEach(function (r) { var o = by[r[0]] = by[r[0]] || [0, 0, 0]; o[0] += r[5]; o[1] += r[6]; o[2] += r[7]; });
+    var ds = Object.keys(by).sort().slice(-31); if (ds.length < 2) return '<div class="note">Need at least two days of data for a trend.</div>';
+    var W = 760, H = 180, pl = 36, pb = 24, lo = 100; ds.forEach(function (d) { var v = pct(by[d][1], by[d][0]); if (v != null) lo = Math.min(lo, v); }); lo = Math.max(0, Math.floor((lo - 3) / 5) * 5);
+    var x = function (i) { return pl + i * (W - pl - 10) / (ds.length - 1); }, y = function (v) { return 8 + (100 - v) / (100 - lo || 1) * (H - pb - 8); };
+    var pts = ds.map(function (d, i) { var v = pct(by[d][1], by[d][0]); return v == null ? null : [x(i), y(v), v, d]; }).filter(Boolean);
+    var s = '<svg class="trend" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="FTR % by day">';
+    [lo, (lo + 100) / 2, 100].forEach(function (g) { s += '<line x1="' + pl + '" x2="' + (W - 10) + '" y1="' + y(g) + '" y2="' + y(g) + '" stroke="#E2E8F0"/><text x="2" y="' + (y(g) + 4) + '" font-size="11" fill="#64748B">' + Math.round(g) + '%</text>'; });
+    if (95 > lo) s += '<line x1="' + pl + '" x2="' + (W - 10) + '" y1="' + y(95) + '" y2="' + y(95) + '" stroke="#15803D" stroke-dasharray="4 4"/>';
+    s += '<polyline fill="none" stroke="#0B2545" stroke-width="2.5" points="' + pts.map(function (p) { return p[0] + ',' + p[1]; }).join(' ') + '"/>';
+    pts.forEach(function (p, i) { s += '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="4" fill="' + ({ g: '#16A34A', a: '#F59E0B', r: '#DC2626' }[ftrC(p[2])]) + '"><title>' + dl(p[3]) + ': FTR ' + p1(p[2]) + '</title></circle>';
+      if (ds.length <= 16 || i % Math.ceil(ds.length / 12) === 0) s += '<text x="' + p[0] + '" y="' + (H - 6) + '" font-size="10.5" fill="#64748B" text-anchor="middle">' + dl(p[3]) + '</text>'; });
+    return s + '</svg>';
+  }
+  function lineRows(rows) {
+    var g = {}; rows.forEach(function (r) { var k = r[1] + '|' + r[2] + '|' + r[3] + '|' + r[4]; (g[k] = g[k] || []).push(r); });
+    return Object.keys(g).map(function (k) { var a = k.split('|'), s = sum(g[k]); return { unit: a[0], line: a[1], style: a[2], colour: a[3], s: s }; });
+  }
+  function lineSort(a, b) { return a.unit < b.unit ? -1 : a.unit > b.unit ? 1 : (parseFloat(a.line) || 999) - (parseFloat(b.line) || 999) || (a.line < b.line ? -1 : 1); }
+  function mini(h) { var mx = 1; h.forEach(function (x) { mx = Math.max(mx, x); }); return '<span class="mini" title="' + h.map(function (x, i) { return HL[i] + ' ' + x; }).join(', ') + '">' + h.map(function (x, i) { return '<i style="height:' + Math.max(1, x / mx * 22) + 'px;' + (i === 8 ? 'background:#E3B66A' : '') + '"></i>'; }).join('') + '</span>'; }
+  function defAgg(rows) {
+    var o = { tot: 0, cat: {}, def: {}, line: {} };
+    rows.forEach(function (r) { o.tot += r[6]; o.cat[r[5]] = (o.cat[r[5]] || 0) + r[6];
+      var lk = r[1] + '|' + r[2], L = o.line[lk] = o.line[lk] || { tot: 0, def: {}, style: {} }; L.tot += r[6]; L.style[r[3]] = 1;
+      r[7].forEach(function (p) { var nm = D.defects[p[0]]; o.def[nm] = (o.def[nm] || 0) + p[1]; L.def[nm] = (L.def[nm] || 0) + p[1]; }); });
+    return o;
+  }
+  function topN(obj, n) { return Object.keys(obj).map(function (k) { return [k, obj[k]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, n); }
+  function renderBar() {
+    var us = units(), h = '<button type="button" data-u="" class="' + (!F.unit ? 'on' : '') + '">All</button>';
+    us.forEach(function (u) { h += '<button type="button" data-u="' + u + '" class="' + (F.unit === u ? 'on' : '') + '">' + u + '</button>'; });
+    document.getElementById('fac').innerHTML = h;
+    var ps = [['last', 'Latest day'], ['7d', 'Last 7 days'], ['mtd', 'This month'], ['30d', 'Last 30 days']];
+    months().slice(1).forEach(function (m) { ps.push(['m:' + m, ml(m)]); });
+    if (/^r:/.test(F.per)) ps.push([F.per, 'Custom dates']);
+    document.getElementById('per').innerHTML = ps.map(function (p) { return '<option value="' + p[0] + '"' + (F.per === p[0] ? ' selected' : '') + '>' + p[1] + '</option>'; }).join('');
+    var P = period(); document.getElementById('dfrom').value = P.from; document.getElementById('dto').value = P.to > latestFor() ? latestFor() : P.to;
+    var ls = {}; D.q.concat(D.d).forEach(function (r) { if (r[0] >= P.from && r[0] <= P.to && (!F.unit || r[1] === F.unit)) ls[r[1] + '|' + r[2]] = 1; });
+    var keys = Object.keys(ls).sort(function (a, b) { var x = a.split('|'), y = b.split('|'); return x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : (parseFloat(x[1]) || 999) - (parseFloat(y[1]) || 999); });
+    if (F.line && !ls[F.line]) F.line = '';
+    document.getElementById('lin').innerHTML = '<option value="">All lines</option>' + keys.map(function (k) { var a = k.split('|'); return '<option value="' + esc(k) + '"' + (F.line === k ? ' selected' : '') + '>' + (F.unit ? '' : a[0] + ' · ') + 'Line ' + esc(a[1]) + '</option>'; }).join('');
+    [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === F.view); });
+  }
+  function scopeTxt(P) { return (F.unit || 'All units') + (F.line ? ' · Line ' + F.line.split('|')[1] : '') + ' · ' + P.label; }
+  function renderQty(P) {
+    var rows = D.q.filter(function (r) { return ok(r, P); }), s = sum(rows), h = '';
+    if (!rows.length) return '<div class="card"><div class="load">No DQR quantity entries for ' + esc(scopeTxt(P)) + '. Try another period or unit.</div></div>';
+    h += '<div class="kpis">' +
+      kpi('Checked', n0(s.chk), s.nl + ' lines · ' + s.nd + ' day' + (s.nd > 1 ? 's' : ''), '', '#1D4ED8') +
+      kpi('FTR passed', n0(s.pass), 'first time right', 'g', '#15803D') +
+      kpi('FTR %', p1(s.ftr), 'target 95%', ftrC(s.ftr), '#15803D') +
+      kpi('Defective pcs', n0(s.dft), 'sent for alteration', 'a', '#B45309') +
+      kpi('Defective %', p1(s.dhu), 'of checked', dhuC(s.dhu), '#B45309') +
+      kpi('Rejected', n0(s.rej), p1(s.rejP) + ' of checked', s.rej ? 'r' : 'g', '#B91C1C') +
+      kpi('Altered checked', n0(s.altChk), n0(s.altPass) + ' passed after alteration', '', '#0891B2') +
+      kpi('Alteration backlog', n0(s.back), 'pcs still to re-check', s.back ? 'a' : 'g', '#C8962E') +
+      kpi('Total passed', n0(s.pass + s.altPass), 'FTR + altered passed', 'g', '#0B2545') + '</div>';
+    var lr = lineRows(rows).sort(lineSort);
+    h += '<div class="grid"><section class="card" style="flex:1 1 460px"><h2>Hourly checked <small>' + esc(P.day ? 'pieces checked per hour' : 'sum of each hour over the period') + '</small></h2>' + hourly(s.h) + '</section>' +
+      '<section class="card" style="flex:1 1 460px"><h2>FTR % by day <small>green dashed line = 95% target</small></h2>' + trendSvg(D.q.filter(function (r) { return ok(r, { from: addDays(latestFor(), -30), to: latestFor() }); })) + '</section></div>';
+    if (!F.unit) {
+      var byU = {}; rows.forEach(function (r) { (byU[r[1]] = byU[r[1]] || []).push(r); });
+      h += '<section class="card"><h2>Unit summary <small>click a unit to focus</small></h2><div class="tw"><table><thead><tr><th>Unit</th><th>Lines</th><th>Checked</th><th>FTR passed</th><th>Defective</th><th>Rejected</th><th>FTR %</th><th>Defective %</th><th>Alt backlog</th></tr></thead><tbody>' +
+        Object.keys(byU).sort().map(function (u) { var x = sum(byU[u]); return '<tr class="click" data-unit="' + u + '"><td><span class="dot ' + ftrC(x.ftr) + '"></span><b>' + u + '</b></td><td>' + x.nl + '</td><td>' + n0(x.chk) + '</td><td class="g">' + n0(x.pass) + '</td><td class="a">' + n0(x.dft) + '</td><td class="r">' + n0(x.rej) + '</td><td class="' + ftrC(x.ftr) + '"><b>' + p1(x.ftr) + '</b></td><td class="' + dhuC(x.dhu) + '">' + p1(x.dhu) + '</td><td>' + n0(x.back) + '</td></tr>'; }).join('') + '</tbody></table></div></section>';
+    }
+    h += '<section class="card"><h2>Line-wise quality <small>' + esc(scopeTxt(P)) + '</small><span class="tools"><input id="lq" type="search" placeholder="Search line, style, colour…" value="' + esc(LQ) + '"></span></h2><div class="tw" id="lt">' + lineTable(lr) + '</div></section>';
+    return h;
+  }
+  function lineTable(lr) {
+    var q = LQ; if (q) lr = lr.filter(function (x) { return (x.unit + ' ' + x.line + ' ' + x.style + ' ' + x.colour).toLowerCase().indexOf(q) > -1; });
+    if (!lr.length) return '<div class="note" style="padding:14px">No lines match.</div>';
+    return '<table><thead><tr><th>Unit · Line</th><th class="l">Style</th><th class="l">Colour</th><th>Checked</th><th>Passed</th><th>Defective</th><th>Rejected</th><th>FTR %</th><th>Defective %</th><th>Alt chk / pass</th><th>Backlog</th><th class="l">Hourly</th></tr></thead><tbody>' +
+      lr.map(function (x) { var s = x.s; return '<tr class="click" data-line="' + esc(x.unit + '|' + x.line) + '"><td><span class="dot ' + ftrC(s.ftr) + '"></span>' + (F.unit ? '' : esc(x.unit) + ' · ') + '<b>Line ' + esc(x.line) + '</b></td><td class="l">' + esc(x.style) + '</td><td class="l">' + esc(x.colour) + '</td><td>' + n0(s.chk) + '</td><td class="g">' + n0(s.pass) + '</td><td class="a">' + n0(s.dft) + '</td><td class="' + (s.rej ? 'r' : 'm') + '">' + n0(s.rej) + '</td><td class="' + ftrC(s.ftr) + '"><b>' + p1(s.ftr) + '</b></td><td class="' + dhuC(s.dhu) + '">' + p1(s.dhu) + '</td><td>' + n0(s.altChk) + ' / ' + n0(s.altPass) + '</td><td class="' + (s.back ? 'a' : 'm') + '">' + n0(s.back) + '</td><td class="l">' + mini(s.h) + '</td></tr>'; }).join('') + '</tbody></table>';
+  }
+  function renderDft(P) {
+    var rows = D.d.filter(function (r) { return ok(r, P); }), a = defAgg(rows), qs = sum(D.q.filter(function (r) { return ok(r, P); })), h = '';
+    if (!rows.length) return '<div class="card"><div class="load">No defects recorded for ' + esc(scopeTxt(P)) + '.</div></div>';
+    var top = topN(a.def, 15), cats = topN(a.cat, 9), dhu = qs.chk ? a.tot / qs.chk * 100 : null;
+    h += '<div class="kpis">' +
+      kpi('Defects found', n0(a.tot), Object.keys(a.line).length + ' lines', 'a', '#B45309') +
+      kpi('Pieces checked', n0(qs.chk), 'same scope', '', '#1D4ED8') +
+      kpi('DHU', dhu == null ? '–' : (Math.round(dhu * 10) / 10).toFixed(1), 'defects per 100 pcs checked', dhuC(dhu), '#B91C1C') +
+      kpi('Top defect', top.length ? esc(top[0][0]) : '–', top.length ? n0(top[0][1]) + ' · ' + p1(pct(top[0][1], a.tot)) + ' of all' : '', '', '#0B2545') +
+      cats.slice(0, 5).map(function (c) { return kpi(esc(c[0]) + ' defects', n0(c[1]), p1(pct(c[1], a.tot)) + ' of all', '', CATC[c[0]] || '#64748B'); }).join('') + '</div>';
+    var mx = top.length ? top[0][1] : 1;
+    h += '<div class="grid"><section class="card" style="flex:1.4 1 520px"><h2>Top defects <small>' + esc(scopeTxt(P)) + '</small></h2>' +
+      top.map(function (t) { return '<div class="def"><span>' + esc(t[0]) + '</span><span class="t"><i style="width:' + (t[1] / mx * 100) + '%;background:#B45309"></i></span><b style="text-align:right">' + n0(t[1]) + '</b></div>'; }).join('') + '</section>' +
+      '<section class="card" style="flex:1 1 360px"><h2>By category <small>Man / Machine / Wash / Material</small></h2><div class="cats">' + cats.map(function (c) { return '<i title="' + esc(c[0]) + ' ' + c[1] + '" style="width:' + (c[1] / a.tot * 100) + '%;background:' + (CATC[c[0]] || '#94A3B8') + '"></i>'; }).join('') + '</div>' +
+      '<table><tbody>' + cats.map(function (c) { return '<tr><td><span class="dot" style="background:' + (CATC[c[0]] || '#94A3B8') + '"></span>' + esc(c[0]) + '</td><td>' + n0(c[1]) + '</td><td>' + p1(pct(c[1], a.tot)) + '</td></tr>'; }).join('') + '</tbody></table></section></div>';
+    var lk = Object.keys(a.line).sort(function (x, y) { return a.line[y].tot - a.line[x].tot; });
+    h += '<section class="card"><h2>Defects by line <small>highest first · click a line to focus</small></h2><div class="tw"><table><thead><tr><th>Unit · Line</th><th class="l">Style(s)</th><th>Defects</th><th class="l">Top 3 defects</th></tr></thead><tbody>' +
+      lk.map(function (k) { var L = a.line[k], p = k.split('|'); return '<tr class="click" data-line="' + esc(k) + '"><td>' + (F.unit ? '' : esc(p[0]) + ' · ') + '<b>Line ' + esc(p[1]) + '</b></td><td class="l">' + esc(Object.keys(L.style).join(', ')) + '</td><td class="a"><b>' + n0(L.tot) + '</b></td><td class="l">' + topN(L.def, 3).map(function (t) { return esc(t[0]) + ' <b>' + t[1] + '</b>'; }).join(' · ') + '</td></tr>'; }).join('') + '</tbody></table></div></section>';
+    return h;
+  }
+  function render() {
+    renderBar(); var P = period();
+    document.getElementById('app').innerHTML = (F.view === 'dft' ? renderDft(P) : renderQty(P)) +
+      '<div class="note">Source: end-line QC app (00_Sew_EL_Data FIPL &amp; TS2 and 00_Sew_EL_Data AP2 — Hr_Smy and ELDft_Smy sheets), last 40 days. FTR % = FTR passed ÷ checked. Defective % = defective pieces ÷ checked. DHU = defects found ÷ pieces checked × 100. Traffic light: FTR ≥ 95% green, ≥ 90% amber, below red.</div>';
+    bind();
+  }
+  function bind() { var q = document.getElementById('lq'); if (q) q.addEventListener('input', function () { LQ = this.value.toLowerCase().trim(); var P = period(); document.getElementById('lt').innerHTML = lineTable(lineRows(D.q.filter(function (r) { return ok(r, P); })).sort(lineSort)); }); }
+  document.getElementById('fac').addEventListener('click', function (e) { var b = e.target.closest('[data-u]'); if (!b) return; F.unit = b.getAttribute('data-u'); F.line = ''; save(); render(); });
+  document.getElementById('per').addEventListener('change', function () { F.per = this.value; save(); render(); });
+  function dates() { var a = document.getElementById('dfrom').value, b = document.getElementById('dto').value; if (!a || !b) return; if (a > b) { var t = a; a = b; b = t; } F.per = 'r:' + a + ':' + b; save(); render(); }
+  document.getElementById('dfrom').addEventListener('change', dates); document.getElementById('dto').addEventListener('change', dates);
+  document.getElementById('lin').addEventListener('change', function () { F.line = this.value; save(); render(); });
+  document.getElementById('tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-v]'); if (!b) return; F.view = b.getAttribute('data-v'); save(); render(); });
+  document.getElementById('app').addEventListener('click', function (e) {
+    var u = e.target.closest('[data-unit]'), l = e.target.closest('[data-line]');
+    if (u) { F.unit = u.getAttribute('data-unit'); F.line = ''; } else if (l) { var k = l.getAttribute('data-line'); F.line = F.line === k ? '' : k; if (!F.unit) F.unit = k.split('|')[0]; } else return;
+    save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+  document.getElementById('btnRefresh').addEventListener('click', function () { load(true); });
+  function sub() { if (!D) return; var m = Math.floor((Date.now() - (D.builtAt || Date.now())) / 60000); document.getElementById('sub').textContent = 'Live from the end-line QC app · latest entry ' + dl(D.latest) + ' · refreshed ' + D.generated + (m > 1 ? ' (' + m + ' min ago)' : ''); }
+  function load(fresh, tries) {
+    tries = tries || 0;
+    document.getElementById('sub').textContent = fresh ? 'Refreshing…' : 'Loading live DQR data…';
+    jsonp(fresh ? { action: 'dqr_dash', fresh: 1 } : { action: 'dqr_dash' }, function (r) {
+      if (!r || !r.q) {
+        if (tries < 2) return setTimeout(function () { load(fresh, tries + 1); }, 2500);
+        if (!D) { try { var c = JSON.parse(localStorage.getItem('dqrDashLast') || 'null'); if (c && c.q) { D = c; render(); document.getElementById('sub').textContent = 'Showing saved data from ' + c.generated + ' — live refresh failed, will retry.'; return; } } catch (e) {}
+          document.getElementById('app').innerHTML = '<div class="load">Could not load DQR data' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please press Refresh in a minute.</div>'; } else sub();
+        return;
+      }
+      D = r; try { localStorage.setItem('dqrDashLast', JSON.stringify(r)); } catch (e) {}
+      if (/^m:/.test(F.per) && months().indexOf(F.per.slice(2)) < 0) F.per = 'mtd';
+      render(); sub();
+    });
+  }
+  load(false); setInterval(sub, 30000); setInterval(function () { if (!document.hidden) load(true); }, 10 * 60000);
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>

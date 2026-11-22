@@ -69,7 +69,7 @@
 },
 {
 "name": "TS2 DQR Qty Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbzux3r1mr0aZufgtwKCArEWyADdvvhhnDhuwY4mYqVrOkbyZ82Vf6vmPirCMB3tKmwh/exec",
+"url": "dqr.html?unit=TS2&view=qty",
 "group": "",
 "portals": [
 "HO",
@@ -79,7 +79,7 @@
 },
 {
 "name": "TS2 DQR Dft Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbzMWNysbF1-HflTVCfhmJKQERvhTKqc6vp1VXvMfs-BN3KHIKG1eucO7W2du1WOdssx/exec",
+"url": "dqr.html?unit=TS2&view=dft",
 "group": "",
 "portals": [
 "HO",
@@ -89,7 +89,7 @@
 },
 {
 "name": "AP2 DQR Qty Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbyB6LZhHpKlRVrVbHjK1-CtCERdvSP63YyuSO7jHHOQbIkqScDys73-bJkLlhUKNHMH/exec",
+"url": "dqr.html?unit=AP2&view=qty",
 "group": "",
 "portals": [
 "HO",
@@ -98,7 +98,7 @@
 },
 {
 "name": "AP2 DQR Dft Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbwwn9e9wNlUVP-lCFUiV9p75UG_9XvdKsZOweuiWFD8ZQ4M-BPQgOsL9rOM_wNQ0e88Zg/exec",
+"url": "dqr.html?unit=AP2&view=dft",
 "group": "",
 "portals": [
 "HO",
