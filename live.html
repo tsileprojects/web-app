@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Live Control Room</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<link rel="stylesheet" href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+<link rel="stylesheet" href="css/notify.css">
+<style>
+:root{--bg:#06142B;--card:#0B2043;--line:#16305A;--ink:#E2E8F0;--mute:#94A3B8;--gold:#C8962E;--header-h:70px}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;font-size:14px}
+.mono{font-family:"JetBrains Mono",Consolas,"Courier New",monospace}
+header.top{position:sticky;top:0;z-index:20;background:#06142B;border-bottom:1px solid #13284A}
+.hw{max-width:1600px;margin:0 auto;padding:12px 24px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px}
+.ttl{display:flex;align-items:center;gap:14px}
+.ttl h1{margin:0;font-size:19px;color:#fff}.ttl small{display:block;font-size:12px;color:var(--mute);margin-top:2px}
+.btn{height:42px;padding:0 14px;border-radius:10px;border:1px solid #1E3A66;background:#0B2043;color:#E2E8F0;font:600 13px Inter,"Segoe UI",Arial,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:8px;text-decoration:none}
+.btn:hover{background:#13284A}
+.btn.home{background:var(--gold);border-color:var(--gold);color:#06142B}
+select.btn{padding-right:10px}
+.header-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.icon-btn{width:42px;height:42px;border-radius:10px;border:1px solid #1E3A66;background:#0B2043;color:#E2E8F0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+.icon-btn:hover{background:#13284A}
+.livebadge[hidden]{display:none}
+.livebadge{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:#FCA5A5}
+.livebadge i{width:8px;height:8px;border-radius:50%;background:#EF4444;animation:blink 1.4s ease-in-out infinite}
+.ticker{overflow:hidden;border-bottom:1px solid #13284A;background:#081B38}
+.ticker .run{display:flex;width:max-content;animation:tick 70s linear infinite}
+.ticker:hover .run{animation-play-state:paused}
+.ticker span.t{display:inline-flex;align-items:center;gap:8px;padding:9px 20px;font-size:13px;white-space:nowrap;border-right:1px solid #13284A}
+main{max-width:1600px;margin:0 auto;padding:20px 24px 90px;display:flex;flex-direction:column;gap:18px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;animation:rise .55s ease-out both}
+.kl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.kv{font-size:32px;font-weight:700;margin-top:6px;color:#fff}
+.kn{font-size:12px;color:var(--mute);margin-top:2px}
+.units{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.unit{cursor:pointer;text-align:left;font:inherit;color:inherit;width:100%;display:flex;flex-direction:column;gap:12px}
+.unit:hover,.unit:focus-visible{border-color:#38BDF8;outline:none}
+.tl{display:flex;flex-direction:column;gap:5px;padding:7px 6px;background:#050F22;border-radius:11px;border:1px solid #1E3A66}
+.lamp{width:13px;height:13px;border-radius:50%;background:#1E293B;border:1px solid #334155;display:block}
+.lamp.on{animation:pulse 1.8s ease-in-out infinite}
+.lamp.g.on{background:#22C55E;color:#22C55E;border-color:#22C55E}
+.lamp.a.on{background:#F59E0B;color:#F59E0B;border-color:#F59E0B}
+.lamp.r.on{background:#EF4444;color:#EF4444;border-color:#EF4444}
+.strip{display:flex;flex-wrap:wrap;gap:3px}.strip i{width:13px;height:20px;border-radius:3px;display:block}
+.cnt{display:flex;justify-content:space-between;font-size:12px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:14px}
+.sec h2{margin:0 0 12px;font-size:15px;color:#fff;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.sec h2 small{font-weight:400;color:var(--mute);font-size:12px}
+.hgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.hc .bars{position:relative;height:130px;display:flex;align-items:flex-end;gap:5px;border-bottom:1px solid #1E3A66}
+.hc .bars b{flex:1;display:block;border-radius:4px 4px 0 0;transform-origin:bottom;animation:up .9s cubic-bezier(.2,.7,.2,1) both}
+.hc .tg{position:absolute;left:0;right:0;border-top:2px dashed #94A3B8}
+.hc .lab{display:flex;gap:5px;margin-top:6px}.hc .lab span{flex:1;text-align:center;font-size:10px;color:var(--mute)}
+.lrow{display:grid;grid-template-columns:76px minmax(0,1fr) 100px 64px;gap:10px;align-items:center;padding:9px 12px;border-radius:10px;background:#0F264D;cursor:pointer;border:0;color:inherit;font:inherit;text-align:left;width:100%}
+.lrow:hover{background:#13305E}
+.ell{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+/* line board */
+.bar2{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{min-height:38px;padding:0 14px;border-radius:999px;border:1px solid #1E3A66;background:#0B2043;color:#CBD5E1;font:600 13px Inter,"Segoe UI",Arial,sans-serif;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.chip.on{background:#E2E8F0;color:#06142B;border-color:#E2E8F0}
+.chip .d{width:10px;height:10px;border-radius:50%}
+.lgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.lc{display:flex;gap:14px;animation:pop .45s ease-out both}.lc .tl{align-self:flex-start}
+.ring{flex:none}
+.ring .arc{animation:fill 1.1s cubic-bezier(.2,.7,.2,1) both}
+.pb{height:7px;background:#13284A;border-radius:999px;overflow:hidden}.pb i{display:block;height:100%;border-radius:999px;transform-origin:left;animation:grow 1s ease-out both}
+.hb{display:flex;align-items:flex-end;gap:3px;height:30px}.hb i{flex:1;display:block;border-radius:3px 3px 0 0;transform-origin:bottom;animation:up .8s ease-out both}
+.pill{padding:3px 9px;border-radius:999px;font-weight:700;font-size:12px}
+.load{padding:80px 20px;text-align:center;color:var(--mute)}
+.spin{width:34px;height:34px;border:3px solid #13284A;border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 12px}
+.note{font-size:12px;color:var(--mute)}
+.g{color:#4ADE80}.a{color:#FBBF24}.r{color:#F87171}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}50%{box-shadow:0 0 16px 3px currentColor}}
+@keyframes tick{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:scale(.97) translateY(8px)}to{opacity:1;transform:none}}
+@keyframes up{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes fill{from{stroke-dashoffset:126}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important}}
+@media(max-width:640px){.hw,main{padding-left:12px;padding-right:12px}.lrow{grid-template-columns:64px minmax(0,1fr) 60px}.lrow .hide{display:none}}
+</style>
+</head>
+<body>
+<header class="top"><div class="hw">
+  <div class="ttl">
+    <a class="btn home" id="homeBtn" href="main_ho.html" title="Back to the main dashboard">&#8962; Home</a>
+    <div><h1>Live Control Room</h1><small id="sub">Loading live DPR…</small></div>
+  </div>
+  <div class="header-actions">
+    <button id="btnBell" class="icon-btn bell-btn" type="button" aria-label="Notifications"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span class="bell-badge" id="bellBadge" hidden>0</span></button>
+    <span class="livebadge" id="liveBadge" hidden><i></i>LIVE</span>
+    <label class="note" for="dateSel" style="position:absolute;left:-9999px">Day</label>
+    <select id="dateSel" class="btn" aria-label="Day"></select>
+    <button class="btn" id="btnRefresh" type="button">Refresh</button>
+  </div>
+</div></header>
+<div class="ticker" id="ticker" aria-hidden="true"></div>
+<main id="app"><div class="load"><div class="spin"></div>Loading live DPR…</div></main>
+
+<script src="security.js?v=20261122a"></script>
+<script src="js/tspl-config.js"></script>
+<script>
+(function () {
+  'use strict';
+  var UNITS = ['TS9', 'TS4', 'FIPL', 'AP2', 'TS2'], MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var D = null, VIEW = 'room', F = { unit: '', sig: '' }, K = 1, animTimer = null;
+  var COL = { g: '#4ADE80', a: '#FBBF24', r: '#F87171' }, BG = { g: '#16A34A', a: '#D97706', r: '#DC2626' }, HC = { g: '#22C55E', a: '#F59E0B', r: '#EF4444' };
+  try { var hb = document.getElementById('homeBtn'), u = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (window.top !== window.self) hb.href = 'home.html'; else if (u.redirect) hb.href = u.redirect; } catch (e) {}
+  var qu = (location.search.match(/[?&]unit=([A-Z0-9]+)/i) || [])[1]; if (qu) { F.unit = qu.toUpperCase(); VIEW = 'lines'; }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function fmt(n) { return Math.round(n || 0).toLocaleString('en-IN'); }
+  function dl(d) { return d.slice(8) + '-' + MN[+d.slice(5, 7) - 1] + '-' + d.slice(0, 4); }
+  function sig(x) { if (!x.av) return 'n'; return x.e >= x.sl ? 'g' : x.e >= x.sl - 10 ? 'a' : 'r'; }
+  function jsonp(params, cb, ms) {
+    var name = '__live' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 120000);
+    document.body.appendChild(s);
+  }
+  function agg(ls) {
+    var o = { n: ls.length, p: 0, t: 0, mp: 0, er: 0, av: 0, g: 0, a: 0, r: 0, h: [0, 0, 0, 0, 0, 0, 0, 0, 0] };
+    ls.forEach(function (x) { o.p += x.p; o.t += x.t; o.mp += x.mp; o.er += x.er; o.av += x.av; var s = sig(x); if (o[s] != null) o[s]++; (x.h || []).forEach(function (v, i) { o.h[i] += v; }); });
+    o.e = o.av ? o.er / o.av * 100 : null; return o;
+  }
+  function lampHtml(s, label) { return '<div class="tl" role="img" aria-label="Signal ' + label + '"><span class="lamp r' + (s === 'r' ? ' on' : '') + '"></span><span class="lamp a' + (s === 'a' ? ' on' : '') + '"></span><span class="lamp g' + (s === 'g' ? ' on' : '') + '"></span></div>'; }
+
+  /* ---------- control room ---------- */
+  function room() {
+    var L = D.lines, T = agg(L), k = 1, hrs = D.hours;
+    var cu = function (v, dec, suf) { return '<span data-cu="' + v + '" data-dec="' + (dec || 0) + '" data-suf="' + (suf || '') + '">' + (dec ? Number(v).toFixed(dec) : fmt(v)) + (suf || '') + '</span>'; };
+    var kp = [
+      ['Pieces produced', cu(T.p), L.length + ' lines reporting', '#fff'],
+      ['Floor efficiency', T.e == null ? '–' : cu(T.e, 1, '%'), 'earned ÷ available minutes', T.e >= 50 ? '#4ADE80' : '#FBBF24'],
+      ['Manpower', cu(T.mp), 'operators on the lines', '#fff'],
+      ['Lines on target', cu(T.g) + ' / ' + L.length, 'efficiency ≥ COT target', '#4ADE80'],
+      ['Lines below target', cu(T.r), 'more than 10 pts short', '#F87171']
+    ];
+    var h = '<section class="kpis">' + kp.map(function (x, i) { return '<div class="card" style="animation-delay:' + (i * .06) + 's"><div class="kl">' + x[0] + '</div><div class="kv mono" style="color:' + x[3] + '">' + x[1] + '</div><div class="kn">' + x[2] + '</div></div>'; }).join('') + '</section>';
+    var maxP = 1, U = UNITS.map(function (u) { var o = agg(L.filter(function (x) { return x.u === u; })); o.u = u; maxP = Math.max(maxP, o.p); return o; });
+    h += '<section class="units">' + U.map(function (o, i) {
+      var s = o.e == null ? 'n' : o.e >= 50 ? 'g' : o.e >= 42 ? 'a' : 'r', word = { g: 'green', a: 'amber', r: 'red', n: 'not started' }[s];
+      var strip = L.filter(function (x) { return x.u === o.u; }).sort(function (a, b) { return b.e - a.e; }).map(function (x) { var q = sig(x); return '<i title="Line ' + esc(x.l) + ' · ' + esc(x.s) + ' · ' + x.e + '%" style="background:' + (BG[q] || '#334155') + '"></i>'; }).join('');
+      return '<button type="button" class="card unit" data-unit="' + o.u + '" style="animation-delay:' + (.1 + i * .07) + 's" aria-label="Open ' + o.u + ' lines">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;width:100%"><div><div style="font-size:22px;font-weight:800;color:#fff">' + o.u + '</div><div class="note">' + o.n + ' lines · ' + fmt(o.mp) + ' MP</div></div>' + lampHtml(s, word) + '</div>' +
+        '<div style="display:flex;align-items:baseline;gap:8px"><span class="mono" style="font-size:38px;font-weight:700;color:' + (COL[s] || '#94A3B8') + '">' + (o.e == null ? '–' : cu(o.e, 1, '%')) + '</span><span class="note">efficiency</span></div>' +
+        '<div style="width:100%"><div style="display:flex;justify-content:space-between;font-size:12px;color:#94A3B8;margin-bottom:6px"><span>Produced</span><b class="mono" style="color:#E2E8F0">' + cu(o.p) + ' pcs</b></div><div class="pb"><i style="width:' + Math.round(o.p / maxP * 100) + '%;background:linear-gradient(90deg,#38BDF8,#22C55E)"></i></div></div>' +
+        '<div class="strip">' + (strip || '<span class="note">No lines reported yet</span>') + '</div>' +
+        '<div class="cnt" style="width:100%"><span class="g">● ' + o.g + ' on target</span><span class="a">● ' + o.a + ' close</span><span class="r">● ' + o.r + ' below</span></div></button>';
+    }).join('') + '</section>';
+    // hourly
+    h += '<section class="card sec"><h2>Hourly production <small>pieces per hour · bar colour = vs hourly target (day target ÷ 8) · dashed line = target</small></h2><div class="hgrid">' + U.map(function (o) {
+      var tgt = Math.round(o.t / 8), n = Math.max(8, D.live ? Math.min(9, Math.max(1, hrs)) : 8), hs = o.h.slice(0, n), mx = Math.max.apply(null, hs.concat([tgt, 1])) * 1.15;
+      return '<div class="hc"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px"><b style="color:#fff">' + o.u + '</b><span class="note">peak ' + fmt(Math.max.apply(null, hs)) + '/hr</span></div>' +
+        '<div class="bars">' + (tgt ? '<div class="tg" style="bottom:' + Math.round(tgt / mx * 100) + '%" title="Hourly target ' + tgt + '"></div>' : '') +
+        hs.map(function (v, j) { var q = !tgt ? 'n' : v >= tgt ? 'g' : v >= tgt * .9 ? 'a' : 'r'; var future = D.live && j >= hrs; return '<b title="Hour ' + (j + 1) + ': ' + fmt(v) + ' pcs' + (tgt ? ' (target ' + tgt + ')' : '') + '" style="height:' + Math.max(future ? 0 : 2, Math.round(v / mx * 100)) + '%;background:' + (future ? '#13284A' : (HC[q] || '#38BDF8')) + ';animation-delay:' + (.2 + j * .06) + 's"></b>'; }).join('') + '</div>' +
+        '<div class="lab">' + hs.map(function (v, j) { return '<span>H' + (j + 1) + '</span>'; }).join('') + '</div></div>';
+    }).join('') + '</div><div class="legend" style="margin-top:10px"><span><i style="background:#22C55E"></i>on target</span><span><i style="background:#F59E0B"></i>90–99%</span><span><i style="background:#EF4444"></i>below 90%</span></div></section>';
+    var by = L.filter(function (x) { return x.av; }).sort(function (a, b) { return (a.e - a.sl) - (b.e - b.sl); });
+    var rowH = function (x, col) { return '<button type="button" class="lrow" data-unit="' + x.u + '"><b style="color:#fff">' + esc(x.u) + ' ' + esc(x.l) + '</b><span class="ell" style="font-size:13px;color:#CBD5E1">' + (x.b && x.b !== '-' ? esc(x.b) + ' · ' : '') + esc(x.s) + '</span><span class="note hide">' + fmt(x.p) + ' / ' + fmt(x.t) + '</span><b class="mono" style="text-align:right;color:' + col + '">' + x.e + '%</b></button>'; };
+    h += '<section class="grid2"><div class="card sec"><h2>Lines needing attention <small class="r">furthest below COT target</small></h2><div style="display:flex;flex-direction:column;gap:8px">' + (by.slice(0, 6).map(function (x) { return rowH(x, '#F87171'); }).join('') || '<span class="note">No data</span>') + '</div></div>' +
+      '<div class="card sec"><h2>Top performing lines <small class="g">furthest above target</small></h2><div style="display:flex;flex-direction:column;gap:8px">' + (by.slice(-6).reverse().map(function (x) { return rowH(x, '#4ADE80'); }).join('') || '<span class="note">No data</span>') + '</div></div></section>';
+    h += '<div class="note">' + esc(D.note) + ' · COT target: day 1–5 = 10% × day, day 6 onwards = 55% · signal: green ≥ target, amber within 10 pts, red below · click a factory or a line to open the line board</div>';
+    return h;
+  }
+
+  /* ---------- line board ---------- */
+  function lines() {
+    var L = D.lines, all = L.filter(function (x) { return !F.unit || x.u === F.unit; });
+    var cnt = function (s) { return all.filter(function (x) { return sig(x) === s; }).length; };
+    var h = '<div class="bar2"><button type="button" class="btn" data-act="room">‹ Control room</button>' +
+      [''].concat(UNITS).map(function (u) { return '<button type="button" class="chip' + (F.unit === u ? ' on' : '') + '" data-fu="' + u + '">' + (u || 'All factories') + ' <span style="opacity:.7;font-weight:500">' + L.filter(function (x) { return !u || x.u === u; }).length + '</span></button>'; }).join('') +
+      '<span style="width:1px;height:26px;background:#1E3A66;margin:0 4px"></span>' +
+      [['', 'All signals', '#94A3B8'], ['r', 'Red ' + cnt('r'), '#EF4444'], ['a', 'Amber ' + cnt('a'), '#F59E0B'], ['g', 'Green ' + cnt('g'), '#22C55E']].map(function (s) { return '<button type="button" class="chip' + (F.sig === s[0] ? ' on' : '') + '" data-fs="' + s[0] + '"><span class="d" style="background:' + s[2] + '"></span>' + s[1] + '</button>'; }).join('') + '</div>';
+    var rank = { r: 0, a: 1, g: 2, n: 3 };
+    var list = all.filter(function (x) { return !F.sig || sig(x) === F.sig; }).sort(function (a, b) { return rank[sig(a)] - rank[sig(b)] || (a.e - a.sl) - (b.e - b.sl); });
+    h += '<section class="lgrid">' + (list.map(function (x, i) {
+      var s = sig(x), c = { g: '#22C55E', a: '#F59E0B', r: '#EF4444', n: '#64748B' }[s], d = x.e - x.sl, ht = x.t / 8, n = D.live ? Math.max(1, D.hours) : 8, hs = (x.h || []).slice(0, Math.max(8, n)), mx = Math.max.apply(null, hs.concat([ht, 1]));
+      return '<article class="card lc" style="animation-delay:' + Math.min(i * .025, .6) + 's">' + lampHtml(s, { g: 'green', a: 'amber', r: 'red', n: 'no manpower yet' }[s]) +
+        '<div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px">' +
+        '<div style="display:flex;justify-content:space-between;gap:8px"><div style="min-width:0"><div class="note" style="font-weight:700">' + esc(x.u) + ' · LINE ' + esc(x.l) + '</div><div class="ell" style="font-weight:700;color:#fff">' + esc(x.s) + '</div><div class="note ell">' + (x.b && x.b !== '-' ? esc(x.b) + ' · ' : '') + esc(x.c) + '</div></div>' +
+        '<svg class="ring" width="54" height="54" viewBox="0 0 48 48" role="img" aria-label="Efficiency ' + x.e + ' percent"><circle cx="24" cy="24" r="20" fill="none" stroke="#13284A" stroke-width="5"/><circle class="arc" cx="24" cy="24" r="20" fill="none" stroke="' + c + '" stroke-width="5" stroke-linecap="round" stroke-dasharray="126" stroke-dashoffset="' + Math.round(126 - Math.min(100, x.e) / 100 * 126) + '" transform="rotate(-90 24 24)"/><text x="24" y="28" text-anchor="middle" font-size="11" font-weight="700" fill="#fff" font-family="Consolas,monospace">' + (x.av ? Math.round(x.e) + '%' : '–') + '</text></svg></div>' +
+        '<div class="hb" role="img" aria-label="Hourly production">' + hs.map(function (v, j) { var q = !ht ? '#38BDF8' : v >= ht ? '#22C55E' : v >= ht * .9 ? '#F59E0B' : '#EF4444'; var fut = D.live && j >= D.hours; return '<i title="Hour ' + (j + 1) + ': ' + v + ' pcs' + (ht ? ' (target ' + Math.round(ht) + ')' : '') + '" style="height:' + Math.max(fut ? 0 : 4, Math.round(v / mx * 100)) + '%;background:' + (fut ? '#13284A' : q) + ';animation-delay:' + (.3 + j * .05) + 's"></i>'; }).join('') + '</div>' +
+        '<div class="pb"><i style="width:' + Math.min(100, x.t ? Math.round(x.p / x.t * 100) : 0) + '%;background:' + c + '"></i></div>' +
+        '<div style="display:flex;justify-content:space-between;font-size:12px;color:#94A3B8"><span><b class="mono" style="color:#fff">' + fmt(x.p) + '</b> / ' + fmt(x.t) + ' pcs</span><span>SAM ' + x.sam + ' · ' + fmt(x.mp) + ' MP</span></div>' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px"><span class="pill" style="background:' + (x.d >= 1 && x.d < 6 ? '#422006;color:#FCD34D' : '#1E1B4B;color:#C7D2FE') + '">' + (x.d >= 6 ? 'COT day ' + x.d : x.d >= 1 ? 'Ramp-up day ' + x.d : 'Running') + '</span><span class="note">target ' + x.sl + '% · ' + (x.av ? (d >= 0 ? '+' : '') + d.toFixed(1) + ' pts' : 'MP not entered') + '</span></div>' +
+        '</div></article>';
+    }).join('') || '<div class="card note">No lines match.</div>') + '</section>';
+    return h;
+  }
+
+  function ticker() {
+    var t = D.lines.filter(function (x) { return x.av; }).sort(function (a, b) { return a.u < b.u ? -1 : a.u > b.u ? 1 : 0; }).map(function (x) { var s = sig(x); return '<span class="t"><span class="lamp on ' + s + '" style="width:9px;height:9px"></span><b style="color:#fff">' + esc(x.u) + ' ' + esc(x.l) + '</b><span style="color:#94A3B8">' + esc(x.s) + '</span><b class="mono" style="color:' + COL[s] + '">' + x.e + '%</b></span>'; }).join('');
+    document.getElementById('ticker').innerHTML = t ? '<div class="run">' + t + t + '</div>' : '';
+  }
+  function render() {
+    if (!D) return;
+    document.getElementById('app').innerHTML = VIEW === 'lines' ? lines() : room();
+    document.getElementById('sub').textContent = (D.live ? 'Live today · ' : '') + 'DPR ' + dl(D.date) + ' · ' + D.lines.length + ' lines · updated ' + D.time + (D.live ? ' · ' + D.hours + ' h worked' : '');
+    document.getElementById('liveBadge').hidden = !D.live;
+  }
+  function countUp() {
+    clearInterval(animTimer); var t0 = Date.now(), els = [].slice.call(document.querySelectorAll('[data-cu]'));
+    if (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    animTimer = setInterval(function () {
+      var p = Math.min(1, (Date.now() - t0) / 1300), k = 1 - Math.pow(1 - p, 3);
+      els.forEach(function (el) { var v = +el.getAttribute('data-cu') * k, dec = +el.getAttribute('data-dec'); el.textContent = (dec ? v.toFixed(dec) : fmt(v)) + el.getAttribute('data-suf'); });
+      if (p >= 1) clearInterval(animTimer);
+    }, 40);
+  }
+  document.getElementById('app').addEventListener('click', function (e) {
+    var t = e.target.closest('[data-unit],[data-act],[data-fu],[data-fs]'); if (!t) return;
+    if (t.hasAttribute('data-act')) { VIEW = 'room'; F.sig = ''; render(); countUp(); window.scrollTo(0, 0); return; }
+    if (t.hasAttribute('data-unit')) { F.unit = t.getAttribute('data-unit'); F.sig = ''; VIEW = 'lines'; render(); window.scrollTo(0, 0); return; }
+    if (t.hasAttribute('data-fu')) F.unit = t.getAttribute('data-fu');
+    if (t.hasAttribute('data-fs')) F.sig = t.getAttribute('data-fs');
+    render();
+  });
+  var sel = document.getElementById('dateSel');
+  sel.addEventListener('change', function () { load(false, sel.value); });
+  document.getElementById('btnRefresh').addEventListener('click', function () { load(true, sel.value === 'latest' ? '' : sel.value); });
+  function fillDates() {
+    var opts = ['<option value="latest">Latest day</option>'].concat((D.days || []).map(function (d) { return '<option value="' + d + '"' + (d === D.date && sel.dataset.picked ? ' selected' : '') + '>' + dl(d) + '</option>'; }));
+    sel.innerHTML = opts.join(''); if (!sel.dataset.picked) sel.value = 'latest';
+  }
+  function load(fresh, date) {
+    document.getElementById('sub').textContent = 'Loading live DPR…';
+    var p = { action: 'live_dash' }; if (fresh) p.fresh = 1; if (date && date !== 'latest') { p.date = date; sel.dataset.picked = '1'; } else delete sel.dataset.picked;
+    jsonp(p, function (r) {
+      if (!r || !r.ok) { if (!D) document.getElementById('app').innerHTML = '<div class="load">Could not load live data' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please press Refresh in a minute.</div>'; else render(); return; }
+      D = r; fillDates(); ticker(); render(); if (VIEW === 'room') countUp();
+    });
+  }
+  load(false);
+  setInterval(function () { if (!document.hidden && D && D.live && !sel.dataset.picked) jsonp({ action: 'live_dash' }, function (r) { if (r && r.ok) { D = r; ticker(); render(); } }); }, 5 * 60000);
+})();
+</script>
+<script src="js/notify.js"></script>
+<script src="js/help.js?v=20261121m" defer></script>
+</body>
+</html>
