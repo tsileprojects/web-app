@@ -309,7 +309,7 @@ body.board .hide-board{display:none}
   document.getElementById('apps').addEventListener('click', function (e) {
     var b = e.target.closest('.app'); if (!b) return;
     var a = APPS[+b.getAttribute('data-i')]; if (!a) return;
-    if (!a.embed) { window.open(a.url, '_blank', 'noopener'); return; }
+    if (!a.embed || /^https:\/\/script\.google\.com\//.test(a.url)) { window.open(a.url, '_blank', 'noopener'); return; }   // Google Apps Script programs need their own tab (sign-in cookies)
     document.getElementById('vTitle').textContent = a.name;
     document.getElementById('vFrame').src = a.url;
     document.getElementById('viewer').classList.add('on');

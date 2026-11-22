@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html><head><link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSPL Needle Stock & Track</title>
+<style>
+:root{--navy:#0b2545;--navy2:#13315c;--teal:#0f9d8a;--teal-l:#e6f6f3;--gold:#c8962e;--red:#c0392b;--red-l:#fdecea;--amber:#d68910;--amber-l:#fef5e7;--green:#1e8449;--green-l:#e9f7ef;--ink:#1c2433;--mute:#6b7689;--line:#e3e8ef;--bg:#f4f6fa;--card:#fff}
+*{box-sizing:border-box}body{margin:0;font-family:"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:13px}
+header{background:linear-gradient(90deg,var(--navy),var(--navy2));color:#fff;padding:14px 22px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+header h1{font-size:17px;margin:0;font-weight:600;letter-spacing:.3px}header .sub{font-size:11.5px;opacity:.75;margin-top:2px}
+header .sp{flex:1}.pill{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);color:#fff;border-radius:6px;padding:6px 10px;font-size:12px}
+select.pill option{color:#000}button.pill{cursor:pointer}button.pill:hover{background:rgba(255,255,255,.22)}
+.tabs{display:flex;gap:4px;padding:0 22px;background:var(--navy2);overflow-x:auto}
+.tab{color:#c9d4e5;padding:9px 16px;cursor:pointer;border-bottom:3px solid transparent;font-weight:600;font-size:12.5px;white-space:nowrap}
+.tab.on{color:#fff;border-bottom-color:var(--gold)}.tab:hover{color:#fff}
+main{padding:18px 22px;max-width:1500px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:13px 15px;border-top:3px solid var(--teal)}
+.kpi .l{color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.kpi .v{font-size:23px;font-weight:700;margin-top:5px;color:var(--navy)}.kpi .s{font-size:11.5px;color:var(--mute);margin-top:3px}
+.kpi.warn{border-top-color:var(--red)}.kpi.gold{border-top-color:var(--gold)}.kpi.navy{border-top-color:var(--navy)}
+.grid{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin-bottom:14px}@media(max-width:1000px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.card h3{margin:0 0 10px;font-size:13.5px;color:var(--navy);display:flex;align-items:center;gap:8px}.card h3 .hint{font-weight:400;color:var(--mute);font-size:11.5px;margin-left:auto}
+.bar-row{display:grid;grid-template-columns:52px 1fr 165px;align-items:center;gap:10px;margin:9px 0}
+.bar-row .n{font-weight:700;color:var(--navy)}.track{background:#eef1f6;border-radius:5px;height:18px;position:relative;overflow:hidden}
+.fill{height:100%;background:var(--teal);border-radius:5px}.plan{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--gold)}
+.bar-row .t{font-size:11.5px;color:var(--mute);text-align:right}
+.legend{display:flex;gap:14px;font-size:11.5px;color:var(--mute);margin-top:6px}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.alerts{max-height:262px;overflow:auto}.al{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line)}
+.al:last-child{border-bottom:0}.dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex:none}
+.al b{color:var(--ink)}.al .m{color:var(--mute);font-size:11.5px}
+.chip{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600}
+.c-red{background:var(--red-l);color:var(--red)}.c-amb{background:var(--amber-l);color:var(--amber)}.c-grn{background:var(--green-l);color:var(--green)}.c-gry{background:#eef1f6;color:var(--mute)}
+.tools{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.tools input,.tools select{border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:12.5px;background:#fff}.tools input{width:240px}
+.tools .cnt{margin-left:auto;color:var(--mute);font-size:12px}
+.tw{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:12.5px}th{position:sticky;top:0;background:#f0f3f8;color:var(--navy);text-align:right;padding:8px 10px;font-weight:600;cursor:pointer;white-space:nowrap;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child,th.l,td.l{text-align:left}td{padding:7px 10px;border-bottom:1px solid #f0f2f6;text-align:right;white-space:nowrap}
+tbody tr:hover{background:#f8fafc}td.neg{color:var(--red);font-weight:700}
+svg text{font-family:inherit}.load{padding:80px;text-align:center;color:var(--mute);font-size:14px}
+.spin{width:34px;height:34px;border:3px solid var(--line);border-top-color:var(--teal);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 14px}@keyframes s{to{transform:rotate(360deg)}}
+.foot{color:var(--mute);font-size:11px;text-align:right;margin-top:10px}
+</style></head><body>
+<header><a id="tsplHomeBtn" href="main_ho.html" style="background:#c8962e;color:#0b2545;text-decoration:none;font-weight:700;border-radius:8px;padding:8px 14px;font-size:13px">&#8962; Home</a><div><h1>Needle Stock &amp; Track</h1><div class="sub">TSPL · CMD and unit needle stock · live from the Needle Stock Data 2.0 sheets</div></div>
+<div class="sp"></div><select id="mon" class="pill"></select><span id="upd" class="pill">Loading…</span><button class="pill" onclick="load(true)">⟳ Refresh</button></header>
+<div class="tabs" id="tabs"></div>
+<main id="app"><div class="load"><div class="spin"></div>Loading live needle data…</div></main>
+<script src="security.js?v=20261122c"></script>
+<script src="js/tspl-config.js?v=20261122e"></script>
+<script>
+var D=null,UNIT='ALL',MON='',SORT={k:'st',d:1};
+var UNITS=['FIPL','TS2','TS4','TS9','AP2'];
+var MN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function f(n){n=Math.round(n||0);return n.toLocaleString('en-IN')}
+function ml(k){var p=k.split('-');return MN[+p[1]-1]+'-'+p[0].slice(2)}
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function call(fresh,cb){var name='__nd'+Date.now()+Math.floor(Math.random()*1e4),sc=document.createElement('script'),done=false;
+ window[name]=function(r){done=true;window[name]=function(){};cb(r)};
+ sc.src=(window.TSPL_MONITOR_URL||'')+'?action=needle_dash'+(fresh?'&fresh=1':'')+'&callback='+name+'&_='+Date.now();
+ sc.onerror=function(){if(!done){done=true;cb(null)}};setTimeout(function(){if(!done){done=true;window[name]=function(){};cb(null)}},120000);document.body.appendChild(sc)}
+function load(force,tries){tries=tries||0;document.getElementById('upd').textContent=tries?'Still loading…':'Loading…';
+ call(!!force,function(r){
+  if(!r||!r.units){if(tries<2){setTimeout(function(){load(force,tries+1)},3000);return}
+   if(!D)document.getElementById('app').innerHTML='<div class="load">Could not load data'+(r&&r.error?': '+esc(r.error):'')+'. Please press Refresh in a minute.</div>';return}
+  D=r;init();if(!force&&Date.now()-(D.builtAt||0)>6e5){document.getElementById('upd').textContent='Updated '+D.generated+' · refreshing…';call(true,function(r2){if(r2&&r2.units){D=r2;init()}})}})}
+function allMonths(){var s={};Object.keys(D.units).forEach(function(u){Object.keys(D.units[u].months).forEach(function(m){s[m]=1})});return Object.keys(s).sort()}
+function init(){var ms=allMonths();var cur=ms[ms.length-1];if(!MON||ms.indexOf(MON)<0)MON=cur;
+ document.getElementById('mon').innerHTML=ms.slice().reverse().map(function(m){return '<option value="'+m+'"'+(m===MON?' selected':'')+'>'+ml(m)+(m===cur?' (current)':'')+'</option>'}).join('');
+ document.getElementById('mon').onchange=function(){MON=this.value;render()};
+ document.getElementById('upd').textContent='Updated '+D.generated;
+ var tabs=['ALL','CMD'].concat(UNITS);document.getElementById('tabs').innerHTML=tabs.map(function(t){return '<div class="tab'+(t===UNIT?' on':'')+'" data-u="'+t+'">'+(t==='ALL'?'Overview':t)+'</div>'}).join('');
+ [].forEach.call(document.querySelectorAll('.tab'),function(el){el.onclick=function(){UNIT=el.dataset.u;SORT={k:'st',d:1};init()}});render()}
+function isCur(){var ms=allMonths();return MON===ms[ms.length-1]}
+function prevMonths(m,n){var p=m.split('-'),y=+p[0],mo=+p[1],r=[];for(var i=0;i<n;i++){mo--;if(mo<1){mo=12;y--}r.push(y+'-'+('0'+mo).slice(-2))}return r}
+/* stock of a unit-type for the selected month: live stock for current month, month close otherwise */
+function stk(T){var r=T.m[MON];if(isCur()&&T.live!==undefined)return T.live;return r?r.c:0}
+function cmdAvg(T){var ps=prevMonths(MON,3),s=0,n=0;ps.forEach(function(m){if(T.m[m]){s+=T.m[m].sc;n++}});return n?s/n:0}
+function unitRows(u){var U=D.units[u]||{types:{}},rows=[];Object.keys(U.types).forEach(function(t){var T=U.types[t],r=T.m[MON]||{};var s=stk(T);
+  var o={t:t,u:u,s:s,o:r.o||0,rl:r.rl||0,il:r.il||0,sc:r.sc||0,rc:r.rc||0,np:r.np||0,cy:r.cy||0,ncy:r.ncy||0,ai:r.ai||0};
+  if(u==='CMD'){o.avg=cmdAvg(T);o.cov=o.avg>0?s/o.avg:null;
+    o.st=s<0?0:(o.avg>0&&o.cov<1?1:(o.avg>0&&o.cov<2?2:(o.avg>0?4:5)));}
+  else{o.cov=o.np>0?s/o.np:null;o.st=s<0?0:(o.np>0&&s<o.np?1:(o.np>0&&s<o.np*1.25?2:(o.np>0?4:5)));}
+  if(o.s||o.o||o.rl||o.il||o.sc||o.rc||o.np)rows.push(o)});return rows}
+var ST={0:['Check stock','c-red'],1:['Short','c-red'],2:['Low','c-amb'],4:['OK','c-grn'],5:['No plan','c-gry']};
+var STC={0:['Check stock','c-red'],1:['Reorder','c-red'],2:['Watch','c-amb'],4:['OK','c-grn'],5:['No movement','c-gry']};
+function chip(o){var m=(o.u==='CMD'?STC:ST)[o.st];return '<span class="chip '+m[1]+'">'+m[0]+'</span>'}
+function render(){if(UNIT==='ALL')renderAll();else renderUnit(UNIT)}
+function kpi(l,v,s,c){return '<div class="kpi '+(c||'')+'"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="s">'+(s||'')+'</div></div>'}
+function daily(units,keys){var days={};units.forEach(function(u){var dd=(D.units[u]||{}).daily||{};Object.keys(dd).forEach(function(d){var x=days[d]||(days[d]={a:0,b:0});keys.forEach(function(k,i){x[i?'b':'a']+=dd[d][k]||0})})});
+ return Object.keys(days).sort().slice(-30).map(function(d){return{d:d,a:days[d].a,b:days[d].b}})}
+function chart(pts,la,lb,ca,cb){if(!pts.length)return '<div class="m" style="color:#6b7689">No daily movement in the last 30 days.</div>';
+ var W=640,H=210,pl=40,pb=24,pt=10,mx=1;pts.forEach(function(p){mx=Math.max(mx,p.a,p.b)});var step=Math.pow(10,Math.floor(Math.log10(mx)));mx=Math.ceil(mx/step)*step;
+ var bw=(W-pl-10)/pts.length,g='';for(var i=0;i<=4;i++){var y=pt+(H-pt-pb)*i/4;g+='<line x1="'+pl+'" x2="'+(W-6)+'" y1="'+y+'" y2="'+y+'" stroke="#eef1f6"/><text x="'+(pl-6)+'" y="'+(y+4)+'" font-size="10" fill="#6b7689" text-anchor="end">'+f(mx*(4-i)/4)+'</text>'}
+ pts.forEach(function(p,i){var x=pl+i*bw,h1=(H-pt-pb)*p.a/mx,h2=(H-pt-pb)*p.b/mx,w=Math.max(2,bw/2-2);
+  g+='<rect x="'+(x+1)+'" y="'+(H-pb-h1)+'" width="'+w+'" height="'+h1+'" fill="'+ca+'" rx="1.5"><title>'+p.d+' · '+la+': '+f(p.a)+'</title></rect>';
+  g+='<rect x="'+(x+1+w+1)+'" y="'+(H-pb-h2)+'" width="'+w+'" height="'+h2+'" fill="'+cb+'" rx="1.5"><title>'+p.d+' · '+lb+': '+f(p.b)+'</title></rect>';
+  if(i%Math.ceil(pts.length/8)===0)g+='<text x="'+(x+bw/2)+'" y="'+(H-6)+'" font-size="10" fill="#6b7689" text-anchor="middle">'+p.d.slice(8)+'-'+MN[+p.d.slice(5,7)-1]+'</text>'});
+ return '<svg viewBox="0 0 '+W+' '+H+'" width="100%">'+g+'</svg><div class="legend"><span><i style="background:'+ca+'"></i>'+la+'</span><span><i style="background:'+cb+'"></i>'+lb+'</span></div>'}
+function trend(u){var ms=allMonths().filter(function(m){return m<=MON}).slice(-6);var us=u?[u]:UNITS;
+ var pts=ms.map(function(m){var s={m:m,c:0,rl:0};us.forEach(function(x){var M=(D.units[x]||{months:{}}).months[m];if(M){s.c+=M.c;s.rl+=x==='CMD'?M.sc:M.rl}});return s}).filter(function(p){return p.c!==0});
+ var W=640,H=190,pl=46,pb=24,pt=12,mx=1;pts.forEach(function(p){mx=Math.max(mx,p.c)});mx*=1.1;var bw=(W-pl-10)/Math.max(1,pts.length),g='';
+ pts.forEach(function(p,i){var x=pl+i*bw+bw*.2,h=(H-pt-pb)*p.c/mx;g+='<rect x="'+x+'" y="'+(H-pb-h)+'" width="'+(bw*.6)+'" height="'+h+'" fill="#13315c" rx="3"><title>'+ml(p.m)+' closing '+f(p.c)+'</title></rect><text x="'+(x+bw*.3)+'" y="'+(H-pb-h-4)+'" font-size="10.5" fill="#0b2545" text-anchor="middle" font-weight="600">'+f(p.c)+'</text><text x="'+(x+bw*.3)+'" y="'+(H-6)+'" font-size="10.5" fill="#6b7689" text-anchor="middle">'+ml(p.m)+'</text>'});
+ return '<svg viewBox="0 0 '+W+' '+H+'" width="100%">'+g+'</svg>'}
+function renderAll(){var cmdR=unitRows('CMD');var tot={s:0,np:0,rl:0,rc:0,short:0,neg:0},per={};
+ UNITS.forEach(function(u){var rs=unitRows(u),p={s:0,np:0,rl:0,rc:0,short:0,neg:0};rs.forEach(function(o){p.s+=o.s;p.np+=o.np;p.rl+=o.rl;p.rc+=o.rc;if(o.st===1)p.short++;if(o.st===0)p.neg++});per[u]=p;['s','np','rl','rc','short','neg'].forEach(function(k){tot[k]+=p[k]})});
+ var cmdS=0,cmdIss=0,cmdIn=0,reo=0;cmdR.forEach(function(o){cmdS+=o.s;cmdIss+=o.sc;cmdIn+=o.rc;if(o.st===1)reo++});
+ var h='<div class="kpis">'+kpi('Total needle stock',f(tot.s+cmdS),'Units '+f(tot.s)+' · CMD '+f(cmdS),'navy')+kpi('CMD stock',f(cmdS),cmdR.length+' needle types')+kpi('CMD issued to units',f(cmdIss),ml(MON)+(isCur()?' to date':''),'gold')+kpi('CMD inward',f(cmdIn),ml(MON)+(isCur()?' to date':''))+kpi('Received from line',f(tot.rl),'Units · '+ml(MON))+kpi('Next month plan',f(tot.np),'All units')+kpi('Needle types short',f(tot.short),'Unit stock below plan','warn')+kpi('CMD reorder',f(reo),'Under 1 month cover','warn')+'</div>';
+ var mxs=1;UNITS.forEach(function(u){mxs=Math.max(mxs,per[u].s,per[u].np)});
+ h+='<div class="grid"><div class="card"><h3>Unit stock vs next month plan<span class="hint">'+(isCur()?'live stock':'month close')+'</span></h3>'+UNITS.map(function(u){var p=per[u],cov=p.np>0?(p.s/p.np):null;
+   return '<div class="bar-row"><div class="n">'+u+'</div><div class="track"><div class="fill" style="width:'+(100*Math.max(0,p.s)/mxs)+'%;background:'+(cov!==null&&cov<1?'#c0392b':'#0f9d8a')+'"></div>'+(p.np>0?'<div class="plan" style="left:'+(100*p.np/mxs)+'%"></div>':'')+'</div><div class="t"><b style="color:#1c2433">'+f(p.s)+'</b> / '+(p.np>0?f(p.np)+' · '+cov.toFixed(1)+'x':'plan not entered')+'</div></div>'}).join('')+
+   '<div class="legend"><span><i style="background:#0f9d8a"></i>Stock</span><span><i style="background:#c8962e"></i>Next month plan</span><span><i style="background:#c0392b"></i>Below plan</span></div></div>';
+ h+='<div class="card"><h3>Attention needed<span class="hint">top items</span></h3><div class="alerts">'+alerts(cmdR,UNITS)+'</div></div></div>';
+ h+='<div class="grid"><div class="card"><h3>Daily movement · last 30 days</h3>'+chart(daily(['CMD'],['sc','rc']),'CMD issued to units','CMD inward','#13315c','#c8962e')+'</div><div class="card"><h3>Units closing stock · 6 months</h3>'+trend()+'</div></div>';
+ h+=tableCard(allRows(cmdR));document.getElementById('app').innerHTML=h+foot();bindTable()}
+function allRows(cmdR){var m={};cmdR.forEach(function(o){m[o.t]={t:o.t,cmd:o.s,avg:o.avg,us:0,np:0,rl:0,sc:o.sc}});
+ UNITS.forEach(function(u){unitRows(u).forEach(function(o){var x=m[o.t]||(m[o.t]={t:o.t,cmd:0,avg:0,us:0,np:0,rl:0,sc:0});x.us+=o.s;x.np+=o.np;x.rl+=o.rl;x[u]=o.s})});
+ return Object.keys(m).map(function(k){var x=m[k];x.tot=x.cmd+x.us;var need=x.np-x.us;x.gap=need>0?need:0;
+  x.st=(x.cmd<0||x.us<0)?0:(x.gap>0&&x.cmd<x.gap?1:(x.gap>0?2:(x.np>0||x.avg>0?4:5)));x.u='ALL';return x})}
+function alerts(cmdR,units){var a=[];
+ cmdR.forEach(function(o){if(o.st===0)a.push([0,'#c0392b','CMD · '+o.t,'Stock shows '+f(o.s)+' — please check entries']);else if(o.st===1)a.push([1,'#c0392b','CMD · '+o.t,'Stock '+f(o.s)+' covers '+(o.cov*30).toFixed(0)+' days (avg issue '+f(o.avg)+'/month)'])});
+ units.forEach(function(u){unitRows(u).forEach(function(o){if(o.st===0)a.push([0,'#c0392b',u+' · '+o.t,'Stock shows '+f(o.s)+' — please check entries']);else if(o.st===1)a.push([2,'#d68910',u+' · '+o.t,'Stock '+f(o.s)+' vs plan '+f(o.np)+' · short '+f(o.np-o.s)])})});
+ a.sort(function(x,y){return x[0]-y[0]});if(!a.length)return '<div class="m" style="color:#1e8449">All clear — no shortages for '+ml(MON)+'.</div>';
+ return a.slice(0,40).map(function(x){return '<div class="al"><span class="dot" style="background:'+x[1]+'"></span><div><b>'+esc(x[2])+'</b><div class="m">'+x[3]+'</div></div></div>'}).join('')+(a.length>40?'<div class="m" style="padding-top:8px">+'+(a.length-40)+' more in the table below</div>':'')}
+function renderUnit(u){var rs=unitRows(u),U=D.units[u]||{},M=(U.months||{})[MON]||{};var s=0,sh=0,ng=0;rs.forEach(function(o){s+=o.s;if(o.st===1)sh++;if(o.st===0)ng++});var h='<div class="kpis">';
+ if(u==='CMD'){h+=kpi('CMD stock',f(s),rs.length+' needle types','navy')+kpi('Opening stock',f(M.o),ml(MON))+kpi('Issued to units',f(M.sc),ml(MON)+(isCur()?' to date':''),'gold')+kpi('Inward',f(M.rc),ml(MON)+(isCur()?' to date':''))+kpi('Reorder',f(sh),'Under 1 month cover','warn')+kpi('Check stock',f(ng),'Negative balances','warn')}
+ else{h+=kpi(u+' stock',f(s),rs.length+' needle types','navy')+kpi('Opening stock',f(M.o),ml(MON))+kpi('Received from line',f(M.rl),ml(MON)+(isCur()?' to date':''),'gold')+kpi('Received from CMD',f(M.rc),ml(MON))+kpi('Sent to CMD',f(M.sc),ml(MON))+kpi('Next month plan',f(M.np),M.np?'':'not entered yet')+kpi('Short types',f(sh),'Stock below plan','warn')+kpi('Check stock',f(ng),'Negative balances','warn')}
+ h+='</div><div class="grid"><div class="card"><h3>Daily movement · last 30 days<span class="hint">'+(U.lastDate?'last entry '+U.lastDate:'')+'</span></h3>'+(u==='CMD'?chart(daily(['CMD'],['sc','rc']),'Issued to units','Inward','#13315c','#c8962e'):chart(daily([u],['rl','rc']),'Received from line','Received from CMD','#0f9d8a','#c8962e'))+'</div>';
+ h+='<div class="card"><h3>Closing stock · 6 months</h3>'+trend(u)+'</div></div>';
+ h+='<div class="card" style="margin-bottom:14px"><h3>Attention needed<span class="hint">'+(u==='CMD'?'cover below 1 month or negative stock':'stock below next month plan or negative stock')+'</span></h3><div class="alerts" style="max-height:210px">'+(u==='CMD'?alerts(rs,[]):alerts([],[u]))+'</div></div>';
+ h+=tableCard(rs);document.getElementById('app').innerHTML=h+foot();bindTable()}
+var ROWS=[];
+function cols(){if(UNIT==='ALL')return[['t','Needle type','l'],['cmd','CMD stock'],['FIPL','FIPL'],['TS2','TS2'],['TS4','TS4'],['TS9','TS9'],['AP2','AP2'],['us','Units total'],['np','Next month plan'],['gap','Units short'],['sc','CMD issued'],['st','Status','l']];
+ if(UNIT==='CMD')return[['t','Needle type','l'],['o','Opening'],['rc','Inward'],['sc','Issued to units'],['s',isCur()?'Live stock':'Closing'],['avg','Avg issue / month'],['cov','Cover (months)'],['st','Status','l']];
+ return[['t','Needle type','l'],['o','Opening'],['rl','Rec from line'],['il','Issued to line'],['rc','Rec from CMD'],['sc','Sent to CMD'],['s',isCur()?'Live stock':'Closing'],['np','Next month plan'],['ncy','Next month cycle change'],['ai','Actual issue from CMD'],['cov','Cover vs plan'],['st','Status','l']]}
+function tableCard(rows){ROWS=rows;return '<div class="card"><h3>Needle type details · '+(UNIT==='ALL'?'all units':UNIT)+' · '+ml(MON)+'</h3><div class="tools"><input id="q" placeholder="Search needle type (e.g. DBX1-14)"><select id="sf"><option value="">All status</option><option value="attn">Needs attention</option><option value="0">Check stock</option><option value="1">'+(UNIT==='CMD'?'Reorder':'Short')+'</option><option value="2">'+(UNIT==='CMD'?'Watch':'Low')+'</option><option value="4">OK</option></select><span class="cnt" id="cnt"></span></div><div class="tw"><table><thead><tr id="th"></tr></thead><tbody id="tb"></tbody></table></div></div>'}
+function bindTable(){document.getElementById('q').oninput=drawT;document.getElementById('sf').onchange=drawT;drawT()}
+function drawT(){var c=cols(),q=document.getElementById('q').value.toLowerCase().trim(),sf=document.getElementById('sf').value;
+ var rs=ROWS.filter(function(o){if(q&&o.t.toLowerCase().indexOf(q)<0)return false;if(sf==='attn')return o.st<=2;if(sf!=='')return String(o.st)===sf;return true});
+ rs.sort(function(a,b){var k=SORT.k,x=a[k],y=b[k];if(k==='t')return SORT.d*String(x).localeCompare(String(y));x=x==null?1e12:x;y=y==null?1e12:y;if(x===y)return String(a.t).localeCompare(String(b.t));return SORT.d*(x-y)});
+ document.getElementById('th').innerHTML=c.map(function(x){return '<th class="'+(x[2]||'')+'" data-k="'+x[0]+'">'+x[1]+(SORT.k===x[0]?(SORT.d>0?' ▲':' ▼'):'')+'</th>'}).join('');
+ [].forEach.call(document.querySelectorAll('#th th'),function(th){th.onclick=function(){var k=th.dataset.k;SORT=SORT.k===k?{k:k,d:-SORT.d}:{k:k,d:(k==='t'||k==='st')?1:-1};drawT()}});
+ document.getElementById('tb').innerHTML=rs.map(function(o){return '<tr>'+c.map(function(x){var k=x[0],v=o[k];
+   if(k==='t')return '<td class="l"><b>'+esc(v)+'</b></td>';if(k==='st')return '<td class="l">'+chip(o)+'</td>';
+   if(k==='cov')return '<td>'+(v==null?'–':v.toFixed(1)+(UNIT==='CMD'?'':'x'))+'</td>';
+   if(v===undefined)return '<td style="color:#c3cad6">–</td>';return '<td class="'+(v<0?'neg':'')+'">'+(v===0?'<span style="color:#c3cad6">0</span>':f(v))+'</td>'}).join('')+'</tr>'}).join('')||'<tr><td colspan="'+c.length+'" class="l" style="color:#6b7689;padding:20px">No needle types match.</td></tr>';
+ document.getElementById('cnt').textContent=rs.length+' of '+ROWS.length+' needle types'}
+function foot(){return '<div class="foot">'+(D.errors.length?'<span style="color:#c0392b">Some sources could not be read: '+esc(D.errors.join('; '))+'</span> · ':'')+'Source: 02_0x Needle_Stock Data 2.0 sheets (Month_Stock, Live_Stock) · refreshes every 10 minutes</div>'}
+(function(){var h=document.getElementById('tsplHomeBtn'),d='main_ho.html';try{var u=JSON.parse(sessionStorage.getItem('userLoggedIn')||'{}');if(window.top!==window.self)d='home.html';else if(u.redirect)d=u.redirect}catch(e){}h.href=d})();
+load(false);
+</script><script src="js/help.js?v=20261121m" defer></script>
+</body></html>
