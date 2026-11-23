@@ -180,7 +180,7 @@
 },
 {
 "name": "FIPL | Needle Plan",
-"url": "https://lookerstudio.google.com/embed/reporting/14ca7b86-b64b-408f-b8ef-3c1145a3ee34/page/45GEF",
+"url": "nplan.html?unit=FIPL",
 "group": "Needle Inventory",
 "portals": [
 "HO",
@@ -201,7 +201,7 @@
 },
 {
 "name": "TS2 | Needle Plan",
-"url": "https://lookerstudio.google.com/embed/reporting/c6c6e171-1616-459a-b4bc-e052134cbf6d/page/45GEF",
+"url": "nplan.html?unit=TS2",
 "group": "Needle Inventory",
 "portals": [
 "HO",
@@ -222,7 +222,7 @@
 },
 {
 "name": "TS4 | Needle Plan",
-"url": "https://lookerstudio.google.com/embed/reporting/068ff5c9-f91f-4943-a03c-54a27fe54791/page/45GEF",
+"url": "nplan.html?unit=TS4",
 "group": "Needle Inventory",
 "portals": [
 "HO",
@@ -244,7 +244,7 @@
 },
 {
 "name": "TS9 | Needle Plan",
-"url": "https://lookerstudio.google.com/embed/reporting/f792c7a8-3038-4b8e-8889-7ccad0f05582/page/45GEF",
+"url": "nplan.html?unit=TS9",
 "group": "Needle Inventory",
 "portals": [
 "HO",
@@ -265,7 +265,7 @@
 },
 {
 "name": "AP2 | Needle Plan",
-"url": "https://lookerstudio.google.com/embed/reporting/9772347c-cdda-4271-ae88-e0c8d976d01b/page/45GEF",
+"url": "nplan.html?unit=AP2",
 "group": "Needle Inventory",
 "portals": [
 "HO",
