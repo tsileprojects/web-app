@@ -151,8 +151,8 @@ tr.fail td{background:#FEF2F2}
     var scope = (F.unit || 'All units') + ' · ' + (F.day === 'all' ? 'last 7 days' : dl(F.day)) + (F.reason === 'noCycle' ? ' · excl. cycle exchange' : F.reason ? ' · ' + F.reason : '');
     if (!rows.length) { document.getElementById('app').innerHTML = '<div class="card"><div class="load">No needle entries for ' + esc(scope) + '.</div></div>'; return; }
     var tr = top(byR, 6), mc = top(byMc, 1)[0];
-    var h = '<div class="kpis">' + kpi('Entries', n0(rows.length), esc(scope), '', '#1D4ED8') + kpi('Needles received', n0(rec), 'old / broken needles taken back', 'a', '#B45309') +
-      kpi('Needles issued', n0(iss), 'new needles given', 'g', '#15803D') + kpi('Broken', n0(byR['Broken'] || 0), 'needles', 'r', '#B91C1C') +
+    var h = '<div class="kpis">' + kpi('Entries', n0(rows.length), esc(scope), '', '#1D4ED8') + kpi('Needles received', n0(rec), 'Rec Needle column', 'a', '#B45309') +
+      kpi('Needles issued', n0(iss), 'Isu Needle column', 'g', '#15803D') + kpi('Broken', n0(byR['Broken'] || 0), 'needles', 'r', '#B91C1C') +
       kpi('Point out', n0(byR['Point out'] || 0), 'needles', 'a', '#B45309') + kpi('Part miss', n0(byR['Part Miss'] || 0), 'needles', (byR['Part Miss'] ? 'r' : 'g'), '#7C3AED') +
       kpi('Top operation', esc((top(byOp, 1)[0] || ['–'])[0]), (top(byOp, 1)[0] ? top(byOp, 1)[0][1] + ' entries' : ''), '', '#0B2545') +
       kpi('Most entries – machine', esc(mc ? mc[0] : '–'), mc ? mc[1] + ' entries' : '', '', '#0891B2') + kpi('Units', Object.keys(byU).length, top(byU, 3).map(function (x) { return x[0] + ' ' + x[1]; }).join(' · '), '', '#64748B') + '</div>';
