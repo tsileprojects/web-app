@@ -41,6 +41,15 @@ function fsadBuild_() {
   // report level: D E F G H I K L M R S V AN AU AV
   const rows = fsadCsv_("select D,E,F,G,H,I,K,L,M,R,S,V,AN,AU,AV where AW = 1 and D >= date '" + FSAD.from + "'");
   const M = {}, D = {}, A = {}, det = [], poSeen = {};
+  // Style No. (column L) mixes text and numbers, so the gviz query drops some values: read it straight from the sheet
+  const styleOf = {};
+  try {
+    const sh = SpreadsheetApp.openById(FSAD.id).getSheetByName(FSAD.sheet), last = sh.getLastRow();
+    if (last > 1) sh.getRange(2, 4, last - 1, 9).getDisplayValues().forEach(v => {   // D..L
+      const st = String(v[8] || '').trim(); if (!st) return;
+      styleOf[String(v[1]).trim() + '|' + String(v[2]).trim().toUpperCase().replace(/^AP$/, 'AP2')] = st;
+    });
+  } catch (e) {}
   const add = (map, key, r, po) => {
     const o = map[key] || (map[key] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]); // n pass fail offered sample major minor failQty orderQty passQty
     o[0]++; if (r.res === 'PASS') { o[1]++; o[9] += r.off; } else if (r.res === 'FAIL') { o[2]++; o[7] += r.off; }
@@ -56,7 +65,7 @@ function fsadBuild_() {
     if (d >= dayFrom) add(D, d + '|' + unit + '|' + type + '|' + buyer, r, po);
     const aud = String(x[4]).trim() || 'Unknown';
     const ak = d.slice(0, 7) + '|' + unit + '|' + aud, a = A[ak] || (A[ak] = [0, 0, 0, 0]); a[0]++; if (r.res === 'PASS') a[1]++; else if (r.res === 'FAIL') a[2]++; a[3] += r.off;
-    if (d >= detFrom) det.push([d, String(x[1]), unit, '', aud, type, buyer, String(x[7]).trim(), String(x[8]).trim(), r.ord, r.off, r.smp, r.res, r.maj, r.min]);
+    if (d >= detFrom) det.push([d, String(x[1]), unit, '', aud, type, buyer, String(x[7]).trim() || styleOf[String(x[1]).trim() + '|' + unit] || '', String(x[8]).trim(), r.ord, r.off, r.smp, r.res, r.maj, r.min]);
   });
   det.sort((a, b) => a[0] < b[0] ? 1 : a[0] > b[0] ? -1 : (+b[1] || 0) - (+a[1] || 0));
   // defects: month x unit x type x defect type x category
