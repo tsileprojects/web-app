@@ -511,7 +511,7 @@
 },
 {
 "name": "Needle Stock Day & Month",
-"url": "https://script.google.com/macros/s/AKfycbyyLZpXAvvR-hsSUSiKTtCatn5xPdrsa8w5GL8KuX8smeI_l7k55TkEncwKCq6ZWecS/exec",
+"url": "nstock.html?unit=AP2",
 "group": "Needle Inventory",
 "portals": [
 "AP2",
@@ -536,7 +536,7 @@
 },
 {
 "name": "Needle Stock Report",
-"url": "https://script.google.com/macros/s/AKfycbyMSjLjM7-LJhvat-Ir2vopafwZwc6WtfvfyUD__qf9Rgbwg7lZabkv7BAr1fxDrXFQXg/exec",
+"url": "nstock.html?unit=FIPL",
 "group": "Needle Inventory",
 "portals": [
 "FIPL",
@@ -562,7 +562,7 @@
 },
 {
 "name": "Needle Stock Day & Month",
-"url": "https://script.google.com/macros/s/AKfycbz5T4GmdMeuUo8mb2ZBAXkC9DAv67oalfMx6Le3vQsh14MuEvAxFTpvQgh1p8PekcyT/exec",
+"url": "nstock.html?unit=TS2",
 "group": "Needle Inventory",
 "portals": [
 "TS2",
@@ -603,7 +603,7 @@
 },
 {
 "name": "Needle Stock Day & Month",
-"url": "https://script.google.com/macros/s/AKfycbzxr665d-q3WnGYI8k-GnYTIEyKK79rJ1xzPz9G4YQ09jo5qklgcbNYO0m-HcJjsi46/exec",
+"url": "nstock.html?unit=TS4",
 "group": "Needle Inventory",
 "portals": [
 "TS4",
@@ -636,7 +636,7 @@
 },
 {
 "name": "Needle Stock Day & Month",
-"url": "https://script.google.com/macros/s/AKfycbxj2pja7CCU4DjYMMEqQDX4GF2PLhLohpBrbjU-QN-ikWZbQLN9DUw6S5RSsYfJYUHTYg/exec",
+"url": "nstock.html?unit=TS9",
 "group": "Needle Inventory",
 "portals": [
 "TS9",

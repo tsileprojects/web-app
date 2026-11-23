@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Needle Stock Day & Month</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--g:#15803D;--a:#B45309;--r:#B91C1C;--b:#1D4ED8;--soft:#F8FAFC}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff}
+.hw{max-width:1440px;margin:0 auto;padding:12px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.hw h1{margin:0;font-size:18px;font-weight:700}.hw h1 span{color:var(--gold)}.hw .sub{font-size:12px;color:#CBD5E1;margin-top:2px}
+.hb{height:38px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.bar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:4}
+.bw{max-width:1440px;margin:0 auto;padding:10px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:#EEF2F7;padding:4px;border-radius:10px}
+.seg button{height:36px;min-width:58px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#334155;font:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.seg button.on{background:var(--navy);color:#fff}.seg button small{font-size:11px;opacity:.75}
+select{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{height:32px;padding:0 11px;border-radius:999px;border:1px solid #CBD5E1;background:#fff;color:#334155;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.chip.on{background:#E6EEFB;border-color:var(--b);color:#1E3A8A}
+.lbl{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+main{max-width:1440px;margin:0 auto;padding:18px 22px 40px;display:flex;flex-direction:column;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(min-width:1300px){.kpis{grid-template-columns:repeat(9,1fr)}.kpis .kpi .v{font-size:22px}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-top:3px solid var(--c,#0B2545)}
+.kpi .l{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase}
+.kpi .v{font-size:26px;font-weight:700;margin:6px 0 2px}.kpi .n{font-size:12.5px;color:var(--mute)}
+.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}.m{color:#64748B}
+.grid{display:flex;flex-wrap:wrap;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--mute);font-size:12px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:700;color:var(--mute);text-align:right;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;cursor:pointer}
+td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
+tr.fail td{background:#FEF2F2}
+.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}.tag.g{background:#DCFCE7;color:#166534}.tag.r{background:#FEE2E2;color:#991B1B}
+.pbar{display:inline-block;width:70px;height:6px;background:var(--line);border-radius:999px;vertical-align:middle;margin-left:8px;overflow:hidden}.pbar i{display:block;height:100%}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-top:6px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.def{display:grid;grid-template-columns:minmax(120px,190px) 1fr 60px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+.def .t{height:14px;background:#EEF2F7;border-radius:4px;overflow:hidden;display:flex}.def .t i{display:block;height:100%}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.tools input{height:38px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;width:240px}
+.load{padding:60px;text-align:center;color:var(--mute)}.spin{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 12px}@keyframes s{to{transform:rotate(360deg)}}
+.note{font-size:12px;color:var(--mute)}
+.din{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 8px;font:inherit;background:#fff;color:var(--ink)}
+@media(max-width:700px){main,.bw,.hw{padding-left:12px;padding-right:12px}}
+.chipR{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.chipR.A{background:#DCFCE7;color:#166534}.chipR.N{background:#FEE2E2;color:#991B1B}.chipR.U{background:#FEF3C7;color:#92400E}.chipR.X{background:#EEF2F7;color:#475569}
+.eb{display:inline-block;position:relative;width:90px;height:8px;background:#EEF2F7;border-radius:999px;vertical-align:middle;margin-left:8px}.eb i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}.eb b{position:absolute;top:-3px;width:2px;height:14px;background:#0F172A}
+.spark{vertical-align:middle}
+
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,.12);padding:4px;border-radius:10px}
+.tabs button{height:36px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:#E2E8F0;font:inherit;font-weight:700;cursor:pointer}
+.tabs button.on{background:#fff;color:var(--navy)}
+.hbars{display:flex;align-items:flex-end;gap:10px;height:190px;padding:8px 4px 0;border-bottom:1px solid var(--line)}
+.hbars .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.hbars .pair{display:flex;gap:3px;align-items:flex-end;height:150px;width:100%;justify-content:center}
+.hbars .pair i{display:block;width:42%;max-width:26px;border-radius:4px 4px 0 0;min-height:1px;transition:height .5s}
+.hbars .v{font-size:11px;color:var(--mute);margin-bottom:3px;white-space:nowrap}
+.hlab{display:flex;gap:10px;padding:4px}.hlab span{flex:1;text-align:center;font-size:11.5px;color:var(--mute);font-weight:600}
+.mini{display:inline-flex;gap:2px;align-items:flex-end;height:22px;vertical-align:middle}.mini i{display:block;width:6px;background:#93C5FD;border-radius:1px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:0}
+.dot.g{background:#16A34A}.dot.a{background:#F59E0B}.dot.r{background:#DC2626}.dot.m{background:#CBD5E1}
+.cats{display:flex;height:16px;border-radius:999px;overflow:hidden;background:#EEF2F7;margin:6px 0 10px}.cats i{display:block;height:100%}
+.trend{width:100%;height:180px}
+.low td{background:#FEF2F2}.num0{color:#94A3B8}
+.trendb{display:flex;align-items:flex-end;gap:4px;height:150px;border-bottom:1px solid var(--line);padding-top:16px}
+.trendb .c{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0;cursor:pointer}
+.trendb .c i{display:block;width:70%;max-width:22px;background:#1D4ED8;border-radius:3px 3px 0 0;min-height:1px}
+.trendb .c.on i{background:#C8962E}.trendb .c span{font-size:10px;color:var(--mute);margin-bottom:2px}
+.tlab{display:flex;gap:4px}.tlab span{flex:1;font-size:10px;color:var(--mute);text-align:center;overflow:hidden}
+</style>
+</head>
+<body>
+<header><div class="hw">
+  <div style="display:flex;align-items:center;gap:14px"><a id="tsplHomeBtn" class="hb" href="main_ho.html" title="Back to the main dashboard" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:var(--gold);border-color:var(--gold);color:#0B2545">&#8962; Home</a>
+  <div><h1><span id="uTitle" style="color:#fff"></span> Needle Stock <span>| day &amp; month</span></h1><div class="sub" id="sub">Loading needle stock…</div></div></div>
+  <div style="display:flex;gap:8px;align-items:center"><div class="tabs" id="tabs"><button type="button" data-v="day">Day</button><button type="button" data-v="month">Month</button></div><button class="hb" id="btnRefresh" type="button">Refresh</button></div>
+</div></header>
+<div class="bar"><div class="bw">
+  <div class="seg" id="fac" role="group" aria-label="Unit"></div>
+  <span id="pickDay"><label class="lbl" for="dsel">Date</label> <input type="date" id="dsel" class="din"></span>
+  <span id="pickMon" hidden><label class="lbl" for="msel">Month</label> <select id="msel"></select></span>
+  <input id="q" type="search" placeholder="Search needle type…" style="height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;width:220px">
+  <label style="font-size:13px;color:#334155;display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="mv"> Only types with movement</label>
+</div></div>
+<main id="app"><div class="load"><div class="spin"></div>Loading needle stock…</div></main>
+<script src="security.js"></script>
+<script src="js/tspl-config.js?v=20261122e"></script>
+<script>
+(function () {
+  'use strict';
+  (function () { var h = document.getElementById('tsplHomeBtn'), d = 'main_ho.html';
+    if (window.top !== window.self) d = 'home.html';
+    else if (/\/m\.html/.test(document.referrer) || /[?&]from=app\b/.test(location.search)) d = 'm.html';
+    else { try { var s = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (s.redirect) d = s.redirect; } catch (e) {} }
+    h.href = d; })();
+  /* live: 0 date 1 type 2 open 3 recLine 4 issLine 5 sendCMD 6 recCMD 7 totIss 8 totRec 9 close
+     month: 0 yyyy-MM 1 type 2 open 3 recLine 4 issLine 5 sendCMD 6 recCMD 7 totIss 8 totRec 9 close 10 cycStock 11 nextCyc 12 nextPlan 13 actualIssCMD */
+  var UNITS = ['FIPL', 'TS2', 'TS4', 'TS9', 'AP2'], MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var qu = ((location.search.match(/[?&]unit=([A-Z0-9]+)/i) || [])[1] || '').toUpperCase();
+  var F = { unit: UNITS.indexOf(qu) > -1 ? qu : 'FIPL', view: (location.search.match(/[?&]view=(day|month)/) || [])[1] || 'day', day: '', mon: '', q: '', mv: false };
+  var D = {}, CUR = null;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function n0(v) { return Math.round(v || 0).toLocaleString('en-IN'); }
+  function nc(v, cls) { return '<td class="' + (v ? (cls || '') : 'num0') + '">' + n0(v) + '</td>'; }
+  function dl(d) { return d.slice(8) + '-' + MN[+d.slice(5, 7) - 1]; }
+  function ml(m) { return MN[+m.slice(5, 7) - 1] + '-' + m.slice(0, 4); }
+  function tname(t) { var p = String(t).split('|'); return esc(p[0]) + (p[1] ? ' <small class="note">Nm ' + esc(p[1]) + '</small>' : ''); }
+  function jsonp(params, cb, ms) {
+    var name = '__nsd' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 90000);
+    document.body.appendChild(s);
+  }
+  function kpi(l, v, n, c, col) { return '<div class="kpi" style="--c:' + (col || '#0B2545') + '"><div class="l">' + l + '</div><div class="v ' + (c || '') + '">' + v + '</div><div class="n">' + n + '</div></div>'; }
+  function match(t) { return !F.q || String(t).toLowerCase().indexOf(F.q) > -1; }
+  function bar() {
+    document.getElementById('fac').innerHTML = UNITS.map(function (u) { return '<button type="button" data-u="' + u + '" class="' + (F.unit === u ? 'on' : '') + '">' + u + '</button>'; }).join('');
+    document.getElementById('uTitle').textContent = F.unit;
+    [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === F.view); });
+    document.getElementById('pickDay').hidden = F.view !== 'day'; document.getElementById('pickMon').hidden = F.view !== 'month';
+    if (!CUR) return;
+    var ds = {}; CUR.live.forEach(function (r) { ds[r[0]] = 1; }); var dk = Object.keys(ds).sort();
+    var di = document.getElementById('dsel'); if (dk.length) { di.min = dk[0]; di.max = dk[dk.length - 1]; } if (!F.day || !ds[F.day]) F.day = CUR.latest || dk[dk.length - 1] || ''; di.value = F.day;
+    var mm = {}; CUR.month.forEach(function (r) { mm[r[0]] = 1; }); var mk = Object.keys(mm).sort().reverse(); if (!F.mon || !mm[F.mon]) F.mon = mk[0] || '';
+    document.getElementById('msel').innerHTML = mk.map(function (m) { return '<option value="' + m + '"' + (m === F.mon ? ' selected' : '') + '>' + ml(m) + '</option>'; }).join('');
+  }
+  function dayView() {
+    var all = CUR.live.filter(function (r) { return r[0] === F.day; });
+    if (!all.length) return '<div class="card"><div class="load">No stock rows for ' + esc(F.day ? dl(F.day) : 'this date') + '.</div></div>';
+    var rows = all.filter(function (r) { return match(r[1]) && (!F.mv || r[3] || r[4] || r[5] || r[6]); }), t = [0,0,0,0,0,0,0,0], low = 0;
+    all.forEach(function (r) { for (var i = 0; i < 8; i++) t[i] += r[2 + i]; if (r[9] <= 0) low++; });
+    var h = '<div class="kpis">' + kpi('Needle types', all.length, 'in stock list', '', '#1D4ED8') + kpi('Opening stock', n0(t[0]), dl(F.day), '', '#0B2545') +
+      kpi('Received from line', n0(t[1]), 'broken / old needles', 'a', '#B45309') + kpi('Issued to line', n0(t[2]), 'new needles given', 'g', '#15803D') +
+      kpi('Sent to CMD', n0(t[3]), '', '', '#0891B2') + kpi('Received from CMD', n0(t[4]), '', '', '#7C3AED') +
+      kpi('Total issues', n0(t[5]), '', '', '#64748B') + kpi('Closing stock', n0(t[7]), 'end of day', '', '#0B2545') + kpi('Zero / negative stock', low, 'types at 0 or below', low ? 'r' : 'g', '#B91C1C') + '</div>';
+    var by = {}; CUR.live.forEach(function (r) { var o = by[r[0]] = by[r[0]] || [0, 0]; o[0] += r[4]; o[1] += r[3]; });
+    var dk = Object.keys(by).sort().slice(-31), mx = 1; dk.forEach(function (d) { mx = Math.max(mx, by[d][0]); });
+    h += '<section class="card"><h2>Needles issued to line per day <small>click a bar to open that day</small></h2><div class="trendb">' + dk.map(function (d) { return '<div class="c' + (d === F.day ? ' on' : '') + '" data-day="' + d + '" title="' + dl(d) + ': issued ' + by[d][0] + ', received ' + by[d][1] + '"><span>' + (by[d][0] || '') + '</span><i style="height:' + (by[d][0] / mx * 100) + '%"></i></div>'; }).join('') + '</div><div class="tlab">' + dk.map(function (d) { return '<span>' + d.slice(8) + '</span>'; }).join('') + '</div></section>';
+    rows.sort(function (a, b) { return (b[3] + b[4] + b[5] + b[6]) - (a[3] + a[4] + a[5] + a[6]) || (a[1] < b[1] ? -1 : 1); });
+    h += '<section class="card"><h2>Needle-wise stock <small>' + esc(F.unit) + ' · ' + dl(F.day) + ' · ' + rows.length + ' of ' + all.length + ' types · red = closing stock 0 or below</small></h2><div class="tw"><table><thead><tr><th>Needle type</th><th>Opening</th><th>Rec from line</th><th>Issued to line</th><th>Sent to CMD</th><th>Rec from CMD</th><th>Total issues</th><th>Total receives</th><th>Closing</th></tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr class="' + (r[9] <= 0 ? 'low' : '') + '"><td>' + tname(r[1]) + '</td>' + nc(r[2]) + nc(r[3], 'a') + nc(r[4], 'g') + nc(r[5]) + nc(r[6]) + nc(r[7]) + nc(r[8]) + '<td class="' + (r[9] <= 0 ? 'r' : '') + '"><b>' + n0(r[9]) + '</b></td></tr>'; }).join('') + '</tbody></table></div></section>';
+    return h;
+  }
+  function monthView() {
+    var all = CUR.month.filter(function (r) { return r[0] === F.mon; });
+    if (!all.length) return '<div class="card"><div class="load">No month rows.</div></div>';
+    var rows = all.filter(function (r) { return match(r[1]) && (!F.mv || r[3] || r[4] || r[5] || r[6]); }), t = new Array(12).fill(0), low = 0;
+    all.forEach(function (r) { for (var i = 0; i < 12; i++) t[i] += r[2 + i]; if (r[9] <= 0) low++; });
+    var h = '<div class="kpis">' + kpi('Needle types', all.length, ml(F.mon), '', '#1D4ED8') + kpi('Opening stock', n0(t[0]), 'start of month', '', '#0B2545') +
+      kpi('Received from line', n0(t[1]), '', 'a', '#B45309') + kpi('Issued to line', n0(t[2]), '', 'g', '#15803D') +
+      kpi('Received from CMD', n0(t[4]), 'sent to CMD ' + n0(t[3]), '', '#7C3AED') + kpi('Closing stock', n0(t[7]), '', '', '#0B2545') +
+      kpi('Cycle change stock', n0(t[8]), 'next month cycle change ' + n0(t[9]), '', '#0891B2') + kpi('Next month plan qty', n0(t[10]), '', '', '#C8962E') +
+      kpi('Actual issue from CMD', n0(t[11]), low + ' types at 0 or below', t[11] < 0 ? 'r' : '', '#B91C1C') + '</div>';
+    rows.sort(function (a, b) { return (b[3] + b[4]) - (a[3] + a[4]) || (a[1] < b[1] ? -1 : 1); });
+    h += '<section class="card"><h2>Needle-wise month stock <small>' + esc(F.unit) + ' · ' + ml(F.mon) + ' · ' + rows.length + ' of ' + all.length + ' types</small></h2><div class="tw"><table><thead><tr><th>Needle type</th><th>Opening</th><th>Rec from line</th><th>Issued to line</th><th>Sent to CMD</th><th>Rec from CMD</th><th>Total issues</th><th>Total receives</th><th>Closing</th><th>Cycle change stock</th><th>Next month cycle change</th><th>Next month plan</th><th>Actual issue from CMD</th></tr></thead><tbody>' +
+      rows.map(function (r) { return '<tr class="' + (r[9] <= 0 ? 'low' : '') + '"><td>' + tname(r[1]) + '</td>' + nc(r[2]) + nc(r[3], 'a') + nc(r[4], 'g') + nc(r[5]) + nc(r[6]) + nc(r[7]) + nc(r[8]) + '<td class="' + (r[9] <= 0 ? 'r' : '') + '"><b>' + n0(r[9]) + '</b></td>' + nc(r[10]) + nc(r[11]) + nc(r[12]) + nc(r[13], r[13] < 0 ? 'r' : '') + '</tr>'; }).join('') + '</tbody></table></div></section>';
+    return h;
+  }
+  function render() {
+    bar(); if (!CUR) return;
+    document.getElementById('app').innerHTML = (F.view === 'month' ? monthView() : dayView()) + '<div class="note">Source: ' + esc(CUR.file || '') + ' (Live_Stock for days, last 35 days; Month_Stock for months). Read-only.</div>';
+  }
+  function sub() { if (!CUR) return; document.getElementById('sub').textContent = 'Live from the needle stock sheet · latest day ' + (CUR.latest ? dl(CUR.latest) : '–') + ' · refreshed ' + CUR.generated; }
+  function load(fresh, tries) {
+    tries = tries || 0; var u = F.unit;
+    if (D[u] && !fresh) { CUR = D[u]; render(); sub(); return; }
+    CUR = null; bar(); document.getElementById('app').innerHTML = '<div class="load"><div class="spin"></div>Loading ' + u + ' needle stock…</div>'; document.getElementById('sub').textContent = 'Loading…';
+    var p = { action: 'nsd_dash', unit: u }; if (fresh) p.fresh = 1;
+    jsonp(p, function (r) {
+      if (u !== F.unit) return;
+      if (!r || !r.ok) {
+        if (tries < 2) return setTimeout(function () { load(fresh, tries + 1); }, 2500);
+        try { var c = JSON.parse(localStorage.getItem('nsdLast_' + u) || 'null'); if (c && c.live) { D[u] = CUR = c; render(); document.getElementById('sub').textContent = 'Showing saved data from ' + c.generated + ' — live refresh failed.'; return; } } catch (e) {}
+        document.getElementById('app').innerHTML = '<div class="load">Could not load needle stock' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please press Refresh in a minute.</div>'; return;
+      }
+      D[u] = CUR = r; try { localStorage.setItem('nsdLast_' + u, JSON.stringify(r)); } catch (e) {}
+      render(); sub();
+    });
+  }
+  document.getElementById('fac').addEventListener('click', function (e) { var b = e.target.closest('[data-u]'); if (!b) return; F.unit = b.getAttribute('data-u'); F.day = ''; F.mon = ''; load(false); });
+  document.getElementById('tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-v]'); if (!b) return; F.view = b.getAttribute('data-v'); render(); });
+  document.getElementById('dsel').addEventListener('change', function () { F.day = this.value; render(); });
+  document.getElementById('msel').addEventListener('change', function () { F.mon = this.value; render(); });
+  document.getElementById('q').addEventListener('input', function () { F.q = this.value.toLowerCase().trim(); render(); var q = document.getElementById('q'); q.focus(); });
+  document.getElementById('mv').addEventListener('change', function () { F.mv = this.checked; render(); });
+  document.getElementById('app').addEventListener('click', function (e) { var c = e.target.closest('[data-day]'); if (c) { F.day = c.getAttribute('data-day'); render(); } });
+  document.getElementById('btnRefresh').addEventListener('click', function () { load(true); });
+  load(false); setInterval(function () { if (!document.hidden) load(true); }, 15 * 60000);
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>
