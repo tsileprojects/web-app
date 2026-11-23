@@ -140,12 +140,12 @@ tr.fail td{background:#FEF2F2}
     var rows = all.filter(function (r) { return match(r[1]) && (!F.mv || r[3] || r[4] || r[5] || r[6]); }), t = [0,0,0,0,0,0,0,0], low = 0;
     all.forEach(function (r) { for (var i = 0; i < 8; i++) t[i] += r[2 + i]; if (r[9] <= 0) low++; });
     var h = '<div class="kpis">' + kpi('Needle types', all.length, 'in stock list', '', '#1D4ED8') + kpi('Opening stock', n0(t[0]), dl(F.day), '', '#0B2545') +
-      kpi('Received from line', n0(t[1]), 'broken / old needles', 'a', '#B45309') + kpi('Issued to line', n0(t[2]), 'new needles given', 'g', '#15803D') +
+      kpi('Rec from line', n0(t[1]), '', 'a', '#B45309') + kpi('Iss to line', n0(t[2]), '', 'g', '#15803D') +
       kpi('Sent to CMD', n0(t[3]), '', '', '#0891B2') + kpi('Received from CMD', n0(t[4]), '', '', '#7C3AED') +
       kpi('Total issues', n0(t[5]), '', '', '#64748B') + kpi('Closing stock', n0(t[7]), 'end of day', '', '#0B2545') + kpi('Zero / negative stock', low, 'types at 0 or below', low ? 'r' : 'g', '#B91C1C') + '</div>';
     var by = {}; CUR.live.forEach(function (r) { var o = by[r[0]] = by[r[0]] || [0, 0]; o[0] += r[4]; o[1] += r[3]; });
     var dk = Object.keys(by).sort().slice(-31), mx = 1; dk.forEach(function (d) { mx = Math.max(mx, by[d][0]); });
-    h += '<section class="card"><h2>Needles issued to line per day <small>click a bar to open that day</small></h2><div class="trendb">' + dk.map(function (d) { return '<div class="c' + (d === F.day ? ' on' : '') + '" data-day="' + d + '" title="' + dl(d) + ': issued ' + by[d][0] + ', received ' + by[d][1] + '"><span>' + (by[d][0] || '') + '</span><i style="height:' + (by[d][0] / mx * 100) + '%"></i></div>'; }).join('') + '</div><div class="tlab">' + dk.map(function (d) { return '<span>' + d.slice(8) + '</span>'; }).join('') + '</div></section>';
+    h += '<section class="card"><h2>Iss to line per day <small>click a bar to open that day</small></h2><div class="trendb">' + dk.map(function (d) { return '<div class="c' + (d === F.day ? ' on' : '') + '" data-day="' + d + '" title="' + dl(d) + ': issued ' + by[d][0] + ', received ' + by[d][1] + '"><span>' + (by[d][0] || '') + '</span><i style="height:' + (by[d][0] / mx * 100) + '%"></i></div>'; }).join('') + '</div><div class="tlab">' + dk.map(function (d) { return '<span>' + d.slice(8) + '</span>'; }).join('') + '</div></section>';
     rows.sort(function (a, b) { return (b[3] + b[4] + b[5] + b[6]) - (a[3] + a[4] + a[5] + a[6]) || (a[1] < b[1] ? -1 : 1); });
     h += '<section class="card"><h2>Needle-wise stock <small>' + esc(F.unit) + ' · ' + dl(F.day) + ' · ' + rows.length + ' of ' + all.length + ' types · red = closing stock 0 or below</small></h2><div class="tw"><table><thead><tr><th>Needle type</th><th>Opening</th><th>Rec from line</th><th>Issued to line</th><th>Sent to CMD</th><th>Rec from CMD</th><th>Total issues</th><th>Total receives</th><th>Closing</th></tr></thead><tbody>' +
       rows.map(function (r) { return '<tr class="' + (r[9] <= 0 ? 'low' : '') + '"><td>' + tname(r[1]) + '</td>' + nc(r[2]) + nc(r[3], 'a') + nc(r[4], 'g') + nc(r[5]) + nc(r[6]) + nc(r[7]) + nc(r[8]) + '<td class="' + (r[9] <= 0 ? 'r' : '') + '"><b>' + n0(r[9]) + '</b></td></tr>'; }).join('') + '</tbody></table></div></section>';
@@ -157,7 +157,7 @@ tr.fail td{background:#FEF2F2}
     var rows = all.filter(function (r) { return match(r[1]) && (!F.mv || r[3] || r[4] || r[5] || r[6]); }), t = new Array(12).fill(0), low = 0;
     all.forEach(function (r) { for (var i = 0; i < 12; i++) t[i] += r[2 + i]; if (r[9] <= 0) low++; });
     var h = '<div class="kpis">' + kpi('Needle types', all.length, ml(F.mon), '', '#1D4ED8') + kpi('Opening stock', n0(t[0]), 'start of month', '', '#0B2545') +
-      kpi('Received from line', n0(t[1]), '', 'a', '#B45309') + kpi('Issued to line', n0(t[2]), '', 'g', '#15803D') +
+      kpi('Rec from line', n0(t[1]), '', 'a', '#B45309') + kpi('Iss to line', n0(t[2]), '', 'g', '#15803D') +
       kpi('Received from CMD', n0(t[4]), 'sent to CMD ' + n0(t[3]), '', '#7C3AED') + kpi('Closing stock', n0(t[7]), '', '', '#0B2545') +
       kpi('Cycle change stock', n0(t[8]), 'next month cycle change ' + n0(t[9]), '', '#0891B2') + kpi('Next month plan qty', n0(t[10]), '', '', '#C8962E') +
       kpi('Actual issue from CMD', n0(t[11]), low + ' types at 0 or below', t[11] < 0 ? 'r' : '', '#B91C1C') + '</div>';
