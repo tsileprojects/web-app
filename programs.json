@@ -315,7 +315,7 @@
 },
 {
 "name": "FIPL | Mc_Plan Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbylhFQwMx_IcXNIsnIAOe2webI_vTffdv-nYfrb1xGVydLFkrUruSzD-ev2bKAhwCLY8A/exec",
+"url": "mcplan.html?unit=FIPL",
 "group": "Mc Plan Dashboard",
 "portals": [
 "HO",
@@ -326,7 +326,7 @@
 },
 {
 "name": "TS2 | Mc_Plan Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbzNvlf6JPvXATXFtyykEIxze18vNLzffg7gsS2xvtFRI_UKK5UMqrwHiCTTNwXRlK6l3A/exec",
+"url": "mcplan.html?unit=TS2",
 "group": "Mc Plan Dashboard",
 "portals": [
 "HO",
@@ -337,7 +337,7 @@
 },
 {
 "name": "TS4 | Mc_Plan Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbzpr9KPEIzeWEB3ei7eOF5cDQ2wPxQz-QqyGFIDnfGocQ4v9GNACo6K2kxAfYPX8nUZ/exec",
+"url": "mcplan.html?unit=TS4",
 "group": "Mc Plan Dashboard",
 "portals": [
 "HO",
@@ -348,7 +348,7 @@
 },
 {
 "name": "TS9 | Mc_Plan Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbyvBs4sqNp7INey5-ptmmYbgoPcT-savbqPJlsVSi0y3zSpYr9dcj-LFZjDmTDGrFPixA/exec",
+"url": "mcplan.html?unit=TS9",
 "group": "Mc Plan Dashboard",
 "portals": [
 "HO",
@@ -359,7 +359,7 @@
 },
 {
 "name": "AP2 | Mc_Plan Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbw6G2Kla7HtX4t4FunWiNG4IsuMTO1w3GAh7EFoLYZGFyZQu06d8QUB3ByKyoiiDlM_Yg/exec",
+"url": "mcplan.html?unit=AP2",
 "group": "Mc Plan Dashboard",
 "portals": [
 "HO",
@@ -370,7 +370,7 @@
 },
 {
 "name": "CMD | Mc_Plan Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbwrekvtGCtGfNl-vNmzMJAwEbtyXug_y13fA1KrlCuIdbPhNFwcewvPkp8f0AG9eAusdA/exec",
+"url": "mcplan.html?unit=CMD",
 "group": "Mc Plan Dashboard",
 "portals": [
 "HO",
@@ -380,7 +380,7 @@
 },
 {
 "name": "TSPL | Mc_Plan Dashboard",
-"url": "https://script.google.com/macros/s/AKfycbxqTIJeBcLIM9htFECSHBGp21-VgggM__0tyEi5IPLqTcZnyg9lGNXl0Rem3CcpKvw/exec",
+"url": "mcplan.html?unit=TSPL",
 "group": "Mc Plan Dashboard",
 "portals": [
 "HO",

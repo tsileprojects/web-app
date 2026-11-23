@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Machine Plan</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--g:#15803D;--a:#B45309;--r:#B91C1C;--b:#1D4ED8;--soft:#F8FAFC}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff}
+.hw{max-width:1440px;margin:0 auto;padding:12px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.hw h1{margin:0;font-size:18px;font-weight:700}.hw h1 span{color:var(--gold)}.hw .sub{font-size:12px;color:#CBD5E1;margin-top:2px}
+.hb{height:38px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.bar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:4}
+.bw{max-width:1440px;margin:0 auto;padding:10px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:#EEF2F7;padding:4px;border-radius:10px}
+.seg button{height:36px;min-width:58px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#334155;font:inherit;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px}
+.seg button.on{background:var(--navy);color:#fff}.seg button small{font-size:11px;opacity:.75}
+select{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff;color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{height:32px;padding:0 11px;border-radius:999px;border:1px solid #CBD5E1;background:#fff;color:#334155;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer}
+.chip.on{background:#E6EEFB;border-color:var(--b);color:#1E3A8A}
+.lbl{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+main{max-width:1440px;margin:0 auto;padding:18px 22px 40px;display:flex;flex-direction:column;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(min-width:1300px){.kpis{grid-template-columns:repeat(9,1fr)}.kpis .kpi .v{font-size:22px}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-top:3px solid var(--c,#0B2545)}
+.kpi .l{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase}
+.kpi .v{font-size:26px;font-weight:700;margin:6px 0 2px}.kpi .n{font-size:12.5px;color:var(--mute)}
+.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}.m{color:#64748B}
+.grid{display:flex;flex-wrap:wrap;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--mute);font-size:12px}
+.tw{overflow-x:auto}table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:700;color:var(--mute);text-align:right;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;cursor:pointer}
+td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
+tr.fail td{background:#FEF2F2}
+.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}.tag.g{background:#DCFCE7;color:#166534}.tag.r{background:#FEE2E2;color:#991B1B}
+.pbar{display:inline-block;width:70px;height:6px;background:var(--line);border-radius:999px;vertical-align:middle;margin-left:8px;overflow:hidden}.pbar i{display:block;height:100%}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-top:6px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.def{display:grid;grid-template-columns:minmax(120px,190px) 1fr 60px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
+.def .t{height:14px;background:#EEF2F7;border-radius:4px;overflow:hidden;display:flex}.def .t i{display:block;height:100%}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.tools input{height:38px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;width:240px}
+.load{padding:60px;text-align:center;color:var(--mute)}.spin{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 12px}@keyframes s{to{transform:rotate(360deg)}}
+.note{font-size:12px;color:var(--mute)}
+.din{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 8px;font:inherit;background:#fff;color:var(--ink)}
+@media(max-width:700px){main,.bw,.hw{padding-left:12px;padding-right:12px}}
+.chipR{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.chipR.A{background:#DCFCE7;color:#166534}.chipR.N{background:#FEE2E2;color:#991B1B}.chipR.U{background:#FEF3C7;color:#92400E}.chipR.X{background:#EEF2F7;color:#475569}
+.eb{display:inline-block;position:relative;width:90px;height:8px;background:#EEF2F7;border-radius:999px;vertical-align:middle;margin-left:8px}.eb i{position:absolute;left:0;top:0;bottom:0;border-radius:999px}.eb b{position:absolute;top:-3px;width:2px;height:14px;background:#0F172A}
+.spark{vertical-align:middle}
+
+.tabs{display:flex;gap:4px;background:rgba(255,255,255,.12);padding:4px;border-radius:10px}
+.tabs button{height:36px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:#E2E8F0;font:inherit;font-weight:700;cursor:pointer}
+.tabs button.on{background:#fff;color:var(--navy)}
+.hbars{display:flex;align-items:flex-end;gap:10px;height:190px;padding:8px 4px 0;border-bottom:1px solid var(--line)}
+.hbars .c{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:0}
+.hbars .pair{display:flex;gap:3px;align-items:flex-end;height:150px;width:100%;justify-content:center}
+.hbars .pair i{display:block;width:42%;max-width:26px;border-radius:4px 4px 0 0;min-height:1px;transition:height .5s}
+.hbars .v{font-size:11px;color:var(--mute);margin-bottom:3px;white-space:nowrap}
+.hlab{display:flex;gap:10px;padding:4px}.hlab span{flex:1;text-align:center;font-size:11.5px;color:var(--mute);font-weight:600}
+.mini{display:inline-flex;gap:2px;align-items:flex-end;height:22px;vertical-align:middle}.mini i{display:block;width:6px;background:#93C5FD;border-radius:1px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:0}
+.dot.g{background:#16A34A}.dot.a{background:#F59E0B}.dot.r{background:#DC2626}.dot.m{background:#CBD5E1}
+.cats{display:flex;height:16px;border-radius:999px;overflow:hidden;background:#EEF2F7;margin:6px 0 10px}.cats i{display:block;height:100%}
+.trend{width:100%;height:180px}
+.low td{background:#FEF2F2}.num0{color:#94A3B8}
+.trendb{display:flex;align-items:flex-end;gap:4px;height:150px;border-bottom:1px solid var(--line);padding-top:16px}
+.trendb .c{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;min-width:0;cursor:pointer}
+.trendb .c i{display:block;width:70%;max-width:22px;background:#1D4ED8;border-radius:3px 3px 0 0;min-height:1px}
+.trendb .c.on i{background:#C8962E}.trendb .c span{font-size:10px;color:var(--mute);margin-bottom:2px}
+.tlab{display:flex;gap:4px}.tlab span{flex:1;font-size:10px;color:var(--mute);text-align:center;overflow:hidden}
+.mx{border-collapse:separate;border-spacing:0}.mx th,.mx td{white-space:nowrap}.mx td.c{text-align:center;min-width:46px}
+.mx .sticky{position:sticky;left:0;background:#fff;z-index:1;text-align:left}.mx thead .sticky{background:#F8FAFC;z-index:2}
+.cs{background:#FEE2E2;color:#991B1B;font-weight:700}.cg{color:#15803D}.cz{color:#CBD5E1}.ca{background:#FEF3C7;color:#92400E;font-weight:700}
+.mx th.sel,.mx td.sel{outline:2px solid #C8962E;outline-offset:-2px}
+</style>
+</head>
+<body>
+<header><div class="hw">
+  <div style="display:flex;align-items:center;gap:14px"><a id="tsplHomeBtn" class="hb" href="main_ho.html" title="Back to the main dashboard" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:var(--gold);border-color:var(--gold);color:#0B2545">&#8962; Home</a>
+  <div><h1><span id="uTitle" style="color:#fff"></span> Machine Plan <span>| machine requirement vs available</span></h1><div class="sub" id="sub">Loading machine plan…</div></div></div>
+  <div style="display:flex;gap:8px;align-items:center"><div class="tabs" id="tabs"><button type="button" data-v="req">Required</button><button type="button" data-v="short">Shortage / surplus</button></div><button class="hb" id="btnRefresh" type="button">Refresh</button></div>
+</div></header>
+<div class="bar"><div class="bw">
+  <div class="seg" id="fac" role="group" aria-label="Unit"></div>
+  <label class="lbl" for="dsel">Date</label><select id="dsel"></select>
+  <label class="lbl" for="rng">Show</label><select id="rng"><option value="7">7 days</option><option value="14">14 days</option><option value="31">31 days</option><option value="999">All dates</option></select>
+  <input id="q" type="search" placeholder="Search machine…" style="height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;width:200px">
+  <label style="font-size:13px;color:#334155;display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="used" checked> Only machines needed in the plan</label>
+</div></div>
+<main id="app"><div class="load"><div class="spin"></div>Loading machine plan…</div></main>
+<script src="security.js"></script>
+<script src="js/tspl-config.js?v=20261122e"></script>
+<script>
+(function () {
+  'use strict';
+  (function () { var h = document.getElementById('tsplHomeBtn'), d = 'main_ho.html';
+    if (window.top !== window.self) d = 'home.html';
+    else if (/\/m\.html/.test(document.referrer) || /[?&]from=app\b/.test(location.search)) d = 'm.html';
+    else { try { var s = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (s.redirect) d = s.redirect; } catch (e) {} }
+    h.href = d; })();
+  var UNITS = ['FIPL', 'TS2', 'TS4', 'TS9', 'AP2', 'CMD', 'TSPL'], MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var qu = ((location.search.match(/[?&]unit=([A-Z0-9]+)/i) || [])[1] || '').toUpperCase();
+  var F = { unit: UNITS.indexOf(qu) > -1 ? qu : 'TSPL', view: 'req', day: '', rng: 7, q: '', used: true };
+  var D = {}, CUR = null;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function n0(v) { return Math.round(v || 0).toLocaleString('en-IN'); }
+  function dl(d) { return d.slice(8) + '-' + MN[+d.slice(5, 7) - 1]; }
+  function wd(d) { return WD[new Date(d + 'T12:00:00').getDay()]; }
+  function today() { var x = new Date(); return x.getFullYear() + '-' + ('0' + (x.getMonth() + 1)).slice(-2) + '-' + ('0' + x.getDate()).slice(-2); }
+  function jsonp(params, cb, ms) {
+    var name = '__mcp' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 90000);
+    document.body.appendChild(s);
+  }
+  function kpi(l, v, n, c, col) { return '<div class="kpi" style="--c:' + (col || '#0B2545') + '"><div class="l">' + l + '</div><div class="v ' + (c || '') + '">' + v + '</div><div class="n">' + n + '</div></div>'; }
+  function bar() {
+    document.getElementById('fac').innerHTML = UNITS.map(function (u) { return '<button type="button" data-u="' + u + '" class="' + (F.unit === u ? 'on' : '') + '">' + (u === 'TSPL' ? 'All (TSPL)' : u) + '</button>'; }).join('');
+    document.getElementById('uTitle').textContent = F.unit === 'TSPL' ? 'TSPL' : F.unit;
+    [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === F.view); });
+    document.getElementById('rng').value = String(F.rng);
+    if (!CUR) return;
+    var t = today(), def = CUR.dates.filter(function (d) { return d > t; })[0] || CUR.dates[CUR.dates.length - 1];
+    if (!F.day || CUR.dates.indexOf(F.day) < 0) F.day = def;
+    document.getElementById('dsel').innerHTML = CUR.dates.map(function (d) { return '<option value="' + d + '"' + (d === F.day ? ' selected' : '') + '>' + wd(d) + ' ' + dl(d) + '-' + d.slice(2, 4) + (d === t ? ' (today)' : '') + '</option>'; }).join('');
+  }
+  function render() {
+    bar(); if (!CUR) return;
+    var di = CUR.dates.indexOf(F.day), cols = [];
+    for (var i = di; i < CUR.dates.length && cols.length < F.rng; i++) cols.push(i);
+    var rows = CUR.rows.filter(function (r) { return (!F.q || r.n.toLowerCase().indexOf(F.q) > -1) && (!F.used || r.q.some(function (x) { return x > 0; })); });
+    var av = 0, req = 0, sg = 0, sq = 0, need = 0, worst = null;
+    CUR.rows.forEach(function (r) { var q = r.q[di] || 0; av += r.av; req += q; if (q > 0) need++; var d = r.av - q; if (d < 0) { sg++; sq -= d; if (!worst || d < worst[1]) worst = [r.n, d]; } });
+    var peak = 0, peakD = ''; cols.forEach(function (j) { var s = 0; CUR.rows.forEach(function (r) { s += Math.max(0, (r.q[j] || 0) - r.av); }); if (s > peak) { peak = s; peakD = CUR.dates[j]; } });
+    var h = '<div class="kpis">' + kpi('Machine types', CUR.rows.length, need + ' needed on ' + dl(F.day), '', '#1D4ED8') + kpi('Available machines', n0(av), 'in-house + out-source, usable', '', '#0B2545') +
+      kpi('Required on ' + dl(F.day), n0(req), 'as per line plan', 'b', '#1D4ED8') + kpi('Short machine types', sg, 'required more than available', sg ? 'r' : 'g', '#B91C1C') +
+      kpi('Total shortage', n0(sq), 'machines short on ' + dl(F.day), sq ? 'r' : 'g', '#B91C1C') + kpi('Biggest shortage', worst ? esc(worst[0]) : 'None', worst ? (-worst[1]) + ' machines short' : 'no shortage', worst ? 'r' : 'g', '#B45309') +
+      kpi('Peak shortage day', peak ? dl(peakD) : 'None', peak ? n0(peak) + ' machines short in the next ' + cols.length + ' days' : 'next ' + cols.length + ' days', peak ? 'a' : 'g', '#C8962E') + '</div>';
+    var head = '<tr><th class="sticky">Machine</th><th>In-house</th><th>Sampling</th><th>Non usable</th><th>Out source</th><th>Available</th>' + cols.map(function (j) { return '<th class="c' + (j === di ? ' sel' : '') + '">' + wd(CUR.dates[j]) + '<br>' + dl(CUR.dates[j]) + '</th>'; }).join('') + '</tr>';
+    var body = rows.map(function (r) {
+      return '<tr><td class="sticky"><b>' + esc(r.n) + '</b></td><td>' + n0(r.ih) + '</td><td>' + n0(r.sm) + '</td><td>' + n0(r.nu) + '</td><td>' + n0(r.os) + '</td><td><b>' + n0(r.av) + '</b></td>' +
+        cols.map(function (j) { var q = r.q[j] || 0, d = r.av - q, sel = j === di ? ' sel' : '';
+          if (F.view === 'short') return '<td class="c' + sel + ' ' + (q === 0 ? 'cz' : d < 0 ? 'cs' : d === 0 ? 'ca' : 'cg') + '">' + (q === 0 ? '·' : (d > 0 ? '+' : '') + d) + '</td>';
+          return '<td class="c' + sel + ' ' + (q === 0 ? 'cz' : d < 0 ? 'cs' : d === 0 ? 'ca' : '') + '">' + (q === 0 ? '·' : q) + '</td>'; }).join('') + '</tr>';
+    }).join('');
+    h += '<section class="card"><h2>Machine-wise plan <small>' + esc(F.unit) + ' · from ' + dl(F.day) + ' · ' + (F.view === 'short' ? 'available minus required (red = short)' : 'machines required (red = more than available, amber = exactly all)') + '</small></h2><div class="tw" style="max-height:640px;overflow:auto"><table class="mx"><thead>' + head + '</thead><tbody>' + (body || '<tr><td colspan="9" class="note">No machines match.</td></tr>') + '</tbody></table></div></section>';
+    document.getElementById('app').innerHTML = h + '<div class="note">Source: ' + esc(F.unit) + '_Mc_Req sheet (machine requirement worked out from the line plan and OB machine details, recalculated every 10 minutes). Read-only.</div>';
+  }
+  function sub() { if (!CUR) return; document.getElementById('sub').textContent = 'Live from the machine plan sheet · ' + CUR.dates.length + ' plan days · refreshed ' + CUR.generated; }
+  function load(fresh, tries) {
+    tries = tries || 0; var u = F.unit;
+    if (D[u] && !fresh) { CUR = D[u]; render(); sub(); return; }
+    CUR = null; bar(); document.getElementById('app').innerHTML = '<div class="load"><div class="spin"></div>Loading ' + u + ' machine plan…</div>';
+    var p = { action: 'mcp_dash', unit: u }; if (fresh) p.fresh = 1;
+    jsonp(p, function (r) {
+      if (u !== F.unit) return;
+      if (!r || !r.ok) {
+        if (tries < 2) return setTimeout(function () { load(fresh, tries + 1); }, 2500);
+        document.getElementById('app').innerHTML = '<div class="load">Could not load the machine plan' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please press Refresh in a minute.</div>'; return;
+      }
+      D[u] = CUR = r; render(); sub();
+    });
+  }
+  document.getElementById('fac').addEventListener('click', function (e) { var b = e.target.closest('[data-u]'); if (!b) return; F.unit = b.getAttribute('data-u'); load(false); });
+  document.getElementById('tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-v]'); if (!b) return; F.view = b.getAttribute('data-v'); render(); });
+  document.getElementById('dsel').addEventListener('change', function () { F.day = this.value; render(); });
+  document.getElementById('rng').addEventListener('change', function () { F.rng = +this.value; render(); });
+  document.getElementById('q').addEventListener('input', function () { F.q = this.value.toLowerCase().trim(); render(); });
+  document.getElementById('used').addEventListener('change', function () { F.used = this.checked; render(); });
+  document.getElementById('btnRefresh').addEventListener('click', function () { load(true); });
+  load(false); setInterval(function () { if (!document.hidden) load(true); }, 10 * 60000);
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>
