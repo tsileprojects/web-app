@@ -13,7 +13,7 @@ const ECM_FOLDERS = [
   ['TS9', '1BBI8NKEpSM1Wv8UZWYAj94GxIV1GCQHk'], ['TS9', '1aBNSfLw1zSROTYhBPQdLBM1EbxOLz1w0'], ['TS9', '1eKc2efVwWke8RtzN-9LBQOAYc1vQ4Ey_'],
   ['AP2', '1KIwUxVVvVEFvjoRVRIEe7dHPlf_ul8sT']
 ];
-const ECM_DAYS = 180, ECM_INDEX_NAME = 'TSPL_eCutmax_Audit_Index.json';
+const ECM_V = 2, ECM_DAYS = 180, ECM_INDEX_NAME = 'TSPL_eCutmax_Audit_Index.json';
 
 const ECM_F2_COLS = {
   'category': 'cat', 'color': 'col', 'style sub- description': 'sub', 'color order qty': 'oq', '+/- qty': 'pm', 'total order qty': 'toq', 'uom': 'uom',
@@ -77,6 +77,7 @@ function ecmParse_(got) {
     const t = String(tally[n - 1] || ''); e.tally = /✔|✅|ok|yes/i.test(t) ? 1 : /❌|✖|no/i.test(t) ? 0 : null;
     if (!e.cat && !e.toq && !e.cut && !e.nu) continue;
     Object.keys(e).forEach(k => { if (typeof e[k] === 'number') e[k] = Math.round(e[k] * 10000) / 10000; });
+    if (e.an === 0.161 || e.an === 0.0045 || e.an === 0.00449) e.an = 0;   // left over from the e-Cutmax template = not entered
     out.cats.push(e);
   }
   return out;
@@ -89,8 +90,9 @@ function ecmFlags_(s) {
     const nm = (c.cat || 'Cat ' + c.n) + (c.col ? ' ' + c.col : '');
     if (c.cut > 0 && c.toq > 0 && c.cut > c.toq) f.push({ k: 'over', c: nm, t: 'Cut ' + Math.round(c.cut).toLocaleString() + ' vs order ' + Math.round(c.toq).toLocaleString() + ' (+' + Math.round((c.cut / c.toq - 1) * 100) + '%)' });
     if (c.cut > 0 && c.an > 0 && c.xn > c.an * 1.02) f.push({ k: 'cons', c: nm, t: 'Actual net cons ' + c.xn.toFixed(3) + ' vs approved ' + c.an.toFixed(3) + ' (+' + ((c.xn / c.an - 1) * 100).toFixed(1) + '%)' });
+    if (c.cut > 0 && c.an > 0 && c.xn > 0 && c.xn < c.an * 0.6) f.push({ k: 'data', c: nm, t: 'Approved cons ' + c.an.toFixed(3) + ' but actual only ' + c.xn.toFixed(3) + ' - check the approved cons entry' });
     if (c.cut > 0 && !(c.an > 0)) f.push({ k: 'noapp', c: nm, t: 'Cutting started but approved consumption not entered' });
-    if (c.cut > 0 && c.nu > 0 && !(c.av > 0)) f.push({ k: 'nofab', c: nm, t: 'Fabric used ' + c.nu.toFixed(1) + ' but fabric received (in-house) not entered' });
+    if (c.cut > 0 && c.nu > 0 && !(c.av > 0)) f.push({ k: 'nofab', c: nm, t: 'Fabric used ' + c.nu.toFixed(1) + ' but fabric received (in-house) not entered in FCR' });
     else if (c.av > 0 && c.gt > 0 && Math.abs(c.av - c.gt) > Math.max(1, c.av * 0.01)) f.push({ k: 'tally', c: nm, t: 'Fabric in unit ' + c.av.toFixed(1) + ' vs accounted ' + c.gt.toFixed(1) + ' (' + (c.av - c.gt > 0 ? 'unaccounted ' : 'used more than received ') + Math.abs(c.av - c.gt).toFixed(1) + ')' });
   });
   return f;
@@ -119,7 +121,7 @@ function ecmRefresh_(budget) {
       if (mod < cutoff || seen[id]) continue;
       seen[id] = 1;
       const old = idx.files[id];
-      if (old && old.mod === mod && !old.err) { old.u = u; old.t = f.getName(); continue; }
+      if (old && old.mod === mod && !old.err && old.v === ECM_V) { old.u = u; old.t = f.getName(); continue; }
       todo.push({ u: u, f: f, mod: mod, old: old });
     }
   });
@@ -131,7 +133,7 @@ function ecmRefresh_(budget) {
     const part = todo.slice(i, i + 15), got = ecmGet_(part.map(j => j.f.getId()), ECM_R);
     part.forEach((j, k) => {
       const e = ecmParse_(got[k]);
-      e.id = j.f.getId(); e.u = j.u; e.t = j.f.getName(); e.mod = j.mod;
+      e.id = j.f.getId(); e.u = j.u; e.t = j.f.getName(); e.mod = j.mod; e.v = ECM_V;
       e.flags = ecmFlags_(e);
       idx.files[e.id] = e; done++;
     });
