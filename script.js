@@ -21,7 +21,8 @@ const userGroups = {
     users19: { redirect: "dept_gsd_fc.html", users: [{ username: "gsdfc", password: "fc123" }] },
     users20: { redirect: "dept_fsa.html", users: [{ username: "sathish", password: "2008" }] },
     users21: { redirect: "ceo.html", users: [{ username: "ceo", hash: "9039256e1679e7d2f8611670c6775a1ffc66e28a47246b66fe0757431990d517" }] },   // Director & CEO - password kept only as a SHA-256 hash
-    users22: { redirect: "merchant.html", users: [{ username: "merchant", hash: "2c8123797bf2f71e63734c95d685f336d1914a7cc1606652339ffdb3e583be0c" }] }   // Merchants (one shared login) - FSA dashboard only, password kept as a SHA-256 hash
+    users22: { redirect: "merchant.html", users: [{ username: "merchant", hash: "2c8123797bf2f71e63734c95d685f336d1914a7cc1606652339ffdb3e583be0c" }] },   // Merchants (one shared login) - FSA dashboard only, password kept as a SHA-256 hash
+    users23: { redirect: "audit.html", users: [{ username: "audit", hash: "b98a99eae5715cd616c780929d52c5a2fd7f559abedf98a0866a6f73191bb7dd" }] }   // Auditors (HO audit) - e-Cutmax & FCR Audit page only, password kept as a SHA-256 hash
 };
 
 async function sha256Hex(text) {

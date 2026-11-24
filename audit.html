@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | e-Cutmax &amp; FCR Audit</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--g:#15803D;--a:#B45309;--r:#B91C1C;--b:#1D4ED8;--soft:#F8FAFC;--teal:#0F766E}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff}
+.hw{max-width:1480px;margin:0 auto;padding:12px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.hw h1{margin:0;font-size:18px;font-weight:700}.hw h1 span{color:var(--gold)}.hw .sub{font-size:12px;color:#CBD5E1;margin-top:2px}
+.hb{height:38px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.hb.gold{background:var(--gold);border-color:var(--gold);color:#0B2545}
+.bar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:4}
+.bw{max-width:1480px;margin:0 auto;padding:10px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:#EEF2F7;padding:4px;border-radius:10px}
+.seg button{height:36px;min-width:52px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#334155;font:inherit;font-weight:600;cursor:pointer}
+.seg button.on{background:var(--navy);color:#fff}.seg button small{font-size:11px;opacity:.75;margin-left:4px}
+select,.inp{height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff;color:var(--ink)}
+.inp{width:230px}
+.lbl{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.chk{font-size:13px;color:#334155;display:inline-flex;align-items:center;gap:6px}
+main{max-width:1480px;margin:0 auto;padding:18px 22px 40px;display:flex;flex-direction:column;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(min-width:1250px){.kpis{grid-template-columns:repeat(8,1fr)}}
+@media(max-width:560px){.kpis{grid-template-columns:1fr 1fr}}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-top:3px solid var(--c,#0B2545)}
+.kpi .l{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase}
+.kpi .v{font-size:23px;font-weight:700;margin:6px 0 2px}.kpi .n{font-size:12.5px;color:var(--mute)}
+.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}.b{color:var(--b)}
+.row2{display:grid;grid-template-columns:1.25fr 1fr;gap:16px}@media(max-width:1000px){.row2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.card h2 small{font-weight:400;color:var(--mute);font-size:12px}
+.tw{overflow:auto}table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:700;color:var(--mute);text-align:right;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;background:#fff;position:sticky;top:0;z-index:1}
+th.s{cursor:pointer}th.s:hover{color:var(--navy)}
+td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th.l,td.l{text-align:left}td.wrap{white-space:normal;min-width:180px}
+tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
+.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;display:inline-block}
+.t-run{background:#DBEAFE;color:#1E40AF}.t-done{background:#DCFCE7;color:#166534}.t-new{background:#EEF2F7;color:#475569}
+.t-over{background:#FEE2E2;color:#991B1B}.t-cons{background:#FFEDD5;color:#9A3412}.t-noapp{background:#FEF3C7;color:#92400E}.t-nofab{background:#FCE7F3;color:#9D174D}.t-tally{background:#EDE9FE;color:#5B21B6}
+.iss{display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.pbar{display:inline-block;width:64px;height:6px;background:var(--line);border-radius:999px;vertical-align:middle;margin-left:8px;overflow:hidden}.pbar i{display:block;height:100%}
+.flag{display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer}.flag:hover{background:var(--soft)}
+.flag .w{flex:1;min-width:0}.flag .w b{font-size:13px}.flag .w div{font-size:12.5px;color:var(--mute);margin-top:2px}
+.load{padding:60px;text-align:center;color:var(--mute)}.spin{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 12px}@keyframes s{to{transform:rotate(360deg)}}
+.note{font-size:12px;color:var(--mute)}
+.legend{display:flex;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--mute);align-items:center}
+/* detail */
+#dv{position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:20;display:none;overflow:auto}
+#dv .pn{max-width:1320px;margin:24px auto;background:var(--bg);border-radius:14px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+#dv .ph{background:var(--navy);color:#fff;padding:16px 22px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+#dv .ph h3{margin:0;font-size:18px}#dv .ph .sub{font-size:12.5px;color:#CBD5E1;margin-top:4px}
+#dv .pb{padding:18px 22px;display:flex;flex-direction:column;gap:16px}
+.fcr th{text-align:right}.fcr td:first-child,.fcr th:first-child{text-align:left;position:sticky;left:0;background:#fff;z-index:1}
+.fcr tr.sec td{background:#F1F5F9;font-weight:700;color:var(--navy);text-align:left}
+.fcr tr.tot td{font-weight:700}
+.info{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px}
+.info div{background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 12px}.info span{display:block;font-size:11px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}.info b{display:block;margin-top:4px;font-size:14px}
+.ok{color:var(--g);font-weight:700}
+@media(max-width:700px){main,.bw,.hw{padding-left:12px;padding-right:12px}#dv .pn{margin:0;border-radius:0}}
+</style>
+</head>
+<body>
+<header><div class="hw">
+  <div style="display:flex;align-items:center;gap:14px"><a id="homeBtn" class="hb gold" href="main_ho.html">&#8962; Home</a>
+  <div><h1>e-Cutmax &amp; FCR Audit <span>| Fabric Consumption Reconciliation</span></h1><div class="sub" id="sub">Loading…</div></div></div>
+  <div style="display:flex;gap:8px;align-items:center"><button class="hb" id="btnXls" type="button" hidden>Download Excel</button><button class="hb" id="btnRefresh" type="button">Refresh</button><button class="hb" id="btnOut" type="button" hidden>Sign out</button></div>
+</div></header>
+<div class="bar"><div class="bw">
+  <div class="seg" id="fac" role="group" aria-label="Factory"></div>
+  <div class="seg" id="st" role="group" aria-label="Status"></div>
+  <span class="lbl">Updated</span><select id="days"><option value="7">last 7 days</option><option value="30" selected>last 30 days</option><option value="90">last 90 days</option><option value="180">last 180 days</option></select>
+  <input id="q" class="inp" type="search" placeholder="Search buyer, style, PO…">
+  <label class="chk"><input type="checkbox" id="onlyIss"> Only styles with issues</label>
+</div></div>
+<main id="app"><div class="load"><div class="spin"></div>Loading e-Cutmax data…</div></main>
+<div id="dv" role="dialog" aria-modal="true"><div class="pn"><div class="ph"><div><h3 id="dvT"></h3><div class="sub" id="dvS"></div></div><button class="hb" id="dvX" type="button">&#10005; Close</button></div><div class="pb" id="dvB"></div></div></div>
+<script src="security.js"></script>
+<script src="js/tspl-config.js?v=20261122e"></script>
+<script>
+(function () {
+  'use strict';
+  var U = {}; try { U = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); } catch (e) {}
+  var IS_AUD = U.redirect === 'audit.html';
+  (function () { var h = document.getElementById('homeBtn'), d = 'main_ho.html';
+    if (IS_AUD) { h.hidden = true; document.getElementById('btnOut').hidden = false; }
+    else if (window.top !== window.self) d = 'home.html';
+    else if (/\/m\.html/.test(document.referrer) || /[?&]from=app\b/.test(location.search)) d = 'm.html';
+    else if (U.redirect) d = U.redirect;
+    h.href = d; })();
+  document.getElementById('btnOut').addEventListener('click', function () { if (typeof logout === 'function') logout(); else { sessionStorage.clear(); location.href = 'index.html'; } });
+  // Excel - HO main users only (analysis files rule); auditors view on screen only
+  if (!IS_AUD && !/^(unit_|dept_|merchant|kpi_|ceo)/.test(U.redirect || '')) document.getElementById('btnXls').hidden = false;
+
+  var FACS = ['ALL', 'FIPL', 'TS2', 'TS4', 'TS9', 'AP2'], STS = [['all', 'All'], ['run', 'Cutting'], ['done', 'Completed'], ['new', 'Not started']];
+  var FLAG = { over: ['Over cut', 't-over'], cons: ['Cons above approved', 't-cons'], noapp: ['No approved cons', 't-noapp'], nofab: ['Fabric receipt missing', 't-nofab'], tally: ['Fabric not tallying', 't-tally'] };
+  var F = { fac: 'ALL', st: 'all', days: 30, q: '', iss: false, sort: 'mod', dir: -1 };
+  var D = null;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function n0(v) { return Math.round(v || 0).toLocaleString('en-IN'); }
+  function n1(v) { return (Math.round((v || 0) * 10) / 10).toLocaleString('en-IN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  function n3(v) { return v ? Number(v).toFixed(3) : '–'; }
+  function pct(v) { return (v > 0 ? '+' : '') + (Math.round(v * 10) / 10) + '%'; }
+  function jsonp(params, cb, ms) {
+    var name = '__ecm' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 120000);
+    document.body.appendChild(s);
+  }
+  function kpi(l, v, n, c, col) { return '<div class="kpi" style="--c:' + (col || '#0B2545') + '"><div class="l">' + l + '</div><div class="v ' + (c || '') + '">' + v + '</div><div class="n">' + n + '</div></div>'; }
+
+  /* derived per style: main category = biggest order qty */
+  function derive(s) {
+    var cats = (s.cats || []).filter(function (c) { return c.toq || c.cut || c.nu || c.av; });
+    var main = cats.slice().sort(function (a, b) { return (b.toq || 0) - (a.toq || 0); })[0] || {};
+    s.main = main; s.toq = main.toq || 0; s.cut = main.cut || 0;
+    s.st = !s.cut ? 'new' : (s.toq && s.cut >= s.toq * 0.98) ? 'done' : 'run';
+    s.cutPct = s.toq ? s.cut / s.toq * 100 : 0;
+    var fab = {}; cats.forEach(function (c) { var u = (c.uom || '').toUpperCase() || '—'; var f = fab[u] || (fab[u] = { av: 0, nu: 0, tu: 0, gt: 0 }); f.av += c.av || 0; f.nu += c.nu || 0; f.tu += c.tu || 0; f.gt += c.gt || 0; });
+    s.fab = fab;
+    s.an = main.an || 0; s.xn = main.xn || 0; s.var = s.an && s.xn ? (s.xn / s.an - 1) * 100 : null;
+    s.fk = {}; (s.flags || []).forEach(function (f) { s.fk[f.k] = 1; });
+    s.nIss = (s.flags || []).length;
+    s.hay = (s.u + ' ' + s.buyer + ' ' + s.style + ' ' + s.desc + ' ' + s.t + ' ' + s.vg).toLowerCase();
+    return s;
+  }
+  function visible() {
+    var lim = Date.now() - F.days * 864e5;
+    return D.styles.filter(function (s) { return (F.fac === 'ALL' || s.u === F.fac) && s.mod >= lim && (F.st === 'all' || s.st === F.st) && (!F.iss || s.nIss) && (!F.q || s.hay.indexOf(F.q) > -1); });
+  }
+  function fabStr(fab, key) { var ks = Object.keys(fab).filter(function (u) { return fab[u][key]; }); if (!ks.length) return '–'; return ks.map(function (u) { return n1(fab[u][key]) + (u !== '—' ? ' ' + esc(u.charAt(0) + u.slice(1).toLowerCase()) : ''); }).join(' · '); }
+  function addFab(t, fab) { Object.keys(fab).forEach(function (u) { var f = t[u] || (t[u] = { av: 0, nu: 0, tu: 0, gt: 0 }); ['av', 'nu', 'tu', 'gt'].forEach(function (k) { f[k] += fab[u][k]; }); }); return t; }
+  function issTags(s) { return Object.keys(s.fk).map(function (k) { return '<span class="tag ' + FLAG[k][1] + '">' + FLAG[k][0] + '</span>'; }).join(''); }
+  function stTag(st) { return st === 'done' ? '<span class="tag t-done">Completed</span>' : st === 'run' ? '<span class="tag t-run">Cutting</span>' : '<span class="tag t-new">Not started</span>'; }
+
+  function bar() {
+    var lim = Date.now() - F.days * 864e5, cnt = {};
+    if (D) D.styles.forEach(function (s) { if (s.mod >= lim) { cnt[s.u] = (cnt[s.u] || 0) + 1; cnt.ALL = (cnt.ALL || 0) + 1; } });
+    document.getElementById('fac').innerHTML = FACS.map(function (u) { return '<button type="button" data-f="' + u + '" class="' + (F.fac === u ? 'on' : '') + '">' + (u === 'ALL' ? 'All factories' : u) + (D ? '<small>' + (cnt[u] || 0) + '</small>' : '') + '</button>'; }).join('');
+    document.getElementById('st').innerHTML = STS.map(function (x) { return '<button type="button" data-s="' + x[0] + '" class="' + (F.st === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('');
+  }
+  function render() {
+    bar(); if (!D) return;
+    var rows = visible();
+    var toq = 0, cut = 0, fab = {}, issS = 0, fl = { over: 0, cons: 0, noapp: 0, nofab: 0, tally: 0 }, vs = [], run = 0, done = 0;
+    rows.forEach(function (s) { toq += s.toq; cut += s.cut; addFab(fab, s.fab); if (s.nIss) issS++; Object.keys(s.fk).forEach(function (k) { fl[k]++; }); if (s.var != null) vs.push(s.var); if (s.st === 'run') run++; if (s.st === 'done') done++; });
+    var avgVar = vs.length ? vs.reduce(function (a, b) { return a + b; }, 0) / vs.length : null;
+    var h = '<div class="kpis">' +
+      kpi('Styles', rows.length, run + ' cutting · ' + done + ' completed', '', '#1D4ED8') +
+      kpi('Order qty', n0(toq), 'incl. allowed +/- (main fabric)', '', '#0B2545') +
+      kpi('Cut qty', n0(cut), toq ? Math.round(cut / toq * 100) + '% of order' : '–', 'b', '#1D4ED8') +
+      kpi('Fabric in unit', fabStr(fab, 'av'), 'received, as entered in FCR', '', '#0F766E') +
+      kpi('Fabric used', fabStr(fab, 'tu'), 'net used + end bits + re-cut', '', '#0F766E') +
+      kpi('Avg cons vs approved', avgVar == null ? '–' : pct(avgVar), 'actual net cons, ' + vs.length + ' styles', avgVar == null ? '' : avgVar > 2 ? 'r' : avgVar < -2 ? 'g' : 'a', '#B45309') +
+      kpi('Styles with issues', issS, rows.length ? Math.round(issS / rows.length * 100) + '% of styles' : '–', issS ? 'r' : 'g', '#B91C1C') +
+      kpi('Over cut styles', fl.over, 'cut more than order qty', fl.over ? 'r' : 'g', '#B91C1C') + '</div>';
+    // attention list
+    var att = []; rows.forEach(function (s) { (s.flags || []).forEach(function (f) { att.push({ s: s, f: f }); }); });
+    var pri = { over: 0, cons: 1, tally: 2, nofab: 3, noapp: 4 }; att.sort(function (a, b) { return (pri[a.f.k] - pri[b.f.k]) || (b.s.mod - a.s.mod); });
+    var attH = att.slice(0, 40).map(function (x) { return '<div class="flag" data-id="' + x.s.id + '"><span class="tag ' + FLAG[x.f.k][1] + '">' + FLAG[x.f.k][0] + '</span><div class="w"><b>' + esc(x.s.u) + ' · ' + esc(x.s.buyer) + ' ' + esc(x.s.style) + '</b> <span class="note">' + esc(x.f.c) + '</span><div>' + esc(x.f.t) + '</div></div></div>'; }).join('');
+    // factory summary
+    var fs = {}; rows.forEach(function (s) { var f = fs[s.u] || (fs[s.u] = { n: 0, toq: 0, cut: 0, iss: 0, fab: {}, vs: [] }); f.n++; f.toq += s.toq; f.cut += s.cut; if (s.nIss) f.iss++; addFab(f.fab, s.fab); if (s.var != null) f.vs.push(s.var); });
+    var fsH = FACS.slice(1).filter(function (u) { return fs[u]; }).map(function (u) { var f = fs[u], av = f.vs.length ? f.vs.reduce(function (a, b) { return a + b; }, 0) / f.vs.length : null;
+      return '<tr class="click" data-fac="' + u + '"><td class="l"><b>' + u + '</b></td><td>' + f.n + '</td><td>' + n0(f.toq) + '</td><td>' + n0(f.cut) + '</td><td>' + fabStr(f.fab, 'av') + '</td><td>' + fabStr(f.fab, 'tu') + '</td><td class="' + (av == null ? '' : av > 2 ? 'r' : av < -2 ? 'g' : '') + '">' + (av == null ? '–' : pct(av)) + '</td><td class="' + (f.iss ? 'r' : 'g') + '"><b>' + f.iss + '</b></td></tr>'; }).join('');
+    h += '<div class="row2"><section class="card"><h2>Needs attention <small>' + att.length + ' findings · click to open the style</small></h2><div class="tw" style="max-height:420px">' + (attH || '<div class="note ok" style="padding:20px">No issues found for this selection.</div>') + '</div></section>' +
+      '<section class="card"><h2>Factory summary <small>click a factory to filter</small></h2><div class="tw"><table><thead><tr><th class="l">Factory</th><th>Styles</th><th>Order</th><th>Cut</th><th>Fabric in</th><th>Fabric used</th><th>Cons var</th><th>Issues</th></tr></thead><tbody>' + (fsH || '<tr><td class="l note" colspan="8">No styles.</td></tr>') + '</tbody></table></div>' +
+      '<div class="legend" style="margin-top:12px"><b>Checks:</b>' + Object.keys(FLAG).map(function (k) { return '<span class="tag ' + FLAG[k][1] + '">' + FLAG[k][0] + '</span>'; }).join('') + '</div>' +
+      '<div class="note" style="margin-top:6px">Over cut = cut more than order + allowed %. Cons above approved = actual net cons more than 2% over approved. Fabric not tallying = fabric in unit differs from fabric accounted (used + end bits + re-cut + size set + left over) by more than 1%.</div></section></div>';
+    // style table
+    var cols = [['u', 'Factory', 'l'], ['buyer', 'Buyer', 'l'], ['style', 'Style', 'l'], ['desc', 'Description', 'l'], ['st', 'Status', 'l'], ['toq', 'Order'], ['cut', 'Cut'], ['cutPct', 'Cut %'], ['an', 'Approved cons'], ['xn', 'Actual cons'], ['var', 'Var %'], ['fav', 'Fabric in'], ['ftu', 'Fabric used'], ['nIss', 'Issues'], ['mod', 'Updated']];
+    rows.forEach(function (s) { s.fav = sumK(s.fab, 'av'); s.ftu = sumK(s.fab, 'tu'); });
+    rows.sort(function (a, b) { var x = a[F.sort], y = b[F.sort]; if (x == null) x = -1e15; if (y == null) y = -1e15; return (typeof x === 'string' ? x.localeCompare(y) : x - y) * F.dir; });
+    var body = rows.map(function (s) {
+      return '<tr class="click" data-id="' + s.id + '"><td class="l"><b>' + esc(s.u) + '</b></td><td class="l">' + esc(s.buyer) + '</td><td class="l"><b>' + esc(s.style) + '</b></td><td class="l wrap">' + esc(s.desc) + '</td><td class="l">' + stTag(s.st) + '</td>' +
+        '<td>' + n0(s.toq) + '</td><td>' + n0(s.cut) + '</td><td>' + (s.toq ? Math.round(s.cutPct) + '%<span class="pbar"><i style="width:' + Math.min(100, s.cutPct) + '%;background:' + (s.cutPct > 100.5 ? '#DC2626' : s.cutPct >= 98 ? '#16A34A' : '#1D4ED8') + '"></i></span>' : '–') + '</td>' +
+        '<td>' + n3(s.an) + '</td><td>' + n3(s.xn) + '</td><td class="' + (s.var == null ? '' : s.var > 2 ? 'r' : s.var < -2 ? 'g' : '') + '">' + (s.var == null ? '–' : pct(s.var)) + '</td>' +
+        '<td>' + fabStr(s.fab, 'av') + '</td><td>' + fabStr(s.fab, 'tu') + '</td><td><span class="iss">' + (issTags(s) || '<span class="ok">OK</span>') + '</span></td><td>' + esc(s.modS) + '</td></tr>';
+    }).join('');
+    h += '<section class="card"><h2>Style-wise e-Cutmax &amp; FCR <small>' + rows.length + ' styles · click a style for the full Fabric Consumption Reconciliation, cut log and PO break-up · click a heading to sort</small></h2><div class="tw" style="max-height:720px"><table><thead><tr>' +
+      cols.map(function (c) { return '<th class="s ' + (c[2] || '') + '" data-k="' + c[0] + '">' + c[1] + (F.sort === c[0] ? (F.dir > 0 ? ' ▲' : ' ▼') : '') + '</th>'; }).join('') + '</tr></thead><tbody>' + (body || '<tr><td class="l note" colspan="15">No styles match.</td></tr>') + '</tbody></table></div></section>';
+    h += '<div class="note">Source: each factory\'s e-Cutmax style files (Fabric Completion Report tab F2, Consumption &amp; Style Summary CS, cut records M1–M10, lay-slip records C1–C10, order sheet OS). Read-only: nothing is changed in the factory files. Files updated in the last ' + D.days + ' days are included; the list refreshes every 10 minutes.</div>';
+    document.getElementById('app').innerHTML = h;
+  }
+  function sumK(fab, k) { var t = 0; Object.keys(fab).forEach(function (u) { t += fab[u][k] || 0; }); return t; }
+
+  /* ---------- style detail ---------- */
+  var FCR_ROWS = [
+    ['Order details'], ['oq', 'Color order qty', 0], ['pm', 'Allowed +/- qty', 0], ['toq', 'Total order qty', 0],
+    ['Fabric in-house'], ['rcw', 'Received from CWH', 1], ['tcw', 'Returned to CWH', 1], ['fos', 'Allocated from other style', 1], ['tos', 'Allocated to other style', 1], ['fou', 'Received from other unit', 1], ['tou', 'Sent to other unit', 1], ['av', 'Fabric available in unit', 1, 1],
+    ['Fabric utilisation'], ['cut', 'Cut qty', 0, 1], ['nu', 'Fabric net used', 1], ['fpm', 'Fabric +/- (lay sheet)', 1], ['ueb', 'Unused end bits', 1], ['leb', 'Leftover end bits', 1], ['rc', 'Re-cutting', 1], ['tu', 'Total fabric utilised', 1, 1], ['ss', 'Used for size set', 1], ['ao', 'Add-on re-cut / others', 1], ['lo', 'Left over / RTG', 1], ['gt', 'Grand total fabric', 1, 1],
+    ['Reconciliation'], ['_bal', 'Fabric in unit − grand total', 1, 1],
+    ['Consumption'], ['bn', 'Booked net cons', 3], ['bg', 'Booked gross cons', 3], ['an', 'Approved net cons', 3], ['ag', 'Approved gross cons', 3], ['xn', 'Actual net cons', 3, 1], ['xg', 'Actual gross cons', 3, 1], ['_var', 'Actual vs approved (net)', 9, 1]
+  ];
+  function fcrTable(cats) {
+    var hd = '<tr><th>Item</th>' + cats.map(function (c) { return '<th>' + esc(c.cat || ('Fabric ' + c.n)) + '<br><span class="note">' + esc(c.col || '') + (c.uom ? ' · ' + esc(c.uom) : '') + '</span></th>'; }).join('') + '</tr>';
+    var b = FCR_ROWS.map(function (r) {
+      if (r.length === 1) return '<tr class="sec"><td colspan="' + (cats.length + 1) + '">' + r[0] + '</td></tr>';
+      return '<tr' + (r[3] ? ' class="tot"' : '') + '><td>' + r[1] + '</td>' + cats.map(function (c) {
+        var v, cls = '';
+        if (r[0] === '_bal') { v = (c.av || 0) - (c.gt || 0); if (!c.av && !c.gt) return '<td>–</td>'; cls = Math.abs(v) > Math.max(1, (c.av || 0) * 0.01) ? 'r' : 'g'; return '<td class="' + cls + '">' + (v > 0 ? '+' : '') + n1(v) + '</td>'; }
+        if (r[0] === '_var') { if (!(c.an > 0 && c.xn > 0)) return '<td>–</td>'; v = (c.xn / c.an - 1) * 100; return '<td class="' + (v > 2 ? 'r' : v < -2 ? 'g' : '') + '">' + pct(v) + '</td>'; }
+        v = c[r[0]]; if (r[0] === 'cut' && c.toq && v > c.toq) cls = 'r';
+        if (!v) return '<td class="note">–</td>';
+        return '<td class="' + cls + '">' + (r[2] === 3 ? Number(v).toFixed(4) : r[2] === 1 ? n1(v) : n0(v)) + '</td>';
+      }).join('') + '</tr>';
+    }).join('');
+    return '<table class="fcr"><thead>' + hd + '</thead><tbody>' + b + '</tbody></table>';
+  }
+  function openStyle(id) {
+    var s = D.styles.filter(function (x) { return x.id === id; })[0]; if (!s) return;
+    document.getElementById('dvT').textContent = s.u + ' · ' + (s.buyer || '') + ' ' + (s.style || '');
+    document.getElementById('dvS').textContent = (s.desc || '') + ' · last updated ' + s.modS;
+    document.getElementById('dvB').innerHTML = '<div class="load"><div class="spin"></div>Opening the style file…</div>';
+    document.getElementById('dv').style.display = 'block'; document.body.style.overflow = 'hidden';
+    jsonp({ action: 'ecm_style', id: id }, function (r) {
+      if (!r || !r.ok) { document.getElementById('dvB').innerHTML = '<div class="load">Could not open this style' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please try again.</div>'; return; }
+      var cats = (r.cats || []).filter(function (c) { return c.toq || c.cut || c.nu || c.av; }); derive(r);
+      var h = '<div class="info"><div><span>Factory</span><b>' + esc(r.u) + '</b></div><div><span>Buyer</span><b>' + esc(r.buyer || '–') + '</b></div><div><span>Style №</span><b>' + esc(r.style || '–') + '</b></div><div><span>Description</span><b>' + esc(r.desc || '–') + '</b></div><div><span>VG №</span><b>' + esc(r.vg || '–') + '</b></div><div><span>Size grid</span><b>' + esc(r.grid || '–') + '</b></div><div><span>Status</span><b>' + stTag(r.st) + '</b></div><div><span>Cut / order</span><b>' + n0(r.cut) + ' / ' + n0(r.toq) + (r.toq ? ' (' + Math.round(r.cut / r.toq * 100) + '%)' : '') + '</b></div></div>';
+      h += '<section class="card"><h2>Audit findings <small>' + (r.flags || []).length + '</small></h2>' + ((r.flags || []).length ? r.flags.map(function (f) { return '<div class="flag" style="cursor:default"><span class="tag ' + FLAG[f.k][1] + '">' + FLAG[f.k][0] + '</span><div class="w"><b>' + esc(f.c) + '</b><div>' + esc(f.t) + '</div></div></div>'; }).join('') : '<div class="ok">No issues: cut within order, consumption within approved, fabric tallies.</div>') + '</section>';
+      h += '<section class="card"><h2>Fabric Consumption Reconciliation (FCR) <small>one column per fabric category · from the Fabric Completion Report</small></h2><div class="tw">' + (cats.length ? fcrTable(cats) : '<div class="note">No FCR data entered yet.</div>') + '</div></section>';
+      if ((r.util || []).length) {
+        var cn = {}; cats.forEach(function (c) { cn[c.n] = (c.cat || 'Fabric ' + c.n) + (c.col ? ' · ' + c.col : ''); });
+        h += '<section class="card"><h2>Fabric utilisation summary <small>lay-slip records (C sheets)</small></h2><div class="tw"><table><thead><tr><th class="l">Fabric</th><th>Rolls issued</th><th>Fabric issued</th><th>Cut qty</th><th>Net used</th><th>Net cons</th><th>End bits</th><th>Fabric +/-</th><th>Unused end bits</th><th>Re-used end bits</th><th>Leftover end bits</th><th>Re-cutting</th><th>Total used</th><th>Gross cons</th><th>B-roll qty</th><th>B-roll re-used</th><th>B-roll left</th></tr></thead><tbody>' +
+          r.util.map(function (u) { return '<tr><td class="l"><b>' + esc(cn[u.cat] || ('Fabric ' + u.cat)) + '</b></td><td>' + n0(u.rolls) + '</td><td>' + n1(u.issued) + '</td><td>' + n0(u.cut) + '</td><td>' + n1(u.net) + '</td><td>' + n3(u.netCons) + '</td><td>' + n1(u.endBits) + '</td><td>' + n1(u.fpm) + '</td><td>' + n1(u.ueb) + '</td><td>' + n1(u.reb) + '</td><td>' + n1(u.leb) + '</td><td>' + n1(u.rc) + '</td><td><b>' + n1(u.used) + '</b></td><td>' + n3(u.grossCons) + '</td><td>' + n1(u.broll) + '</td><td>' + n1(u.brollRe) + '</td><td>' + n1(u.brollLeft) + '</td></tr>'; }).join('') + '</tbody></table></div></section>';
+      }
+      if ((r.cuts || []).length) {
+        var cn2 = {}; cats.forEach(function (c) { cn2[c.n] = (c.cat || 'Fabric ' + c.n) + (c.col ? ' · ' + c.col : ''); });
+        var tq = 0; r.cuts.forEach(function (c) { tq += c.qty || 0; });
+        h += '<section class="card"><h2>Cut log <small>' + r.cuts.length + ' cuts · ' + n0(tq) + ' pcs · from the minusing records (M sheets)</small></h2><div class="tw" style="max-height:460px"><table><thead><tr><th class="l">Fabric</th><th>Cut №</th><th class="l">Date</th><th class="l">Lot</th><th>Lays</th><th>Ways</th><th>Cut qty</th><th>Marker length</th><th>Lay length</th><th>Marker width</th><th>Fabric width</th><th>Req (mtr)</th><th>Avg cons (mtr)</th><th>Req (kg)</th><th>Avg cons (kg)</th><th>Numbering</th></tr></thead><tbody>' +
+          r.cuts.map(function (c) { return '<tr><td class="l">' + esc(cn2[c.cat] || ('Fabric ' + c.cat)) + '</td><td>' + esc(c.no) + '</td><td class="l">' + esc(c.date) + '</td><td class="l">' + esc(c.lot) + '</td><td>' + n0(c.lay) + '</td><td>' + n0(c.ways) + '</td><td><b>' + n0(c.qty) + '</b></td><td>' + (c.mlen ? c.mlen.toFixed(3) : '–') + '</td><td>' + (c.laylen ? c.laylen.toFixed(3) : '–') + '</td><td>' + (c.mw || '–') + '</td><td>' + (c.fw || '–') + '</td><td>' + n1(c.reqM) + '</td><td>' + n3(c.consM) + '</td><td>' + n1(c.reqKg) + '</td><td>' + n3(c.consKg) + '</td><td>' + esc(c.start) + '–' + esc(c.end) + '</td></tr>'; }).join('') + '</tbody></table></div></section>';
+      }
+      if ((r.pos || []).length) {
+        var st = r.sizes.map(function () { return 0; }), gt = 0; r.pos.forEach(function (p) { p.q.forEach(function (v, i) { st[i] += v; }); gt += p.tot; });
+        var keep = r.sizes.map(function (_, i) { return st[i] > 0; });
+        h += '<section class="card"><h2>PO &amp; size break-up <small>' + r.pos.length + ' POs · ' + n0(gt) + ' pcs · order sheet (OS)</small></h2><div class="tw"><table><thead><tr><th class="l">PO №</th><th class="l">Color</th><th class="l">Destination</th><th class="l">Delivery</th><th class="l">TOD</th>' + r.sizes.map(function (z, i) { return keep[i] ? '<th>' + esc(z) + '</th>' : ''; }).join('') + '<th>Total</th></tr></thead><tbody>' +
+          r.pos.map(function (p) { return '<tr><td class="l"><b>' + esc(p.po) + '</b></td><td class="l">' + esc(p.color) + '</td><td class="l">' + esc(p.dest) + '</td><td class="l">' + esc(p.del) + '</td><td class="l">' + esc(p.tod) + '</td>' + p.q.map(function (v, i) { return keep[i] ? '<td>' + (v ? n0(v) : '–') + '</td>' : ''; }).join('') + '<td><b>' + n0(p.tot) + '</b></td></tr>'; }).join('') +
+          '<tr class="tot"><td class="l" colspan="5"><b>Total</b></td>' + st.map(function (v, i) { return keep[i] ? '<td><b>' + n0(v) + '</b></td>' : ''; }).join('') + '<td><b>' + n0(gt) + '</b></td></tr></tbody></table></div></section>';
+      }
+      h += '<div class="note">Read live from the style file "' + esc(r.t) + '". Read-only.</div>';
+      document.getElementById('dvB').innerHTML = h;
+    });
+  }
+  function closeDv() { document.getElementById('dv').style.display = 'none'; document.body.style.overflow = ''; }
+  document.getElementById('dvX').addEventListener('click', closeDv);
+  document.getElementById('dv').addEventListener('click', function (e) { if (e.target === this) closeDv(); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeDv(); });
+
+  function load(fresh, tries) {
+    tries = tries || 0;
+    if (!D) document.getElementById('app').innerHTML = '<div class="load"><div class="spin"></div>Loading e-Cutmax data…</div>';
+    var p = { action: 'ecm_list' }; if (fresh) p.fresh = 1;
+    jsonp(p, function (r) {
+      if (!r || !r.ok) { if (tries < 2) return setTimeout(function () { load(fresh, tries + 1); }, 2500);
+        if (!D) document.getElementById('app').innerHTML = '<div class="load">Could not load the e-Cutmax data' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please press Refresh in a minute.</div>'; return; }
+      r.styles.forEach(derive); D = r;
+      document.getElementById('sub').textContent = r.styles.length + ' style files from all factories · list refreshed ' + r.builtS + (r.pending ? ' · ' + r.pending + ' files still being read' : '');
+      render();
+    });
+  }
+  document.getElementById('app').addEventListener('click', function (e) {
+    var th = e.target.closest('th.s'); if (th) { var k = th.getAttribute('data-k'); if (F.sort === k) F.dir = -F.dir; else { F.sort = k; F.dir = /^(u|buyer|style|desc|st)$/.test(k) ? 1 : -1; } render(); return; }
+    var fr = e.target.closest('[data-fac]'); if (fr) { F.fac = fr.getAttribute('data-fac'); render(); window.scrollTo(0, 0); return; }
+    var r = e.target.closest('[data-id]'); if (r) openStyle(r.getAttribute('data-id'));
+  });
+  document.getElementById('fac').addEventListener('click', function (e) { var b = e.target.closest('[data-f]'); if (!b) return; F.fac = b.getAttribute('data-f'); render(); });
+  document.getElementById('st').addEventListener('click', function (e) { var b = e.target.closest('[data-s]'); if (!b) return; F.st = b.getAttribute('data-s'); render(); });
+  document.getElementById('days').addEventListener('change', function () { F.days = +this.value; render(); });
+  document.getElementById('q').addEventListener('input', function () { F.q = this.value.toLowerCase().trim(); render(); });
+  document.getElementById('onlyIss').addEventListener('change', function () { F.iss = this.checked; render(); });
+  document.getElementById('btnRefresh').addEventListener('click', function () { load(true); });
+  document.getElementById('btnXls').addEventListener('click', function () {
+    if (!D) return; var btn = this; btn.disabled = true; btn.textContent = 'Preparing…';
+    function go() {
+      var rows = visible(), hdr = ['Factory', 'Buyer', 'Style', 'Description', 'Status', 'Fabric category', 'Color', 'UOM', 'Order qty', 'Total order qty', 'Cut qty', 'Fabric in unit', 'Fabric net used', 'Total utilised', 'Grand total', 'In unit - grand total', 'Booked net cons', 'Approved net cons', 'Actual net cons', 'Actual gross cons', 'Issues', 'Updated'];
+      var out = [];
+      rows.forEach(function (s) { (s.cats || []).filter(function (c) { return c.toq || c.cut || c.nu || c.av; }).forEach(function (c) {
+        out.push([s.u, s.buyer, s.style, s.desc, s.st === 'done' ? 'Completed' : s.st === 'run' ? 'Cutting' : 'Not started', c.cat, c.col, c.uom, c.oq || 0, c.toq || 0, c.cut || 0, c.av || 0, c.nu || 0, c.tu || 0, c.gt || 0, Math.round(((c.av || 0) - (c.gt || 0)) * 10) / 10, c.bn || 0, c.an || 0, c.xn || 0, c.xg || 0, (s.flags || []).filter(function (f) { return f.c.indexOf(c.cat || '#') === 0; }).map(function (f) { return f.t; }).join('; '), s.modS]); }); });
+      var ws = XLSX.utils.aoa_to_sheet([['Texport Syndicate · e-Cutmax & FCR Audit · ' + (F.fac === 'ALL' ? 'All factories' : F.fac) + ' · updated in last ' + F.days + ' days'], [], hdr].concat(out));
+      ws['!cols'] = hdr.map(function (h, i) { return { wch: i < 4 ? 22 : 14 }; });
+      var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'FCR Audit'); XLSX.writeFile(wb, 'eCutmax_FCR_Audit_' + F.fac + '.xlsx');
+      btn.disabled = false; btn.textContent = 'Download Excel';
+    }
+    if (window.XLSX) return go();
+    var sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'; sc.onload = go; sc.onerror = function () { btn.disabled = false; btn.textContent = 'Download Excel'; }; document.head.appendChild(sc);
+  });
+  bar(); load(false);
+  setInterval(function () { if (!document.hidden && document.getElementById('dv').style.display !== 'block') load(false); }, 10 * 60000);
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>

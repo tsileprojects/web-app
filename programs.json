@@ -841,6 +841,14 @@
 "portals": [
 "SMP"
 ]
+},
+{
+"name": "e-Cutmax & FCR Audit",
+"url": "audit.html",
+"group": "Audit",
+"portals": [
+"HO"
+]
 }
 ]
 }
