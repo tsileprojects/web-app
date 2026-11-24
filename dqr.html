@@ -100,7 +100,7 @@ tr.fail td{background:#FEF2F2}
   var CATC = { Man: '#1D4ED8', Machine: '#B45309', Wash: '#0891B2', Material: '#7C3AED', NA: '#94A3B8' };
   var D = null, F = { unit: '', per: 'last', line: '', view: 'qty' }, LQ = '';
   try { var sv = JSON.parse(localStorage.getItem('dqrDashF') || 'null'); if (sv) F = Object.assign(F, sv); } catch (e) {}
-  if (/^r:/.test(F.per) || F.per === 'last') F.per = 'mtd';   // a custom date range is for that visit only: always reopen on the full month
+  if (/^r:/.test(F.per)) F.per = 'last';   // a custom date range is for that visit only: always reopen on the full month
   var qu = (location.search.match(/[?&]unit=([A-Z0-9]+)/i) || [])[1]; if (qu) { F.unit = qu.toUpperCase(); F.line = ''; }
   var qv = (location.search.match(/[?&]view=(qty|dft)/i) || [])[1]; if (qv) F.view = qv.toLowerCase();
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
