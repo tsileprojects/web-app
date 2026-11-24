@@ -84,6 +84,7 @@ tr.fail td{background:#FEF2F2}
      live: 0 unit 1 line 2 buyer 3 style 4 color 5 sam 6 mp 7 util 8 target 9 pro 10 eff 11 days 12 slab 13 dayRes 14 overRes 15 batchSt */
   var D = null, F = { unit: '', per: 'mtd', buyer: '' }, BQ = '', BR = '';
   try { var sv = JSON.parse(localStorage.getItem('cotDashF') || 'null'); if (sv) F = Object.assign(F, sv); } catch (e) {}
+  if (/^r:/.test(F.per) || F.per === 'last') F.per = 'mtd';   // a custom date range is for that visit only: always reopen on the full month
   var qu = (location.search.match(/[?&]unit=([A-Z0-9]+)/i) || [])[1]; if (qu) F.unit = qu.toUpperCase();
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function n0(v) { return Math.round(v || 0).toLocaleString('en-IN'); }

@@ -81,6 +81,7 @@ tr.fail td{background:#FEF2F2}
   var MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   var D = null, F = { unit: '', per: 'mtd', buyer: '', types: { 'FSA': 1, 'Re-FSA': 1 } }, SORT = { k: 0, d: -1 }, DQ = '', DR = '';
   try { var sv = JSON.parse(localStorage.getItem('fsaDashF') || 'null'); if (sv) F = Object.assign(F, sv); } catch (e) {}
+  if (/^r:/.test(F.per) || F.per === 'last') F.per = 'mtd';   // a custom date range is for that visit only: always reopen on the full month
   var qUnit = (location.search.match(/[?&]unit=([A-Z0-9]+)/i) || [])[1]; if (qUnit) F.unit = qUnit.toUpperCase();
 
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
