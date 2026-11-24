@@ -42,7 +42,7 @@ th.l,td.l{text-align:left}td.wrap{white-space:normal;min-width:180px}
 tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
 .tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;display:inline-block}
 .t-run{background:#DBEAFE;color:#1E40AF}.t-done{background:#DCFCE7;color:#166534}.t-new{background:#EEF2F7;color:#475569}
-.t-over{background:#FEE2E2;color:#991B1B}.t-cons{background:#FFEDD5;color:#9A3412}.t-noapp{background:#FEF3C7;color:#92400E}.t-nofab{background:#FCE7F3;color:#9D174D}.t-tally{background:#EDE9FE;color:#5B21B6}
+.t-over{background:#FEE2E2;color:#991B1B}.t-cons{background:#FFEDD5;color:#9A3412}.t-noapp{background:#FEF3C7;color:#92400E}.t-nofab{background:#FCE7F3;color:#9D174D}.t-tally{background:#EDE9FE;color:#5B21B6}.t-data{background:#E0F2FE;color:#075985}
 .iss{display:inline-flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
 .pbar{display:inline-block;width:64px;height:6px;background:var(--line);border-radius:999px;vertical-align:middle;margin-left:8px;overflow:hidden}.pbar i{display:block;height:100%}
 .flag{display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-bottom:1px solid var(--line);cursor:pointer}.flag:hover{background:var(--soft)}
@@ -98,7 +98,7 @@ tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
   if (!IS_AUD && !/^(unit_|dept_|merchant|kpi_|ceo)/.test(U.redirect || '')) document.getElementById('btnXls').hidden = false;
 
   var FACS = ['ALL', 'FIPL', 'TS2', 'TS4', 'TS9', 'AP2'], STS = [['all', 'All'], ['run', 'Cutting'], ['done', 'Completed'], ['new', 'Not started']];
-  var FLAG = { over: ['Over cut', 't-over'], cons: ['Cons above approved', 't-cons'], noapp: ['No approved cons', 't-noapp'], nofab: ['Fabric receipt missing', 't-nofab'], tally: ['Fabric not tallying', 't-tally'] };
+  var FLAG = { over: ['Over cut', 't-over'], cons: ['Cons above approved', 't-cons'], noapp: ['No approved cons', 't-noapp'], nofab: ['Fabric receipt not entered', 't-nofab'], tally: ['Fabric not tallying', 't-tally'], data: ['Check cons entry', 't-data'] };
   var F = { fac: 'ALL', st: 'all', days: 30, q: '', iss: false, sort: 'mod', dir: -1 };
   var D = null;
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -149,30 +149,30 @@ tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
   function render() {
     bar(); if (!D) return;
     var rows = visible();
-    var toq = 0, cut = 0, fab = {}, issS = 0, fl = { over: 0, cons: 0, noapp: 0, nofab: 0, tally: 0 }, vs = [], run = 0, done = 0;
-    rows.forEach(function (s) { toq += s.toq; cut += s.cut; addFab(fab, s.fab); if (s.nIss) issS++; Object.keys(s.fk).forEach(function (k) { fl[k]++; }); if (s.var != null) vs.push(s.var); if (s.st === 'run') run++; if (s.st === 'done') done++; });
+    var toq = 0, cut = 0, fab = {}, issS = 0, fl = { over: 0, cons: 0, noapp: 0, nofab: 0, tally: 0, data: 0 }, fcrOk = 0, tallyOk = 0, withFab = 0, vs = [], run = 0, done = 0;
+    rows.forEach(function (s) { toq += s.toq; cut += s.cut; addFab(fab, s.fab); if (s.nIss) issS++; Object.keys(s.fk).forEach(function (k) { fl[k]++; }); if (s.var != null && Math.abs(s.var) <= 40) vs.push(s.var); if (s.cut && sumK(s.fab, 'av') > 0) { withFab++; if (!s.fk.tally) tallyOk++; } if (s.cut && !s.fk.nofab && !s.fk.noapp) fcrOk++; if (s.st === 'run') run++; if (s.st === 'done') done++; });
     var avgVar = vs.length ? vs.reduce(function (a, b) { return a + b; }, 0) / vs.length : null;
     var h = '<div class="kpis">' +
       kpi('Styles', rows.length, run + ' cutting · ' + done + ' completed', '', '#1D4ED8') +
       kpi('Order qty', n0(toq), 'incl. allowed +/- (main fabric)', '', '#0B2545') +
       kpi('Cut qty', n0(cut), toq ? Math.round(cut / toq * 100) + '% of order' : '–', 'b', '#1D4ED8') +
-      kpi('Fabric in unit', fabStr(fab, 'av'), 'received, as entered in FCR', '', '#0F766E') +
-      kpi('Fabric used', fabStr(fab, 'tu'), 'net used + end bits + re-cut', '', '#0F766E') +
-      kpi('Avg cons vs approved', avgVar == null ? '–' : pct(avgVar), 'actual net cons, ' + vs.length + ' styles', avgVar == null ? '' : avgVar > 2 ? 'r' : avgVar < -2 ? 'g' : 'a', '#B45309') +
+      kpi('FCR complete', fcrOk + ' / ' + (run + done), 'cut styles with fabric receipt + approved cons entered', fcrOk < run + done ? 'a' : 'g', '#0F766E') +
+      kpi('Fabric tallies', tallyOk + ' / ' + withFab, 'styles where fabric in unit = fabric accounted', tallyOk < withFab ? 'a' : 'g', '#0F766E') +
+      kpi('Avg cons vs approved', avgVar == null ? '–' : pct(avgVar), 'actual vs approved net cons, ' + vs.length + ' styles', avgVar == null ? '' : avgVar > 2 ? 'r' : avgVar < -2 ? 'g' : 'a', '#B45309') +
       kpi('Styles with issues', issS, rows.length ? Math.round(issS / rows.length * 100) + '% of styles' : '–', issS ? 'r' : 'g', '#B91C1C') +
       kpi('Over cut styles', fl.over, 'cut more than order qty', fl.over ? 'r' : 'g', '#B91C1C') + '</div>';
     // attention list
     var att = []; rows.forEach(function (s) { (s.flags || []).forEach(function (f) { att.push({ s: s, f: f }); }); });
-    var pri = { over: 0, cons: 1, tally: 2, nofab: 3, noapp: 4 }; att.sort(function (a, b) { return (pri[a.f.k] - pri[b.f.k]) || (b.s.mod - a.s.mod); });
+    var pri = { over: 0, cons: 1, tally: 2, data: 3, noapp: 4, nofab: 5 }; att.sort(function (a, b) { return (pri[a.f.k] - pri[b.f.k]) || (b.s.mod - a.s.mod); });
     var attH = att.slice(0, 40).map(function (x) { return '<div class="flag" data-id="' + x.s.id + '"><span class="tag ' + FLAG[x.f.k][1] + '">' + FLAG[x.f.k][0] + '</span><div class="w"><b>' + esc(x.s.u) + ' · ' + esc(x.s.buyer) + ' ' + esc(x.s.style) + '</b> <span class="note">' + esc(x.f.c) + '</span><div>' + esc(x.f.t) + '</div></div></div>'; }).join('');
     // factory summary
-    var fs = {}; rows.forEach(function (s) { var f = fs[s.u] || (fs[s.u] = { n: 0, toq: 0, cut: 0, iss: 0, fab: {}, vs: [] }); f.n++; f.toq += s.toq; f.cut += s.cut; if (s.nIss) f.iss++; addFab(f.fab, s.fab); if (s.var != null) f.vs.push(s.var); });
+    var fs = {}; rows.forEach(function (s) { var f = fs[s.u] || (fs[s.u] = { n: 0, toq: 0, cut: 0, iss: 0, fab: {}, vs: [] }); f.n++; f.toq += s.toq; f.cut += s.cut; if (s.nIss) f.iss++; addFab(f.fab, s.fab); if (s.var != null && Math.abs(s.var) <= 40) f.vs.push(s.var); if (s.cut) { f.cutN = (f.cutN || 0) + 1; if (!s.fk.nofab && !s.fk.noapp) f.fcr = (f.fcr || 0) + 1; } });
     var fsH = FACS.slice(1).filter(function (u) { return fs[u]; }).map(function (u) { var f = fs[u], av = f.vs.length ? f.vs.reduce(function (a, b) { return a + b; }, 0) / f.vs.length : null;
-      return '<tr class="click" data-fac="' + u + '"><td class="l"><b>' + u + '</b></td><td>' + f.n + '</td><td>' + n0(f.toq) + '</td><td>' + n0(f.cut) + '</td><td>' + fabStr(f.fab, 'av') + '</td><td>' + fabStr(f.fab, 'tu') + '</td><td class="' + (av == null ? '' : av > 2 ? 'r' : av < -2 ? 'g' : '') + '">' + (av == null ? '–' : pct(av)) + '</td><td class="' + (f.iss ? 'r' : 'g') + '"><b>' + f.iss + '</b></td></tr>'; }).join('');
+      return '<tr class="click" data-fac="' + u + '"><td class="l"><b>' + u + '</b></td><td>' + f.n + '</td><td>' + n0(f.toq) + '</td><td>' + n0(f.cut) + '</td><td class="' + ((f.fcr || 0) < (f.cutN || 0) ? 'a' : 'g') + '">' + (f.fcr || 0) + ' / ' + (f.cutN || 0) + '</td><td class="' + (av == null ? '' : av > 2 ? 'r' : av < -2 ? 'g' : '') + '">' + (av == null ? '–' : pct(av)) + '</td><td class="' + (f.iss ? 'r' : 'g') + '"><b>' + f.iss + '</b></td></tr>'; }).join('');
     h += '<div class="row2"><section class="card"><h2>Needs attention <small>' + att.length + ' findings · click to open the style</small></h2><div class="tw" style="max-height:420px">' + (attH || '<div class="note ok" style="padding:20px">No issues found for this selection.</div>') + '</div></section>' +
-      '<section class="card"><h2>Factory summary <small>click a factory to filter</small></h2><div class="tw"><table><thead><tr><th class="l">Factory</th><th>Styles</th><th>Order</th><th>Cut</th><th>Fabric in</th><th>Fabric used</th><th>Cons var</th><th>Issues</th></tr></thead><tbody>' + (fsH || '<tr><td class="l note" colspan="8">No styles.</td></tr>') + '</tbody></table></div>' +
+      '<section class="card"><h2>Factory summary <small>click a factory to filter</small></h2><div class="tw"><table><thead><tr><th class="l">Factory</th><th>Styles</th><th>Order</th><th>Cut</th><th>FCR complete</th><th>Cons var</th><th>Issues</th></tr></thead><tbody>' + (fsH || '<tr><td class="l note" colspan="7">No styles.</td></tr>') + '</tbody></table></div>' +
       '<div class="legend" style="margin-top:12px"><b>Checks:</b>' + Object.keys(FLAG).map(function (k) { return '<span class="tag ' + FLAG[k][1] + '">' + FLAG[k][0] + '</span>'; }).join('') + '</div>' +
-      '<div class="note" style="margin-top:6px">Over cut = cut more than order + allowed %. Cons above approved = actual net cons more than 2% over approved. Fabric not tallying = fabric in unit differs from fabric accounted (used + end bits + re-cut + size set + left over) by more than 1%.</div></section></div>';
+      '<div class="note" style="margin-top:6px">Over cut = cut more than order + allowed %. Cons above approved = actual net cons more than 2% over approved. Fabric receipt not entered = cutting done but fabric received from CWH is blank in the FCR. Check cons entry = approved cons looks mistyped (actual less than 60% of it). Avg cons ignores styles more than 40% off (entry errors). Fabric not tallying = fabric in unit differs from fabric accounted (used + end bits + re-cut + size set + left over) by more than 1%.</div></section></div>';
     // style table
     var cols = [['u', 'Factory', 'l'], ['buyer', 'Buyer', 'l'], ['style', 'Style', 'l'], ['desc', 'Description', 'l'], ['st', 'Status', 'l'], ['toq', 'Order'], ['cut', 'Cut'], ['cutPct', 'Cut %'], ['an', 'Approved cons'], ['xn', 'Actual cons'], ['var', 'Var %'], ['fav', 'Fabric in'], ['ftu', 'Fabric used'], ['nIss', 'Issues'], ['mod', 'Updated']];
     rows.forEach(function (s) { s.fav = sumK(s.fab, 'av'); s.ftu = sumK(s.fab, 'tu'); });
