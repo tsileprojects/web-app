@@ -85,12 +85,11 @@ tr.fail td{background:#FEF2F2}
 <header><div class="hw">
   <div style="display:flex;align-items:center;gap:14px"><a id="tsplHomeBtn" class="hb" href="main_ho.html" title="Back to the main dashboard" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;background:var(--gold);border-color:var(--gold);color:#0B2545">&#8962; Home</a>
   <div><h1><span id="uTitle" style="color:#fff"></span> Machine Plan <span>| machine requirement vs available</span></h1><div class="sub" id="sub">Loading machine plan…</div></div></div>
-  <div style="display:flex;gap:8px;align-items:center"><div class="tabs" id="tabs"><button type="button" data-v="req">Required</button><button type="button" data-v="short">Shortage / surplus</button></div><button class="hb" id="btnRefresh" type="button">Refresh</button></div>
+  <div style="display:flex;gap:8px;align-items:center"><div class="tabs" id="tabs"><button type="button" data-v="req">Required</button><button type="button" data-v="short">Shortage / surplus</button></div><button class="hb" id="btnXls" type="button" hidden>Download Excel</button><button class="hb" id="btnRefresh" type="button">Refresh</button></div>
 </div></header>
 <div class="bar"><div class="bw">
   <div class="seg" id="fac" role="group" aria-label="Unit"></div>
-  <label class="lbl" for="dsel">Date</label><select id="dsel"></select>
-  <label class="lbl" for="rng">Show</label><select id="rng"><option value="7">7 days</option><option value="14">14 days</option><option value="31">31 days</option><option value="999">All dates</option></select>
+  <span class="lbl">Dates</span><span style="display:inline-flex;align-items:center;gap:6px"><label for="dfrom" style="font-size:12px;color:#475569">From</label><input type="date" id="dfrom" class="din"><label for="dto" style="font-size:12px;color:#475569">To</label><input type="date" id="dto" class="din"></span>
   <input id="q" type="search" placeholder="Search machine…" style="height:40px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;width:200px">
   <label style="font-size:13px;color:#334155;display:inline-flex;align-items:center;gap:6px"><input type="checkbox" id="used" checked> Only machines needed in the plan</label>
 </div></div>
@@ -107,8 +106,8 @@ tr.fail td{background:#FEF2F2}
     h.href = d; })();
   var UNITS = ['FIPL', 'TS2', 'TS4', 'TS9', 'AP2', 'CMD', 'TSPL'], MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   var qu = ((location.search.match(/[?&]unit=([A-Z0-9]+)/i) || [])[1] || '').toUpperCase();
-  var F = { unit: UNITS.indexOf(qu) > -1 ? qu : 'TSPL', view: 'req', day: '', rng: 7, q: '', used: true };
-  var D = {}, CUR = null;
+  var F = { unit: UNITS.indexOf(qu) > -1 ? qu : 'TSPL', view: 'req', day: '', to: '', q: '', used: true };
+  var D = {}, CUR = null, LASTCOLS = null;
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function f1(v) { return String(Math.round(v * 10) / 10); }
   function n0(v) { return Math.round(v || 0).toLocaleString('en-IN'); }
@@ -128,16 +127,19 @@ tr.fail td{background:#FEF2F2}
     document.getElementById('fac').innerHTML = UNITS.map(function (u) { return '<button type="button" data-u="' + u + '" class="' + (F.unit === u ? 'on' : '') + '">' + (u === 'TSPL' ? 'All (TSPL)' : u) + '</button>'; }).join('');
     document.getElementById('uTitle').textContent = F.unit === 'TSPL' ? 'TSPL' : F.unit;
     [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.classList.toggle('on', b.getAttribute('data-v') === F.view); });
-    document.getElementById('rng').value = String(F.rng);
     if (!CUR) return;
     var t = today(), def = CUR.dates.filter(function (d) { return d > t; })[0] || CUR.dates[CUR.dates.length - 1];
     if (!F.day || CUR.dates.indexOf(F.day) < 0) F.day = def;
-    document.getElementById('dsel').innerHTML = CUR.dates.map(function (d) { return '<option value="' + d + '"' + (d === F.day ? ' selected' : '') + '>' + wd(d) + ' ' + dl(d) + '-' + d.slice(2, 4) + (d === t ? ' (today)' : '') + '</option>'; }).join('');
+    if (!F.to || F.to < F.day || CUR.dates.indexOf(F.to) < 0) { var j = Math.min(CUR.dates.indexOf(F.day) + 6, CUR.dates.length - 1); F.to = CUR.dates[j]; }
+    var a = document.getElementById('dfrom'), b = document.getElementById('dto');
+    a.min = b.min = CUR.dates[0]; a.max = b.max = CUR.dates[CUR.dates.length - 1]; a.value = F.day; b.value = F.to;
   }
+  function near(d, after) { var ds = CUR.dates; if (ds.indexOf(d) > -1) return d; for (var i = 0; i < ds.length; i++) if (ds[i] > d) return after ? ds[i] : (ds[i - 1] || ds[i]); return ds[ds.length - 1]; }
   function render() {
     bar(); if (!CUR) return;
     var di = CUR.dates.indexOf(F.day), cols = [];
-    for (var i = di; i < CUR.dates.length && cols.length < F.rng; i++) cols.push(i);
+    for (var i = di; i < CUR.dates.length && CUR.dates[i] <= F.to; i++) cols.push(i);
+    LASTCOLS = cols;
     var rows = CUR.rows.filter(function (r) { return (!F.q || r.n.toLowerCase().indexOf(F.q) > -1) && (!F.used || r.q.some(function (x) { return x > 0; })); });
     var av = 0, req = 0, sg = 0, sq = 0, need = 0, worst = null;
     CUR.rows.forEach(function (r) { var q = r.q[di] || 0; av += r.av; req += q; if (q > 0) need++; var d = r.av - q; if (d < 0) { sg++; sq -= d; if (!worst || d < worst[1]) worst = [r.n, d]; } });
@@ -153,7 +155,7 @@ tr.fail td{background:#FEF2F2}
           if (F.view === 'short') return '<td class="c' + sel + ' ' + (q === 0 ? 'cz' : d < 0 ? 'cs' : d === 0 ? 'ca' : 'cg') + '">' + (q === 0 ? '·' : (d > 0 ? '+' : '') + f1(d)) + '</td>';
           return '<td class="c' + sel + ' ' + (q === 0 ? 'cz' : d < 0 ? 'cs' : d === 0 ? 'ca' : '') + '">' + (q === 0 ? '·' : f1(q)) + '</td>'; }).join('') + '</tr>';
     }).join('');
-    h += '<section class="card"><h2>Machine-wise plan <small>' + esc(F.unit) + ' · from ' + dl(F.day) + ' · ' + (F.view === 'short' ? 'available minus required (red = short)' : 'machines required (red = more than available, amber = exactly all)') + '</small></h2><div class="tw" style="max-height:640px;overflow:auto"><table class="mx"><thead>' + head + '</thead><tbody>' + (body || '<tr><td colspan="9" class="note">No machines match.</td></tr>') + '</tbody></table></div></section>';
+    h += '<section class="card"><h2>Machine-wise plan <small>' + esc(F.unit) + ' · ' + dl(F.day) + ' to ' + dl(F.to) + ' (' + cols.length + ' plan days) · ' + (F.view === 'short' ? 'available minus required (red = short)' : 'machines required (red = more than available, amber = exactly all)') + '</small></h2><div class="tw" style="max-height:640px;overflow:auto"><table class="mx"><thead>' + head + '</thead><tbody>' + (body || '<tr><td colspan="9" class="note">No machines match.</td></tr>') + '</tbody></table></div></section>';
     document.getElementById('app').innerHTML = h + '<div class="note">Source: ' + esc(F.unit) + '_Mc_Req sheet (machine requirement worked out from the line plan and OB machine details, recalculated every 10 minutes). Read-only.</div>';
   }
   function sub() { if (!CUR) return; document.getElementById('sub').textContent = 'Live from the machine plan sheet · ' + CUR.dates.length + ' plan days · refreshed ' + CUR.generated; }
@@ -173,8 +175,27 @@ tr.fail td{background:#FEF2F2}
   }
   document.getElementById('fac').addEventListener('click', function (e) { var b = e.target.closest('[data-u]'); if (!b) return; F.unit = b.getAttribute('data-u'); load(false); });
   document.getElementById('tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-v]'); if (!b) return; F.view = b.getAttribute('data-v'); render(); });
-  document.getElementById('dsel').addEventListener('change', function () { F.day = this.value; render(); });
-  document.getElementById('rng').addEventListener('change', function () { F.rng = +this.value; render(); });
+  document.getElementById('dfrom').addEventListener('change', function () { if (!this.value || !CUR) return; F.day = near(this.value, true); if (F.to < F.day) F.to = F.day; render(); });
+  document.getElementById('dto').addEventListener('change', function () { if (!this.value || !CUR) return; F.to = near(this.value, false); if (F.to < F.day) F.day = F.to; render(); });
+  // Excel download - HO main users only (analysis files rule)
+  (function () { try { var u = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (/main_ho\.html|ceo\.html/.test(u.redirect || '')) document.getElementById('btnXls').hidden = false; } catch (e) {} })();
+  document.getElementById('btnXls').addEventListener('click', function () {
+    if (!CUR) return; var btn = this; btn.disabled = true; btn.textContent = 'Preparing…';
+    function go() {
+      var cols = LASTCOLS || [], hdr = ['Machine', 'In-house', 'Sampling', 'Non usable', 'Out source', 'Available'].concat(cols.map(function (j) { return wd(CUR.dates[j]) + ' ' + dl(CUR.dates[j]) + '-' + CUR.dates[j].slice(0, 4); }));
+      var rows = CUR.rows.filter(function (r) { return (!F.q || r.n.toLowerCase().indexOf(F.q) > -1) && (!F.used || r.q.some(function (x) { return x > 0; })); }).map(function (r) {
+        return [r.n, r.ih, r.sm, r.nu, r.os, r.av].concat(cols.map(function (j) { var q = r.q[j] || 0; return F.view === 'short' ? Math.round((r.av - q) * 10) / 10 : Math.round(q * 10) / 10; })); });
+      var title = [['Texport Syndicate Pvt Ltd. · ' + F.unit + ' Machine Plan · ' + (F.view === 'short' ? 'Shortage / surplus (available minus required)' : 'Machines required') + ' · ' + dl(F.day) + '-' + F.day.slice(0, 4) + ' to ' + dl(F.to) + '-' + F.to.slice(0, 4)], []];
+      var ws = XLSX.utils.aoa_to_sheet(title.concat([hdr]).concat(rows)); ws['!cols'] = [{ wch: 28 }].concat(hdr.slice(1).map(function () { return { wch: 13 }; }));
+      var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Machine Plan');
+      XLSX.writeFile(wb, 'Machine_Plan_' + F.unit + '_' + F.day + '_to_' + F.to + '.xlsx');
+      btn.disabled = false; btn.textContent = 'Download Excel';
+    }
+    if (window.XLSX) return go();
+    var sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'; sc.onload = go;
+    sc.onerror = function () { btn.disabled = false; btn.textContent = 'Download Excel'; btn.textContent = 'Excel tool did not load - try again'; };
+    document.head.appendChild(sc);
+  });
   document.getElementById('q').addEventListener('input', function () { F.q = this.value.toLowerCase().trim(); render(); });
   document.getElementById('used').addEventListener('change', function () { F.used = this.checked; render(); });
   document.getElementById('btnRefresh').addEventListener('click', function () { load(true); });
