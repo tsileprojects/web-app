@@ -145,7 +145,7 @@ tr.fail td{background:#FEF2F2}
     CUR.rows.forEach(function (r) { var q = r.q[di] || 0; av += r.av; req += q; if (q > 0) need++; var d = r.av - q; if (d < 0) { sg++; sq -= d; if (!worst || d < worst[1]) worst = [r.n, d]; } });
     var peak = 0, peakD = ''; cols.forEach(function (j) { var s = 0; CUR.rows.forEach(function (r) { s += Math.max(0, (r.q[j] || 0) - r.av); }); if (s > peak) { peak = s; peakD = CUR.dates[j]; } });
     var h = '<div class="kpis">' + kpi('Machine types', CUR.rows.length, need + ' needed on ' + dl(F.day), '', '#1D4ED8') + kpi('Available machines', n0(av), 'in-house + out-source, usable', '', '#0B2545') +
-      kpi('Required on ' + dl(F.day), n0(req), 'as per line plan', 'b', '#1D4ED8') + kpi('Short machine types', sg, 'required more than available', sg ? 'r' : 'g', '#B91C1C') +
+      kpi('Required on ' + dl(F.day), n0(req), 'as per line plan', 'b', '#1D4ED8') + (function () { var hr = htRows(); if (!hr.length) return ''; var t = hr[hr.length - 1].q[di] || 0; return kpi('Helper tables on ' + dl(F.day), f1(t), 'as per line plan', 'b', '#0F766E'); })() + kpi('Short machine types', sg, 'required more than available', sg ? 'r' : 'g', '#B91C1C') +
       kpi('Total shortage', n0(sq), 'machines short on ' + dl(F.day), sq ? 'r' : 'g', '#B91C1C') + kpi('Biggest shortage', worst ? esc(worst[0]) : 'None', worst ? (-worst[1]) + ' machines short' : 'no shortage', worst ? 'r' : 'g', '#B45309') +
       kpi('Peak shortage day', peak ? dl(peakD) : 'None', peak ? n0(peak) + ' machines short in the next ' + cols.length + ' days' : 'next ' + cols.length + ' days', peak ? 'a' : 'g', '#C8962E') + '</div>';
     var head = '<tr><th class="sticky">Machine</th><th>In-house</th><th>Sampling</th><th>Non usable</th><th>Out source</th><th>Available</th>' + cols.map(function (j) { return '<th class="c' + (j === di ? ' sel' : '') + '">' + wd(CUR.dates[j]) + '<br>' + dl(CUR.dates[j]) + '</th>'; }).join('') + '</tr>';
@@ -156,8 +156,17 @@ tr.fail td{background:#FEF2F2}
           return '<td class="c' + sel + ' ' + (q === 0 ? 'cz' : d < 0 ? 'cs' : d === 0 ? 'ca' : '') + '">' + (q === 0 ? '·' : f1(q)) + '</td>'; }).join('') + '</tr>';
     }).join('');
     h += '<section class="card"><h2>Machine-wise plan <small>' + esc(F.unit) + ' · ' + dl(F.day) + ' to ' + dl(F.to) + ' (' + cols.length + ' plan days) · ' + (F.view === 'short' ? 'available minus required (red = short)' : 'machines required (red = more than available, amber = exactly all)') + '</small></h2><div class="tw" style="max-height:640px;overflow:auto"><table class="mx"><thead>' + head + '</thead><tbody>' + (body || '<tr><td colspan="9" class="note">No machines match.</td></tr>') + '</tbody></table></div></section>';
+    var hr = htRows();
+    if (hr.length) {
+      var hh = '<tr><th class="sticky">' + (hr.length > 1 ? 'Unit' : 'Helper tables') + '</th>' + cols.map(function (j) { return '<th class="c' + (j === di ? ' sel' : '') + '">' + wd(CUR.dates[j]) + '<br>' + dl(CUR.dates[j]) + '</th>'; }).join('') + '</tr>';
+      var hb = hr.map(function (r) { return '<tr' + (r.tot ? ' style="background:#F1F5F9"' : '') + '><td class="sticky"' + (r.tot ? ' style="background:#F1F5F9"' : '') + '><b>' + esc(r.n) + '</b></td>' + cols.map(function (j) { var q = r.q[j] || 0; return '<td class="c' + (j === di ? ' sel' : '') + (q === 0 ? ' cz' : '') + '">' + (q === 0 ? '·' : (r.tot ? '<b>' + f1(q) + '</b>' : f1(q))) + '</td>'; }).join('') + '</tr>'; }).join('');
+      h += '<section class="card"><h2>Helper tables required <small>' + dl(F.day) + ' to ' + dl(F.to) + ' · from the line plan and OB (HELPER TABLE per style)' + (hr.length > 1 ? ' · unit-wise' : '') + '</small></h2><div class="tw"><table class="mx"><thead>' + hh + '</thead><tbody>' + hb + '</tbody></table></div></section>';
+    }
     document.getElementById('app').innerHTML = h + '<div class="note">Source: ' + esc(F.unit) + '_Mc_Req sheet (machine requirement worked out from the line plan and OB machine details, recalculated every 10 minutes). Read-only.</div>';
   }
+  function htRows() { var ht = CUR.ht || {}, us = Object.keys(ht).filter(function (k) { return k.charAt(0) !== '_'; }), out = us.map(function (u) { return { n: u, q: ht[u] }; });
+    if (out.length > 1) { var t = CUR.dates.map(function (_, j) { return out.reduce(function (a, r) { return a + (r.q[j] || 0); }, 0); }); out.push({ n: 'Total TSPL', q: t, tot: 1 }); }
+    return out; }
   function sub() { if (!CUR) return; document.getElementById('sub').textContent = 'Live from the machine plan sheet · ' + CUR.dates.length + ' plan days · refreshed ' + CUR.generated; }
   function load(fresh, tries) {
     tries = tries || 0; var u = F.unit;
@@ -188,6 +197,13 @@ tr.fail td{background:#FEF2F2}
       var title = [['Texport Syndicate Pvt Ltd. · ' + F.unit + ' Machine Plan · ' + (F.view === 'short' ? 'Shortage / surplus (available minus required)' : 'Machines required') + ' · ' + dl(F.day) + '-' + F.day.slice(0, 4) + ' to ' + dl(F.to) + '-' + F.to.slice(0, 4)], []];
       var ws = XLSX.utils.aoa_to_sheet(title.concat([hdr]).concat(rows)); ws['!cols'] = [{ wch: 28 }].concat(hdr.slice(1).map(function () { return { wch: 13 }; }));
       var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Machine Plan');
+      var hr = htRows();
+      if (hr.length) {
+        var h2 = [hr.length > 1 ? 'Unit' : 'Helper tables'].concat(cols.map(function (j) { return wd(CUR.dates[j]) + ' ' + dl(CUR.dates[j]) + '-' + CUR.dates[j].slice(0, 4); }));
+        var r2 = hr.map(function (r) { return [r.n].concat(cols.map(function (j) { return Math.round((r.q[j] || 0) * 10) / 10; })); });
+        var ws2 = XLSX.utils.aoa_to_sheet([['Texport Syndicate Pvt Ltd. · ' + F.unit + ' Helper tables required · ' + dl(F.day) + '-' + F.day.slice(0, 4) + ' to ' + dl(F.to) + '-' + F.to.slice(0, 4)], [], h2].concat(r2));
+        ws2['!cols'] = [{ wch: 16 }].concat(cols.map(function () { return { wch: 13 }; })); XLSX.utils.book_append_sheet(wb, ws2, 'Helper Tables');
+      }
       XLSX.writeFile(wb, 'Machine_Plan_' + F.unit + '_' + F.day + '_to_' + F.to + '.xlsx');
       btn.disabled = false; btn.textContent = 'Download Excel';
     }

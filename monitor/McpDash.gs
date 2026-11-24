@@ -35,13 +35,44 @@ function mcpBuild_(unit) {
     ['ih', 'sm', 'nu', 'os', 'av'].forEach(k => { if (idx[k] != null && typeof row[idx[k]] === 'number') e[k] += row[idx[k]]; });
     dates.forEach((d, j) => { if (typeof row[d.i] === 'number') e.q[j] += row[d.i]; });
   }
-  const ts = new Date();
-  return { ok: true, unit: unit, dates: dates.map(d => d.k), rows: order.map(n => map[n]), builtAt: ts.getTime(), generated: Utilities.formatDate(ts, tz, 'dd-MMM-yyyy HH:mm') };
+  const ts = new Date(), dk = dates.map(d => d.k);
+  let ht = {}; try { ht = mcpHelper_(unit, dk, tz); } catch (e) { ht = { _err: e.message }; }
+  return { ok: true, unit: unit, dates: dk, rows: order.map(n => map[n]), ht: ht, builtAt: ts.getTime(), generated: Utilities.formatDate(ts, tz, 'dd-MMM-yyyy HH:mm') };
+}
+/* Helper tables: not in the <UNIT>_Mc_Req machine list, so worked out here the same way the unit
+   "Mc_Plan_Dispaly & Calc" scripts do it: OB_Mc_Dtl (style -> HELPER TABLE qty) x <UNIT>_LP (date -> styles per line).
+   Returns { FIPL:[qty per date], ... } (one unit, or every unit for TSPL). Read-only. */
+const MCP_HELPER_NAME = 'HELPER TABLE';
+function mcpHelper_(unit, dk, tz) {
+  const clean = v => String(v).replace(/\s+/g, ' ').trim().toUpperCase();
+  const ob = SpreadsheetApp.openById('1-zpviK1eMMCwiEdjpXcV1jLyeiYqPRh_DRC55Aa4trU').getSheetByName('OB_Mc_Dtl');
+  const obv = ob.getRange(5, 3, Math.max(1, ob.getLastRow() - 4), 3).getValues(), sty = {};
+  obv.forEach(r => { if (!r[0] || !r[1]) return; const s = clean(r[0]); if (!sty[s]) sty[s] = {}; sty[s][clean(r[1])] = Number(r[2]) || 0; });
+  const keys = Object.keys(sty), memo = {};
+  const helperOf = name => {
+    const s = clean(name); if (memo[s] != null) return memo[s];
+    let m = sty[s]; if (!m) { const k = keys.find(x => x.replace(/\d+/g, '') === s.replace(/\d+/g, '')); if (k) m = sty[k]; }
+    return memo[s] = m ? (m[MCP_HELPER_NAME] || 0) : 0;
+  };
+  const units = unit === 'TSPL' ? ['FIPL', 'TS2', 'TS4', 'TS9', 'AP2', 'CMD'] : [unit], out = {}, pos = {};
+  dk.forEach((k, i) => pos[k] = i);
+  units.forEach(u => {
+    const f = MCP_FILES[u]; if (!f) return;
+    const sh = SpreadsheetApp.openById(f[0]).getSheetByName(u + '_LP'); if (!sh || sh.getLastRow() < 5) return;
+    const lp = sh.getRange(5, 3, sh.getLastRow() - 4, 89).getValues(), q = dk.map(() => 0);
+    lp.forEach(row => {
+      if (!row[0]) return; const d = new Date(row[0]); if (isNaN(d)) return;
+      const j = pos[Utilities.formatDate(d, tz, 'yyyy-MM-dd')]; if (j == null) return;
+      for (let c = 1; c < row.length; c += 2) if (row[c]) q[j] += helperOf(row[c]);
+    });
+    out[u] = q;
+  });
+  return out;
 }
 function mcpDash_(p) {
   const unit = String(p.unit || '').toUpperCase();
   if (!MCP_FILES[unit]) return { ok: false, error: 'Unknown unit ' + unit };
-  const c = CacheService.getScriptCache(), key = 'mcp1_' + unit;
+  const c = CacheService.getScriptCache(), key = 'mcp2_' + unit;
   if (String(p.fresh) !== '1') { const hit = c.get(key); if (hit) return JSON.parse(hit); }
   let out; try { out = mcpBuild_(unit); } catch (e) { return { ok: false, error: e.message }; }
   try { c.put(key, JSON.stringify(out), 300); } catch (e) {}
