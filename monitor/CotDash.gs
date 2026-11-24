@@ -77,3 +77,48 @@ function cotDash_(p) {
   try { const parts = {}; let k = 0; for (let i = 0; i < js.length; i += 95000) parts['cotd_' + (k++)] = js.slice(i, i + 95000); parts.cotd_n = String(k); c.putAll(parts, 21600); } catch (e) {}
   return out;
 }
+
+/* ---------- style history (action=cot_style&q=text[&unit=TS4]) ----------
+   Every line batch of the styles whose name contains q, with start / last day, running or closed, totals,
+   the COT result and the day-by-day rows from DPR_Data. Read-only; cached 5 minutes per search. */
+function cotStyleHist_(p) {
+  const q = String(p.q || '').toLowerCase().trim(), unit = String(p.unit || '').toUpperCase();
+  if (q.length < 2) return { ok: false, error: 'Type at least 2 letters of the style' };
+  const c = CacheService.getScriptCache(), key = 'cots2_' + Utilities.base64EncodeWebSafe(unit + '|' + q).slice(0, 200);
+  const hit = c.get(key); if (hit) return JSON.parse(hit);
+  // fast path: let the sheet filter the rows (gviz query) instead of reading the whole DPR_Data
+  const src = { id: COTD.id, sheet: 'DPR_Data' }, qs = q.replace(/'/g, '');
+  const res0 = appCsv_(src, "select C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W where lower(H) contains '" + qs + "'" + (unit ? " and upper(D) = '" + unit + "'" : ''));
+  if (res0.error) return { ok: false, error: res0.error };
+  const dt = v => cotDate_(v) || (function () { const d = new Date(v); return isNaN(d) ? '' : Utilities.formatDate(d, 'Asia/Kolkata', 'yyyy-MM-dd'); })();   // CSV dates come as dd/MM/yyyy
+  const mx = appCsv_(src, 'select max(C)'), latest = mx.rows && mx.rows[0] ? dt(mx.rows[0][0]) : '';
+  const rows = (res0.rows || []).map(r => { r[0] = dt(r[0]); return r; });
+  const g = {};
+  rows.forEach(r => {
+    const d = cotDate_(r[0]), u = String(r[1]).trim().toUpperCase(); if (!d || !u || (unit && u !== unit)) return;
+    const style = cotStyle_(r[5]); if (style.toLowerCase().indexOf(q) < 0) return;
+    const k = u + '|' + String(r[3]).trim() + '|' + style.toUpperCase() + '|' + String(r[6]).trim().toUpperCase();
+    (g[k] = g[k] || []).push({ d: d, u: u, line: String(r[3]).trim(), buyer: String(r[4]).trim() || '-', style: style, color: String(r[6]).trim(), sam: cotNum_(r[7]),
+      mp: cotNum_(r[8]), util: cotNum_(r[10]), tgt: cotNum_(r[11]), st: String(r[12]).trim(), pro: cotNum_(r[13]), aval: cotNum_(r[14]), earn: cotNum_(r[15]),
+      eff: cotPct_(r[16]), days: cotNum_(r[17]), slab: cotPct_(r[18]), dres: String(r[19]).trim(), ores: String(r[20]).trim() });
+  });
+  const r1 = n => Math.round(n * 10) / 10, out = [];
+  Object.keys(g).forEach(k => {
+    const a = g[k].sort((x, y) => x.d < y.d ? -1 : 1);
+    let cur = null;
+    a.forEach(x => {   // a new batch starts when the day count goes back down (style loaded again on that line)
+      if (!cur || (x.days >= 1 && x.days < cur.lastDays)) { cur = { rows: [] }; out.push(cur); }
+      cur.rows.push(x); if (x.days >= 1) cur.lastDays = x.days;
+    });
+  });
+  const bats = out.map(b => {
+    const f = b.rows[0], l = b.rows[b.rows.length - 1], lr = b.rows.filter(x => x.days >= 1).pop() || l;
+    let pro = 0, aval = 0, earn = 0, best = 0; b.rows.forEach(x => { pro += x.pro; aval += x.aval; earn += x.earn; if (x.eff > best) best = x.eff; });
+    return { unit: f.u, line: f.line, buyer: l.buyer, style: f.style, color: f.color, sam: l.sam, start: f.d, last: l.d, running: l.d === latest,
+      days: lr.days, pro: pro, eff: aval ? r1(earn / aval * 100) : 0, best: r1(best), lastEff: r1(lr.eff), ores: lr.ores, dres: lr.dres, mp: l.mp, util: l.util,
+      daily: b.rows.map(x => [x.d, x.days, x.util, x.tgt, x.pro, r1(x.eff), x.slab, x.dres]) };
+  }).sort((x, y) => x.start < y.start ? 1 : -1).slice(0, 80);
+  const res = { ok: true, q: q, latest: latest, batches: bats };
+  try { const js = JSON.stringify(res); if (js.length < 95000) c.put(key, js, 300); } catch (e) {}
+  return res;
+}

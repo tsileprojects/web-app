@@ -40,7 +40,7 @@ td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-sp
 th:first-child,td:first-child,th.l,td.l{text-align:left}
 tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
 tr.fail td{background:#FEF2F2}
-.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}.tag.g{background:#DCFCE7;color:#166534}.tag.r{background:#FEE2E2;color:#991B1B}
+.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px}.tag.g{background:#DCFCE7;color:#166534}.tag.r{background:#FEE2E2;color:#991B1B}.tag.a{background:#FEF3C7;color:#92400E}
 .pbar{display:inline-block;width:70px;height:6px;background:var(--line);border-radius:999px;vertical-align:middle;margin-left:8px;overflow:hidden}.pbar i{display:block;height:100%}
 .legend{display:flex;gap:14px;font-size:12px;color:var(--mute);margin-top:6px;flex-wrap:wrap}.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .def{display:grid;grid-template-columns:minmax(120px,190px) 1fr 60px;gap:10px;align-items:center;margin:7px 0;font-size:13px}
@@ -239,12 +239,13 @@ tr.fail td{background:#FEF2F2}
     h += '<section class="card"><h2>Live line status <small>' + dl(D.latest) + '-' + D.latest.slice(0, 4) + ' · latest DPR day · ' + esc(F.unit || 'all factories') + '</small></h2>' + liveTable() + '</section>';
     h += '<div class="grid"><section class="card" style="flex:1 1 420px"><h2>By buyer <small>click to filter</small></h2>' + buyerTable(P) + '</section>' +
          '<section class="card" style="flex:2 1 640px"><h2>Line batches <small>' + esc(scope) + '</small></h2><div id="bt">' + batchTable(P) + '</div></section></div>';
+    h += '<section class="card" id="shist"' + (BQ.length >= 3 ? '' : ' hidden') + '></section>';
     h += '<div class="note">Source: 00_COT_Datamaster_Live_1.0 (COT_Result and DPR_Data). COT target slab: day 1 = 10%, day 2 = 20% … day 5 = 50%, day 6 onwards = 55% (or the style\'s own slab). A batch is judged on its latest day: Achieved / Not achieved from the Over Result, Under COT while still in days 1–5. Start-up fail = latest day is day 6–8 and the day target was missed.</div>';
-    document.getElementById('app').innerHTML = h; bindB();
+    document.getElementById('app').innerHTML = h; bindB(); if (BQ.length >= 3) histShow();
   }
   function bindB() {
     var q = document.getElementById('bq'), r = document.getElementById('br');
-    if (q) q.addEventListener('input', function () { BQ = this.value.toLowerCase().trim(); var p = q.selectionStart; document.getElementById('bt').innerHTML = batchTable(period()); bindB(); var n = document.getElementById('bq'); n.focus(); n.setSelectionRange(p, p); });
+    if (q) q.addEventListener('input', function () { BQ = this.value.toLowerCase().trim(); var p = q.selectionStart; document.getElementById('bt').innerHTML = batchTable(period()); bindB(); var n = document.getElementById('bq'); n.focus(); n.setSelectionRange(p, p); histLater(); });
     if (r) r.addEventListener('change', function () { BR = this.value; document.getElementById('bt').innerHTML = batchTable(period()); bindB(); });
   }
   document.getElementById('app').addEventListener('click', function (e) {
@@ -252,6 +253,35 @@ tr.fail td{background:#FEF2F2}
     if (t) { F.unit = F.unit === t.getAttribute('data-unit') ? '' : t.getAttribute('data-unit'); save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
     else if (b) { F.buyer = F.buyer === b.getAttribute('data-buyer') ? '' : b.getAttribute('data-buyer'); save(); render(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
   });
+
+  /* ---------- style history: every batch of the searched style, start to close, day by day ---------- */
+  var HC = {}, HT = null, HOPEN = {};
+  function histLater() { clearTimeout(HT); HT = setTimeout(histShow, 600); }
+  function histShow() {
+    var box = document.getElementById('shist'); if (!box) return;
+    if (BQ.length < 3) { box.hidden = true; return; }
+    box.hidden = false; var key = (F.unit || '') + '|' + BQ;
+    if (HC[key]) { box.innerHTML = histHtml(HC[key]); return; }
+    box.innerHTML = '<h2>Style history <small>' + esc(BQ) + '</small></h2><div class="load"><div class="spin"></div>Finding every batch of "' + esc(BQ) + '"…</div>';
+    var p = { action: 'cot_style', q: BQ }; if (F.unit) p.unit = F.unit;
+    jsonp(p, function (r) { if (!r || !r.ok) { box.innerHTML = '<h2>Style history</h2><div class="note">Could not load the style history' + (r && r.error ? ': ' + esc(r.error) : '') + '.</div>'; return; }
+      HC[key] = r; if ((F.unit || '') + '|' + BQ === key) box.innerHTML = histHtml(r); });
+  }
+  function resTag(o) { return /^ach/i.test(o) ? '<span class="tag g">Achieved</span>' : /^not/i.test(o) ? '<span class="tag r">Not achieved</span>' : '<span class="tag a">Under COT</span>'; }
+  function histHtml(r) {
+    var b = r.batches; if (!b.length) return '<h2>Style history <small>' + esc(r.q) + '</small></h2><div class="note">No batches found for this style' + (F.unit ? ' in ' + esc(F.unit) : '') + '.</div>';
+    var run = b.filter(function (x) { return x.running; }).length, pcs = 0; b.forEach(function (x) { pcs += x.pro; });
+    var h = '<h2>Style history <small>"' + esc(r.q) + '"' + (F.unit ? ' · ' + esc(F.unit) : ' · all factories') + ' · ' + b.length + ' line batches · ' + run + ' running · ' + n0(pcs) + ' pcs produced · click a row for day-by-day detail</small></h2>';
+    h += '<div class="tw"><table><thead><tr><th class="l">Unit · Line</th><th class="l">Buyer</th><th class="l">Style</th><th class="l">Colour</th><th>SAM</th><th class="l">Started</th><th class="l">Last day / closed</th><th>Days run</th><th>Pcs produced</th><th>Avg eff</th><th>Best day</th><th>Latest eff</th><th class="l">COT result</th></tr></thead><tbody>';
+    b.forEach(function (x, i) {
+      var id = x.unit + '|' + x.line + '|' + x.style + '|' + x.color + '|' + x.start;
+      h += '<tr class="click" data-hist="' + esc(id) + '"><td class="l"><b>' + esc(x.unit) + ' · ' + esc(x.line) + '</b></td><td class="l">' + esc(x.buyer) + '</td><td class="l">' + esc(x.style) + '</td><td class="l">' + esc(x.color) + '</td><td>' + x.sam + '</td><td class="l">' + dl(x.start) + '-' + x.start.slice(2, 4) + '</td><td class="l">' + (x.running ? '<span class="tag g">Running</span> ' + dl(x.last) : 'Closed ' + dl(x.last) + '-' + x.last.slice(2, 4)) + '</td><td>' + n0(x.days) + '</td><td>' + n0(x.pro) + '</td><td class="' + (x.eff >= 55 ? 'g' : x.eff >= 45 ? 'a' : 'r') + '"><b>' + p1(x.eff) + '</b></td><td>' + p1(x.best) + '</td><td>' + p1(x.lastEff) + '</td><td class="l">' + resTag(x.ores) + '</td></tr>';
+      if (HOPEN[id]) h += '<tr><td colspan="13" style="background:#F8FAFC;padding:8px 12px"><table style="width:auto"><thead><tr><th class="l">Date</th><th>Day</th><th>MP</th><th>Target</th><th>Pcs</th><th>Eff</th><th>COT slab</th><th class="l">Day result</th></tr></thead><tbody>' +
+        x.daily.map(function (d) { return '<tr><td class="l">' + dl(d[0]) + '</td><td>' + (d[1] || '–') + '</td><td>' + n0(d[2]) + '</td><td>' + n0(d[3]) + '</td><td>' + n0(d[4]) + '</td><td class="' + (d[6] && d[5] >= d[6] ? 'g' : d[5] ? 'r' : '') + '">' + p1(d[5]) + '</td><td>' + (d[6] ? p1(d[6]) : '–') + '</td><td class="l">' + esc(d[7] || '') + '</td></tr>'; }).join('') + '</tbody></table></td></tr>';
+    });
+    return h + '</tbody></table></div><div class="note">From DPR_Data, all days the style ran on each line (a new batch starts when the day count restarts). "Closed" = the style\'s last DPR day on that line.</div>';
+  }
+  document.getElementById('app').addEventListener('click', function (e) { var t = e.target.closest('[data-hist]'); if (!t) return; var id = t.getAttribute('data-hist'); HOPEN[id] = !HOPEN[id]; var key = (F.unit || '') + '|' + BQ; if (HC[key]) document.getElementById('shist').innerHTML = histHtml(HC[key]); });
   function sub() { if (!D) return; var m = Math.floor((Date.now() - (D.builtAt || Date.now())) / 60000); document.getElementById('sub').textContent = 'Live from the COT datamaster · latest DPR day ' + dl(D.latest) + ' · refreshed ' + D.generated + (m > 1 ? ' (' + m + ' min ago)' : ''); }
   function load(fresh) {
     document.getElementById('sub').textContent = fresh ? 'Refreshing…' : 'Loading live COT data…';
