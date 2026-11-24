@@ -1,80 +1,202 @@
-/* ================= MACHINE PLAN (Mc_Plan) feed (action=mcp_dash&unit=FIPL|TS2|TS4|TS9|AP2|CMD|TSPL) =================
-   Read-only. Same <UNIT>_Mc_Req sheets (A5:CY108) the old "Mc_Plan Dashboard" Google pages read; the unit
-   "Mc_Plan_Dispaly & Calc" projects keep recalculating them every 10 minutes.
-   out: { dates:['24-Nov-2026',…], rows:[{n, ih, sm, nu, os, av, q:[required per date]}] }   Cached 5 minutes. */
-const MCP_FILES = {
-  FIPL: ['19Tp4xb4Gb0UfkXHDYIjjQET-8H2JnJJk7BwL0demTWE', 'FIPL_Mc_Req'], TS2: ['1U-SejE8qkwk9RuBSAUj1jWKlZQcy5uKm8EjCQqwJcZY', 'TS2_Mc_Req'],
-  TS4: ['1Gp5BWM-MB_U9NvywWSqWNFcpf7pppmSIYRwYlftKj28', 'TS4_Mc_Req'], TS9: ['1-xvNlcODe6h03-BndxUCXU5psDFUnVYQ8aJFc1jQaG0', 'TS9_Mc_Req'],
-  AP2: ['1FYPDUDUo3pK2syfgmWqV0cNZCevrO7wfwX2uBcpPcJo', 'AP2_Mc_Req'], CMD: ['1PzUHCBWccYa6twGBMD8IFpR-vaVN6u4qhK-qUwf4W4Q', 'CMD_Mc_Req'],
-  TSPL: ['1nkCRjl3V2ZzUczFZj2kuF8Wd_fEuBQ-Vfz-g9Si3a2Q', 'TSPL_Mc_Req']
+/* ================= e-CUTMAX & FCR AUDIT feed (Nov 2026) =================
+   action=ecm_list            -> every style e-Cutmax file of the last 180 days, all factories, with its
+                                 Fabric Completion Report (F2) per fabric category + audit flags.
+   action=ecm_style&id=<file> -> one style in detail: PO / size break-up (OS), cut log (M1..M10),
+                                 fabric utilisation summary (C1..C10), FCR rows.
+   READ-ONLY: the factory e-Cutmax files are only read, never written.
+   The list comes from an index (a JSON file in this account's Drive) that ecmTick keeps up to date every
+   10 minutes, re-reading only files changed since the last run. */
+const ECM_FOLDERS = [
+  ['FIPL', '1LRWQ4H8UM8sT6Lu_eOmnpPmAlay7Jl9S'], ['FIPL', '1QS-iPwlg9BqvJt0HFtPb_DNFStU1Uv3T'],   // TS3 e-Cutmax = FIPL
+  ['TS2', '1oF2IyHFMHNl4IXNxpe3EAJ-ofBuaqKd9'], ['TS2', '1wWrg3TQAtKVhHOAZf8P8cwbwWJ-bct6I'],
+  ['TS4', '1I1H08Vqb5nytBLKM4WnXV-7aj1gaDOM0'], ['TS4', '1HFWr7CyAyd1CMgG4AJZlnaseoVEyo2EU'],
+  ['TS9', '1BBI8NKEpSM1Wv8UZWYAj94GxIV1GCQHk'], ['TS9', '1aBNSfLw1zSROTYhBPQdLBM1EbxOLz1w0'], ['TS9', '1eKc2efVwWke8RtzN-9LBQOAYc1vQ4Ey_'],
+  ['AP2', '1KIwUxVVvVEFvjoRVRIEe7dHPlf_ul8sT']
+];
+const ECM_DAYS = 180, ECM_INDEX_NAME = 'TSPL_eCutmax_Audit_Index.json';
+
+const ECM_F2_COLS = {
+  'category': 'cat', 'color': 'col', 'style sub- description': 'sub', 'color order qty': 'oq', '+/- qty': 'pm', 'total order qty': 'toq', 'uom': 'uom',
+  'received from cwh': 'rcw', 'return to cwh': 'tcw', 'location from other style': 'fos', 'location to other style': 'tos',
+  'received from other unit': 'fou', 'sent to other unit': 'tou', 'fabric availabe in unit': 'av', 'fabric available in unit': 'av',
+  'cut qty': 'cut', 'fabric net used': 'nu', 'fabric +/-': 'fpm', 'unused end bits': 'ueb', 'leftover end bits': 'leb', 're- cutting': 'rc', 're-cutting': 'rc',
+  'total fabric utilised': 'tu', 'used for size set': 'ss', 'add-on re-cut / others': 'ao', 'let over / rtg': 'lo', 'left over / rtg': 'lo', 'grand total fabric': 'gt',
+  'booked net cons': 'bn', 'booked gross cons': 'bg', 'approved net cons': 'an', 'approved gross cons': 'ag', 'actual net cons': 'xn', 'actual gross cons': 'xg'
 };
-function mcpBuild_(unit) {
-  const tz = Session.getScriptTimeZone(), f = MCP_FILES[unit];
-  const values = SpreadsheetApp.openById(f[0]).getSheetByName(f[1]).getRange('A5:CY108').getValues();
-  let h = -1;
-  for (let r = 0; r < Math.min(values.length, 10) && h < 0; r++)
-    for (let c = 0; c < values[r].length; c++) if (String(values[r][c] || '').trim() === 'Grouping Machines') { h = r; break; }
-  if (h < 0) return { ok: false, error: 'Could not find the "Grouping Machines" header in ' + f[1] };
-  const names = { 'Grouping Machines': 'g', 'In-House Machines': 'ih', 'In-House': 'ih', 'Sampling Machines': 'sm', 'Sampling': 'sm',
-    'Non Usable Machines': 'nu', 'Non Usable': 'nu', 'Out Source Machines': 'os', 'Out Source': 'os', 'Available Machines': 'av', 'Available': 'av' };
-  const hdr = values[h], idx = {}, dates = [], seen = {};
-  const parse = t => { const m = String(t).match(/(\d+)-([A-Za-z]+)-(\d+)/); if (!m) return null; const mo = DQR_MON_[m[2].slice(0, 3).toLowerCase()]; if (!mo) return null; let y = +m[3]; if (y < 100) y += 2000; return new Date(y, mo - 1, +m[1]); };
-  for (let i = 0; i < hdr.length; i++) {
-    const cell = hdr[i]; if (cell === '' || cell == null) continue;
-    const t = cell instanceof Date ? '' : String(cell).trim();
-    if (t && names[t] && idx[names[t]] == null) idx[names[t]] = i;
-    const d = cell instanceof Date ? cell : parse(t);
-    if (d && !isNaN(d)) { const k = Utilities.formatDate(d, tz, 'yyyy-MM-dd'); if (!seen[k]) { seen[k] = 1; dates.push({ i: i, k: k }); } }
-  }
-  dates.sort((a, b) => a.k < b.k ? -1 : 1);
-  const map = {}, order = [];
-  for (let r = h + 1; r < values.length; r++) {
-    const row = values[r], nm = String(row[idx.g] || '').trim(); if (!nm || nm === '0') continue;
-    if (!map[nm]) { map[nm] = { n: nm, ih: 0, sm: 0, nu: 0, os: 0, av: 0, q: dates.map(() => 0) }; order.push(nm); }
-    const e = map[nm];
-    ['ih', 'sm', 'nu', 'os', 'av'].forEach(k => { if (idx[k] != null && typeof row[idx[k]] === 'number') e[k] += row[idx[k]]; });
-    dates.forEach((d, j) => { if (typeof row[d.i] === 'number') e.q[j] += row[d.i]; });
-  }
-  const ts = new Date(), dk = dates.map(d => d.k);
-  let ht = {}; try { ht = mcpHelper_(unit, dk, tz); } catch (e) { ht = { _err: e.message }; }
-  return { ok: true, unit: unit, dates: dk, rows: order.map(n => map[n]), ht: ht, builtAt: ts.getTime(), generated: Utilities.formatDate(ts, tz, 'dd-MMM-yyyy HH:mm') };
+function ecmNorm_(s) { return String(s == null ? '' : s).replace(/\s+/g, ' ').trim().toLowerCase(); }
+function ecmNum_(v) { if (typeof v === 'number') return isFinite(v) ? v : 0; const n = Number(String(v || '').replace(/,/g, '')); return isFinite(n) ? n : 0; }
+function ecmLabel_(grid, label) {   // value to the right of a label cell such as "Buyer :"
+  for (let r = 0; r < grid.length; r++) for (let c = 0; c < grid[r].length; c++)
+    if (ecmNorm_(grid[r][c]).indexOf(label) === 0) {
+      const own = String(grid[r][c]).split(':').slice(1).join(':').trim(); if (own) return own;
+      for (let k = c + 1; k < grid[r].length; k++) { const v = String(grid[r][k]).trim(); if (v && v !== ':') return v; }
+    }
+  return '';
 }
-/* Helper tables: not in the <UNIT>_Mc_Req machine list, so worked out here the same way the unit
-   "Mc_Plan_Dispaly & Calc" scripts do it: OB_Mc_Dtl (style -> HELPER TABLE qty) x <UNIT>_LP (date -> styles per line).
-   Returns { FIPL:[qty per date], ... } (one unit, or every unit for TSPL). Read-only. */
-const MCP_HELPER_NAME = 'HELPER TABLE';
-function mcpHelper_(unit, dk, tz) {
-  const clean = v => String(v).replace(/\s+/g, ' ').trim().toUpperCase();
-  const ob = SpreadsheetApp.openById('1-zpviK1eMMCwiEdjpXcV1jLyeiYqPRh_DRC55Aa4trU').getSheetByName('OB_Mc_Dtl');
-  const obv = ob.getRange(5, 3, Math.max(1, ob.getLastRow() - 4), 3).getValues(), sty = {};
-  obv.forEach(r => { if (!r[0] || !r[1]) return; const s = clean(r[0]); if (!sty[s]) sty[s] = {}; sty[s][clean(r[1])] = Number(r[2]) || 0; });
-  const keys = Object.keys(sty), memo = {};
-  const helperOf = name => {
-    const s = clean(name); if (memo[s] != null) return memo[s];
-    let m = sty[s]; if (!m) { const k = keys.find(x => x.replace(/\d+/g, '') === s.replace(/\d+/g, '')); if (k) m = sty[k]; }
-    return memo[s] = m ? (m[MCP_HELPER_NAME] || 0) : 0;
-  };
-  const units = unit === 'TSPL' ? ['FIPL', 'TS2', 'TS4', 'TS9', 'AP2', 'CMD'] : [unit], out = {}, pos = {};
-  dk.forEach((k, i) => pos[k] = i);
-  units.forEach(u => {
-    const f = MCP_FILES[u]; if (!f) return;
-    const sh = SpreadsheetApp.openById(f[0]).getSheetByName(u + '_LP'); if (!sh || sh.getLastRow() < 5) return;
-    const lp = sh.getRange(5, 3, sh.getLastRow() - 4, 89).getValues(), q = dk.map(() => 0);
-    lp.forEach(row => {
-      if (!row[0]) return; const d = new Date(row[0]); if (isNaN(d)) return;
-      const j = pos[Utilities.formatDate(d, tz, 'yyyy-MM-dd')]; if (j == null) return;
-      for (let c = 1; c < row.length; c += 2) if (row[c]) q[j] += helperOf(row[c]);
-    });
-    out[u] = q;
-  });
+
+/* ---- read one e-Cutmax file into an index entry ---- */
+function ecmReadFile_(ss) {
+  const out = { cats: [] };
+  const os = ss.getSheetByName('OS');
+  if (os) {
+    const g = os.getRange('A1:Z4').getDisplayValues();
+    out.buyer = ecmLabel_(g, 'buyer'); out.style = ecmLabel_(g, 'style №') || ecmLabel_(g, 'style no'); out.desc = ecmLabel_(g, 'style description');
+    out.vg = ecmLabel_(g, 'vg software'); out.grid = ecmLabel_(g, 'size grid');
+  }
+  const f2 = ss.getSheetByName('F2');
+  if (!f2) { out.err = 'No F2 (Fabric Completion Report) tab'; return out; }
+  const v = f2.getRange('A1:AL30').getValues();
+  let h = -1;
+  for (let r = 0; r < v.length && h < 0; r++) { const t = v[r].map(ecmNorm_); if (t.indexOf('cut qty') > -1 && t.indexOf('fabric net used') > -1) h = r; }
+  if (h < 0) { out.err = 'FCR header not found in F2'; return out; }
+  const map = {}; v[h].forEach((c, i) => { const k = ECM_F2_COLS[ecmNorm_(c)]; if (k && map[k] == null) map[k] = i; });
+  let uoms = [], tally = [];
+  const cs = ss.getSheetByName('CS');
+  if (cs) {
+    const c = cs.getRange('A1:BA16').getDisplayValues(); let ch = -1;
+    for (let r = 0; r < c.length && ch < 0; r++) if (c[r].map(ecmNorm_).indexOf('uom') > -1) ch = r;
+    if (ch > -1) { const iu = c[ch].map(ecmNorm_).indexOf('uom'), it = c[ch].map(ecmNorm_).findIndex(x => x.indexOf('fabric tally') === 0);
+      for (let r = ch + 1; r < c.length; r++) { uoms.push(c[r][iu] || ''); tally.push(it > -1 ? c[r][it] : ''); } }
+  }
+  if (!out.style) { const s = String(v[2] && v[2][2] || ''); out.style = s.split(':').slice(1).join(':').trim(); }
+  for (let r = h + 1, n = 0; r < v.length && n < 10; r++) {
+    const row = v[r], first = ecmNorm_(row[2]);
+    if (first.indexOf('prepared') === 0 || first.indexOf('total') === 0) break;
+    if (row[2] === '' && row[3] === '') continue;
+    n++;
+    const e = { n: n, sheet: n };
+    Object.keys(map).forEach(k => { const x = row[map[k]]; e[k] = (k === 'cat' || k === 'col' || k === 'sub' || k === 'uom') ? String(x || '').trim() : ecmNum_(x); });
+    if (!e.uom) e.uom = String(uoms[n - 1] || '').trim();
+    const t = String(tally[n - 1] || ''); e.tally = /✔|✅|ok|yes/i.test(t) ? 1 : /❌|✖|no/i.test(t) ? 0 : null;
+    if (!e.cat && !e.toq && !e.cut && !e.nu) continue;
+    out.cats.push(e);
+  }
   return out;
 }
-function mcpDash_(p) {
-  const unit = String(p.unit || '').toUpperCase();
-  if (!MCP_FILES[unit]) return { ok: false, error: 'Unknown unit ' + unit };
-  const c = CacheService.getScriptCache(), key = 'mcp2_' + unit;
+
+/* ---- audit flags for one style ---- */
+function ecmFlags_(s) {
+  const f = [];
+  s.cats.forEach(c => {
+    const nm = (c.cat || 'Cat ' + c.n) + (c.col ? ' ' + c.col : '');
+    if (c.cut > 0 && c.toq > 0 && c.cut > c.toq) f.push({ k: 'over', c: nm, t: 'Cut ' + Math.round(c.cut).toLocaleString() + ' vs order ' + Math.round(c.toq).toLocaleString() + ' (+' + Math.round((c.cut / c.toq - 1) * 100) + '%)' });
+    if (c.cut > 0 && c.an > 0 && c.xn > c.an * 1.02) f.push({ k: 'cons', c: nm, t: 'Actual net cons ' + c.xn.toFixed(3) + ' vs approved ' + c.an.toFixed(3) + ' (+' + ((c.xn / c.an - 1) * 100).toFixed(1) + '%)' });
+    if (c.cut > 0 && !(c.an > 0)) f.push({ k: 'noapp', c: nm, t: 'Cutting started but approved consumption not entered' });
+    if (c.cut > 0 && c.nu > 0 && !(c.av > 0)) f.push({ k: 'nofab', c: nm, t: 'Fabric used ' + c.nu.toFixed(1) + ' but fabric received (in-house) not entered' });
+    else if (c.av > 0 && c.gt > 0 && Math.abs(c.av - c.gt) > Math.max(1, c.av * 0.01)) f.push({ k: 'tally', c: nm, t: 'Fabric in unit ' + c.av.toFixed(1) + ' vs accounted ' + c.gt.toFixed(1) + ' (' + (c.av - c.gt > 0 ? 'unaccounted ' : 'used more than received ') + Math.abs(c.av - c.gt).toFixed(1) + ')' });
+  });
+  return f;
+}
+
+/* ---- index (Drive JSON) ---- */
+function ecmIndexFile_() {
+  const it = DriveApp.getRootFolder().getFilesByName(ECM_INDEX_NAME);
+  return it.hasNext() ? it.next() : DriveApp.getRootFolder().createFile(ECM_INDEX_NAME, '{"files":{}}', 'application/json');
+}
+function ecmLoadIndex_() { try { return JSON.parse(ecmIndexFile_().getBlob().getDataAsString()); } catch (e) { return { files: {} }; } }
+
+function ecmTick() {
+  const h = Number(Utilities.formatDate(new Date(), 'Asia/Kolkata', 'H'));
+  if (h < 6 || h >= 23) return 'night - skipped';
+  const lock = LockService.getScriptLock(); if (!lock.tryLock(2000)) return 'busy';
+  try { return ecmRefresh_(230000); } finally { lock.releaseLock(); }
+}
+function ecmRefresh_(budget) {
+  const t0 = Date.now(), idx = ecmLoadIndex_(), seen = {}, cutoff = Date.now() - ECM_DAYS * 864e5, todo = [];
+  ECM_FOLDERS.forEach(([u, fid]) => {
+    let folder; try { folder = DriveApp.getFolderById(fid); } catch (e) { return; }
+    const it = folder.getFilesByType(MimeType.GOOGLE_SHEETS);
+    while (it.hasNext()) {
+      const f = it.next(), id = f.getId(), mod = f.getLastUpdated().getTime();
+      if (mod < cutoff || seen[id]) continue;
+      seen[id] = 1;
+      const old = idx.files[id];
+      if (old && old.mod === mod && !old.err) { old.u = u; old.t = f.getName(); continue; }
+      todo.push({ u: u, f: f, mod: mod, old: old });
+    }
+  });
+  Object.keys(idx.files).forEach(id => { if (!seen[id]) delete idx.files[id]; });
+  todo.sort((a, b) => b.mod - a.mod);
+  let done = 0;
+  for (const j of todo) {
+    if (Date.now() - t0 > budget) break;
+    let e;
+    try { e = ecmReadFile_(SpreadsheetApp.openById(j.f.getId())); } catch (err) { e = { cats: [], err: String(err.message || err) }; }
+    e.id = j.f.getId(); e.u = j.u; e.t = j.f.getName(); e.mod = j.mod;
+    e.flags = ecmFlags_(e);
+    idx.files[e.id] = e; done++;
+  }
+  idx.built = Date.now(); idx.pending = todo.length - done;
+  ecmIndexFile_().setContent(JSON.stringify(idx));
+  CacheService.getScriptCache().remove('ecml_n');
+  return 'e-Cutmax index: ' + Object.keys(idx.files).length + ' files, read ' + done + ', pending ' + idx.pending + ' in ' + Math.round((Date.now() - t0) / 1000) + 's';
+}
+function ecmSetup_() {
+  const have = ScriptApp.getProjectTriggers().filter(t => t.getHandlerFunction() === 'ecmTick');
+  if (!have.length) ScriptApp.newTrigger('ecmTick').timeBased().everyMinutes(10).create();
+  return ecmRefresh_(300000);
+}
+
+/* ---- feeds ---- */
+function ecmList_(p) {
+  const c = CacheService.getScriptCache();
+  if (String(p.fresh) !== '1') { const n = Number(c.get('ecml_n') || 0); if (n) { const parts = c.getAll(Array.from({ length: n }, (_, i) => 'ecml_' + i)); let s = ''; for (let i = 0; i < n; i++) { if (parts['ecml_' + i] == null) { s = ''; break; } s += parts['ecml_' + i]; } if (s) return JSON.parse(s); } }
+  const idx = ecmLoadIndex_(), tz = 'Asia/Kolkata';
+  const styles = Object.keys(idx.files).map(id => idx.files[id]).sort((a, b) => b.mod - a.mod).map(e => ({
+    id: e.id, u: e.u, t: e.t, buyer: e.buyer || '', style: e.style || '', desc: e.desc || '', vg: e.vg || '', grid: e.grid || '',
+    mod: e.mod, modS: Utilities.formatDate(new Date(e.mod), tz, 'dd-MMM-yy HH:mm'), err: e.err || '', cats: e.cats, flags: e.flags || []
+  }));
+  const out = { ok: true, styles: styles, built: idx.built || 0, builtS: idx.built ? Utilities.formatDate(new Date(idx.built), tz, 'dd-MMM-yyyy HH:mm') : '', pending: idx.pending || 0, days: ECM_DAYS };
+  const js = JSON.stringify(out);
+  try { const parts = {}; let k = 0; for (let i = 0; i < js.length; i += 95000) parts['ecml_' + (k++)] = js.slice(i, i + 95000); parts.ecml_n = String(k); c.putAll(parts, 600); } catch (e) {}
+  return out;
+}
+
+function ecmStyle_(p) {
+  const id = String(p.id || '');
+  const idx = ecmLoadIndex_(), base = idx.files[id];
+  if (!base) return { ok: false, error: 'Style file not found in the e-Cutmax audit list' };   // only indexed e-Cutmax files can be opened
+  const c = CacheService.getScriptCache(), key = 'ecms_' + id + '_' + base.mod;
   if (String(p.fresh) !== '1') { const hit = c.get(key); if (hit) return JSON.parse(hit); }
-  let out; try { out = mcpBuild_(unit); } catch (e) { return { ok: false, error: e.message }; }
-  try { c.put(key, JSON.stringify(out), 300); } catch (e) {}
+  const ss = SpreadsheetApp.openById(id), tz = 'Asia/Kolkata';
+  const fresh = ecmReadFile_(ss); fresh.flags = ecmFlags_(fresh);
+  const out = { ok: true, id: id, u: base.u, t: base.t, buyer: fresh.buyer, style: fresh.style, desc: fresh.desc, vg: fresh.vg, grid: fresh.grid, cats: fresh.cats, flags: fresh.flags,
+    modS: Utilities.formatDate(new Date(base.mod), tz, 'dd-MMM-yyyy HH:mm'), pos: [], sizes: [], cuts: [], util: [] };
+  // POs and size break-up (OS)
+  const os = ss.getSheetByName('OS');
+  if (os) {
+    const g = os.getRange('A1:Z60').getDisplayValues(); let h = -1;
+    for (let r = 0; r < g.length && h < 0; r++) if (g[r].some(x => ecmNorm_(x) === 'po №.' || ecmNorm_(x) === 'po no.')) h = r;
+    if (h > -1) {
+      const hd = g[h].map(ecmNorm_), ip = hd.findIndex(x => x === 'po №.' || x === 'po no.'), ic = hd.indexOf('color'), id2 = hd.findIndex(x => x.indexOf('destination') === 0), idd = hd.findIndex(x => x.indexOf('delivery') === 0), itd = hd.indexOf('tod');
+      const s0 = itd > -1 ? itd + 1 : 10; let s1 = g[h].length - 1;
+      out.sizes = []; for (let k = s0; k < g[h].length; k++) { const nm = String(g[h][k]).trim(); if (!nm || /total|note/i.test(nm)) { s1 = k - 1; break; } out.sizes.push(nm); }
+      for (let r = h + 1; r < g.length; r++) {
+        const row = g[r]; if (!String(row[ip] || '').trim()) continue;
+        const q = out.sizes.map((_, k) => ecmNum_(row[s0 + k]));
+        out.pos.push({ po: row[ip], color: ic > -1 ? row[ic] : '', dest: id2 > -1 ? row[id2] : '', del: idd > -1 ? row[idd] : '', tod: itd > -1 ? row[itd] : '', q: q, tot: q.reduce((a, b) => a + b, 0) });
+      }
+    }
+  }
+  // cut log (M sheets) + utilisation summary (C sheets) for categories with data
+  fresh.cats.forEach(cat => {
+    const m = ss.getSheetByName('M' + cat.sheet);
+    if (m && cat.cut > 0) {
+      const last = Math.min(m.getLastRow(), 16 + 3 * 200);
+      if (last >= 16) {
+        const v = m.getRange(16, 2, last - 15, 13).getValues(); let cur = null;
+        v.forEach(r => {
+          if (r[0] === 1 && r[1] !== '' && r[1] != null) { cur = { cat: cat.n, no: r[1], lot: r[2], lay: ecmNum_(r[3]), mlen: ecmNum_(r[4]), mw: ecmNum_(r[6]), fw: ecmNum_(r[7]), date: r[12] instanceof Date ? Utilities.formatDate(r[12], tz, 'yyyy-MM-dd') : String(r[12] || '') }; }
+          else if (r[0] === 3 && cur) { cur.qty = ecmNum_(r[2]); cur.ways = ecmNum_(r[3]); cur.laylen = ecmNum_(r[4]); cur.reqM = ecmNum_(r[5]); cur.consM = ecmNum_(r[6]); cur.reqKg = ecmNum_(r[7]); cur.consKg = ecmNum_(r[8]); cur.start = r[9]; cur.end = r[10]; if (cur.lay > 0 || cur.qty > 0) out.cuts.push(cur); cur = null; }
+        });
+      }
+    }
+    const cs = ss.getSheetByName('C' + cat.sheet);
+    if (cs) {
+      const r = cs.getRange('C9:S9').getValues()[0].map(ecmNum_);
+      if (r.some(x => x)) out.util.push({ cat: cat.n, rolls: r[0], issued: r[1], cut: r[2], net: r[3], netCons: r[4], endBits: r[5], fpm: r[6], uebLen: r[7], ueb: r[8], reb: r[9], leb: r[10], rc: r[11], used: r[12], grossCons: r[13], broll: r[14], brollRe: r[15], brollLeft: r[16] });
+    }
+  });
+  try { c.put(key, JSON.stringify(out), 900); } catch (e) {}
   return out;
 }
