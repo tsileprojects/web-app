@@ -99,6 +99,7 @@ tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
 
   var FACS = ['ALL', 'FIPL', 'TS2', 'TS4', 'TS9', 'AP2'], STS = [['all', 'All'], ['run', 'Cutting'], ['done', 'Completed'], ['new', 'Not started']];
   var FLAG = { over: ['Over cut', 't-over'], cons: ['Cons above approved', 't-cons'], noapp: ['No approved cons', 't-noapp'], nofab: ['Fabric receipt not entered', 't-nofab'], tally: ['Fabric not tallying', 't-tally'], data: ['Check cons entry', 't-data'] };
+  function FL(k) { return FLAG[k] || [k, 't-data']; }
   var F = { fac: 'ALL', st: 'all', days: 30, q: '', iss: false, sort: 'mod', dir: -1 };
   var D = null;
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
@@ -137,7 +138,7 @@ tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
   }
   function fabStr(fab, key) { var ks = Object.keys(fab).filter(function (u) { return fab[u][key]; }); if (!ks.length) return '–'; return ks.map(function (u) { return n1(fab[u][key]) + (u !== '—' ? ' ' + esc(u.charAt(0) + u.slice(1).toLowerCase()) : ''); }).join(' · '); }
   function addFab(t, fab) { Object.keys(fab).forEach(function (u) { var f = t[u] || (t[u] = { av: 0, nu: 0, tu: 0, gt: 0 }); ['av', 'nu', 'tu', 'gt'].forEach(function (k) { f[k] += fab[u][k]; }); }); return t; }
-  function issTags(s) { return Object.keys(s.fk).map(function (k) { return '<span class="tag ' + FLAG[k][1] + '">' + FLAG[k][0] + '</span>'; }).join(''); }
+  function issTags(s) { return Object.keys(s.fk).map(function (k) { return '<span class="tag ' + FL(k)[1] + '">' + FL(k)[0] + '</span>'; }).join(''); }
   function stTag(st) { return st === 'done' ? '<span class="tag t-done">Completed</span>' : st === 'run' ? '<span class="tag t-run">Cutting</span>' : '<span class="tag t-new">Not started</span>'; }
 
   function bar() {
@@ -164,14 +165,14 @@ tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
     // attention list
     var att = []; rows.forEach(function (s) { (s.flags || []).forEach(function (f) { att.push({ s: s, f: f }); }); });
     var pri = { over: 0, cons: 1, tally: 2, data: 3, noapp: 4, nofab: 5 }; att.sort(function (a, b) { return (pri[a.f.k] - pri[b.f.k]) || (b.s.mod - a.s.mod); });
-    var attH = att.slice(0, 40).map(function (x) { return '<div class="flag" data-id="' + x.s.id + '"><span class="tag ' + FLAG[x.f.k][1] + '">' + FLAG[x.f.k][0] + '</span><div class="w"><b>' + esc(x.s.u) + ' · ' + esc(x.s.buyer) + ' ' + esc(x.s.style) + '</b> <span class="note">' + esc(x.f.c) + '</span><div>' + esc(x.f.t) + '</div></div></div>'; }).join('');
+    var attH = att.slice(0, 40).map(function (x) { return '<div class="flag" data-id="' + x.s.id + '"><span class="tag ' + FL(x.f.k)[1] + '">' + FL(x.f.k)[0] + '</span><div class="w"><b>' + esc(x.s.u) + ' · ' + esc(x.s.buyer) + ' ' + esc(x.s.style) + '</b> <span class="note">' + esc(x.f.c) + '</span><div>' + esc(x.f.t) + '</div></div></div>'; }).join('');
     // factory summary
     var fs = {}; rows.forEach(function (s) { var f = fs[s.u] || (fs[s.u] = { n: 0, toq: 0, cut: 0, iss: 0, fab: {}, vs: [] }); f.n++; f.toq += s.toq; f.cut += s.cut; if (s.nIss) f.iss++; addFab(f.fab, s.fab); if (s.var != null && Math.abs(s.var) <= 40) f.vs.push(s.var); if (s.cut) { f.cutN = (f.cutN || 0) + 1; if (!s.fk.nofab && !s.fk.noapp) f.fcr = (f.fcr || 0) + 1; } });
     var fsH = FACS.slice(1).filter(function (u) { return fs[u]; }).map(function (u) { var f = fs[u], av = f.vs.length ? f.vs.reduce(function (a, b) { return a + b; }, 0) / f.vs.length : null;
       return '<tr class="click" data-fac="' + u + '"><td class="l"><b>' + u + '</b></td><td>' + f.n + '</td><td>' + n0(f.toq) + '</td><td>' + n0(f.cut) + '</td><td class="' + ((f.fcr || 0) < (f.cutN || 0) ? 'a' : 'g') + '">' + (f.fcr || 0) + ' / ' + (f.cutN || 0) + '</td><td class="' + (av == null ? '' : av > 2 ? 'r' : av < -2 ? 'g' : '') + '">' + (av == null ? '–' : pct(av)) + '</td><td class="' + (f.iss ? 'r' : 'g') + '"><b>' + f.iss + '</b></td></tr>'; }).join('');
     h += '<div class="row2"><section class="card"><h2>Needs attention <small>' + att.length + ' findings · click to open the style</small></h2><div class="tw" style="max-height:420px">' + (attH || '<div class="note ok" style="padding:20px">No issues found for this selection.</div>') + '</div></section>' +
       '<section class="card"><h2>Factory summary <small>click a factory to filter</small></h2><div class="tw"><table><thead><tr><th class="l">Factory</th><th>Styles</th><th>Order</th><th>Cut</th><th>FCR complete</th><th>Cons var</th><th>Issues</th></tr></thead><tbody>' + (fsH || '<tr><td class="l note" colspan="7">No styles.</td></tr>') + '</tbody></table></div>' +
-      '<div class="legend" style="margin-top:12px"><b>Checks:</b>' + Object.keys(FLAG).map(function (k) { return '<span class="tag ' + FLAG[k][1] + '">' + FLAG[k][0] + '</span>'; }).join('') + '</div>' +
+      '<div class="legend" style="margin-top:12px"><b>Checks:</b>' + Object.keys(FLAG).map(function (k) { return '<span class="tag ' + FL(k)[1] + '">' + FL(k)[0] + '</span>'; }).join('') + '</div>' +
       '<div class="note" style="margin-top:6px">Over cut = cut more than order + allowed %. Cons above approved = actual net cons more than 2% over approved. Fabric receipt not entered = cutting done but fabric received from CWH is blank in the FCR. Check cons entry = approved cons looks mistyped (actual less than 60% of it). Avg cons ignores styles more than 40% off (entry errors). Fabric not tallying = fabric in unit differs from fabric accounted (used + end bits + re-cut + size set + left over) by more than 1%.</div></section></div>';
     // style table
     var cols = [['u', 'Factory', 'l'], ['buyer', 'Buyer', 'l'], ['style', 'Style', 'l'], ['desc', 'Description', 'l'], ['st', 'Status', 'l'], ['toq', 'Order'], ['cut', 'Cut'], ['cutPct', 'Cut %'], ['an', 'Approved cons'], ['xn', 'Actual cons'], ['var', 'Var %'], ['fav', 'Fabric in'], ['ftu', 'Fabric used'], ['nIss', 'Issues'], ['mod', 'Updated']];
@@ -223,7 +224,7 @@ tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
       if (!r || !r.ok) { document.getElementById('dvB').innerHTML = '<div class="load">Could not open this style' + (r && r.error ? ': ' + esc(r.error) : '') + '. Please try again.</div>'; return; }
       var cats = (r.cats || []).filter(function (c) { return c.toq || c.cut || c.nu || c.av; }); derive(r);
       var h = '<div class="info"><div><span>Factory</span><b>' + esc(r.u) + '</b></div><div><span>Buyer</span><b>' + esc(r.buyer || '–') + '</b></div><div><span>Style №</span><b>' + esc(r.style || '–') + '</b></div><div><span>Description</span><b>' + esc(r.desc || '–') + '</b></div><div><span>VG №</span><b>' + esc(r.vg || '–') + '</b></div><div><span>Size grid</span><b>' + esc(r.grid || '–') + '</b></div><div><span>Status</span><b>' + stTag(r.st) + '</b></div><div><span>Cut / order</span><b>' + n0(r.cut) + ' / ' + n0(r.toq) + (r.toq ? ' (' + Math.round(r.cut / r.toq * 100) + '%)' : '') + '</b></div></div>';
-      h += '<section class="card"><h2>Audit findings <small>' + (r.flags || []).length + '</small></h2>' + ((r.flags || []).length ? r.flags.map(function (f) { return '<div class="flag" style="cursor:default"><span class="tag ' + FLAG[f.k][1] + '">' + FLAG[f.k][0] + '</span><div class="w"><b>' + esc(f.c) + '</b><div>' + esc(f.t) + '</div></div></div>'; }).join('') : '<div class="ok">No issues: cut within order, consumption within approved, fabric tallies.</div>') + '</section>';
+      h += '<section class="card"><h2>Audit findings <small>' + (r.flags || []).length + '</small></h2>' + ((r.flags || []).length ? r.flags.map(function (f) { return '<div class="flag" style="cursor:default"><span class="tag ' + FL(f.k)[1] + '">' + FL(f.k)[0] + '</span><div class="w"><b>' + esc(f.c) + '</b><div>' + esc(f.t) + '</div></div></div>'; }).join('') : '<div class="ok">No issues: cut within order, consumption within approved, fabric tallies.</div>') + '</section>';
       h += '<section class="card"><h2>Fabric Consumption Reconciliation (FCR) <small>one column per fabric category · from the Fabric Completion Report</small></h2><div class="tw">' + (cats.length ? fcrTable(cats) : '<div class="note">No FCR data entered yet.</div>') + '</div></section>';
       if ((r.util || []).length) {
         var cn = {}; cats.forEach(function (c) { cn[c.n] = (c.cat || 'Fabric ' + c.n) + (c.col ? ' · ' + c.col : ''); });
