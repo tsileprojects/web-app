@@ -178,7 +178,7 @@ tr.fail td{background:#FEF2F2}
   document.getElementById('dfrom').addEventListener('change', function () { if (!this.value || !CUR) return; F.day = near(this.value, true); if (F.to < F.day) F.to = F.day; render(); });
   document.getElementById('dto').addEventListener('change', function () { if (!this.value || !CUR) return; F.to = near(this.value, false); if (F.to < F.day) F.day = F.to; render(); });
   // Excel download - HO main users only (analysis files rule)
-  (function () { try { var u = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); if (!/^(unit_|dept_|merchant|kpi_)/.test(u.redirect || '')) document.getElementById('btnXls').hidden = false; } catch (e) {} })();
+  (function () { try { var u = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); var rd = u.redirect || ''; if (/^dept_gsd/.test(rd) || !/^(unit_|dept_|merchant|kpi_)/.test(rd)) document.getElementById('btnXls').hidden = false; } catch (e) {} })();
   document.getElementById('btnXls').addEventListener('click', function () {
     if (!CUR) return; var btn = this; btn.disabled = true; btn.textContent = 'Preparing…';
     function go() {
