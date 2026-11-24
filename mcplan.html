@@ -75,7 +75,7 @@ tr.fail td{background:#FEF2F2}
 .trendb .c i{display:block;width:70%;max-width:22px;background:#1D4ED8;border-radius:3px 3px 0 0;min-height:1px}
 .trendb .c.on i{background:#C8962E}.trendb .c span{font-size:10px;color:var(--mute);margin-bottom:2px}
 .tlab{display:flex;gap:4px}.tlab span{flex:1;font-size:10px;color:var(--mute);text-align:center;overflow:hidden}
-.mx{border-collapse:separate;border-spacing:0}.mx th,.mx td{white-space:nowrap}.mx td.c{text-align:center;min-width:46px}
+.mx{border-collapse:separate;border-spacing:0}.mx th,.mx td{white-space:nowrap}.mx th.c,.mx td.c{text-align:center;width:72px;min-width:72px;max-width:72px}.mx th.c{line-height:1.25}
 .mx .sticky{position:sticky;left:0;background:#fff;z-index:1;text-align:left}.mx thead .sticky{background:#F8FAFC;z-index:2}
 .cs{background:#FEE2E2;color:#991B1B;font-weight:700}.cg{color:#15803D}.cz{color:#CBD5E1}.ca{background:#FEF3C7;color:#92400E;font-weight:700}
 .mx th.sel,.mx td.sel{outline:2px solid #C8962E;outline-offset:-2px}
@@ -110,6 +110,7 @@ tr.fail td{background:#FEF2F2}
   var F = { unit: UNITS.indexOf(qu) > -1 ? qu : 'TSPL', view: 'req', day: '', rng: 7, q: '', used: true };
   var D = {}, CUR = null;
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function f1(v) { return String(Math.round(v * 10) / 10); }
   function n0(v) { return Math.round(v || 0).toLocaleString('en-IN'); }
   function dl(d) { return d.slice(8) + '-' + MN[+d.slice(5, 7) - 1]; }
   function wd(d) { return WD[new Date(d + 'T12:00:00').getDay()]; }
@@ -149,8 +150,8 @@ tr.fail td{background:#FEF2F2}
     var body = rows.map(function (r) {
       return '<tr><td class="sticky"><b>' + esc(r.n) + '</b></td><td>' + n0(r.ih) + '</td><td>' + n0(r.sm) + '</td><td>' + n0(r.nu) + '</td><td>' + n0(r.os) + '</td><td><b>' + n0(r.av) + '</b></td>' +
         cols.map(function (j) { var q = r.q[j] || 0, d = r.av - q, sel = j === di ? ' sel' : '';
-          if (F.view === 'short') return '<td class="c' + sel + ' ' + (q === 0 ? 'cz' : d < 0 ? 'cs' : d === 0 ? 'ca' : 'cg') + '">' + (q === 0 ? '·' : (d > 0 ? '+' : '') + d) + '</td>';
-          return '<td class="c' + sel + ' ' + (q === 0 ? 'cz' : d < 0 ? 'cs' : d === 0 ? 'ca' : '') + '">' + (q === 0 ? '·' : q) + '</td>'; }).join('') + '</tr>';
+          if (F.view === 'short') return '<td class="c' + sel + ' ' + (q === 0 ? 'cz' : d < 0 ? 'cs' : d === 0 ? 'ca' : 'cg') + '">' + (q === 0 ? '·' : (d > 0 ? '+' : '') + f1(d)) + '</td>';
+          return '<td class="c' + sel + ' ' + (q === 0 ? 'cz' : d < 0 ? 'cs' : d === 0 ? 'ca' : '') + '">' + (q === 0 ? '·' : f1(q)) + '</td>'; }).join('') + '</tr>';
     }).join('');
     h += '<section class="card"><h2>Machine-wise plan <small>' + esc(F.unit) + ' · from ' + dl(F.day) + ' · ' + (F.view === 'short' ? 'available minus required (red = short)' : 'machines required (red = more than available, amber = exactly all)') + '</small></h2><div class="tw" style="max-height:640px;overflow:auto"><table class="mx"><thead>' + head + '</thead><tbody>' + (body || '<tr><td colspan="9" class="note">No machines match.</td></tr>') + '</tbody></table></div></section>';
     document.getElementById('app').innerHTML = h + '<div class="note">Source: ' + esc(F.unit) + '_Mc_Req sheet (machine requirement worked out from the line plan and OB machine details, recalculated every 10 minutes). Read-only.</div>';
