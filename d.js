@@ -34,30 +34,37 @@ function ecmLabel_(grid, label) {   // value to the right of a label cell such a
   return '';
 }
 
-/* ---- read one e-Cutmax file into an index entry ---- */
-function ecmReadFile_(ss) {
+/* ---- read e-Cutmax files through the Sheets API (values:batchGet, many files in parallel, read-only) ---- */
+function ecmGet_(ids, ranges, render) {
+  const tok = ScriptApp.getOAuthToken(), q = ranges.map(r => 'ranges=' + encodeURIComponent(r)).join('&');
+  const rs = UrlFetchApp.fetchAll(ids.map(id => ({ url: 'https://sheets.googleapis.com/v4/spreadsheets/' + id + '/values:batchGet?valueRenderOption=' + (render || 'UNFORMATTED_VALUE') + '&' + q, headers: { Authorization: 'Bearer ' + tok }, muteHttpExceptions: true })));
+  return rs.map(r => {
+    if (r.getResponseCode() !== 200) { let m = 'HTTP ' + r.getResponseCode(); try { m = JSON.parse(r.getContentText()).error.message; } catch (e) {} return { err: m }; }
+    const j = JSON.parse(r.getContentText()), out = {};
+    (j.valueRanges || []).forEach((v, i) => { out[ranges[i]] = (v.values || []).map(row => row.map(x => x == null ? '' : x)); });
+    return out;
+  });
+}
+function ecmPad_(g, n) { return (g || []).map(r => { r = r.slice(); while (r.length < n) r.push(''); return r; }); }
+const ECM_R = ['OS!A1:Z6', 'F2!A1:AL30', 'CS!A1:BA16'];
+function ecmParse_(got) {
   const out = { cats: [] };
-  const os = ss.getSheetByName('OS');
-  if (os) {
-    const g = os.getRange('A1:Z4').getDisplayValues();
-    out.buyer = ecmLabel_(g, 'buyer'); out.style = ecmLabel_(g, 'style №') || ecmLabel_(g, 'style no'); out.desc = ecmLabel_(g, 'style description');
-    out.vg = ecmLabel_(g, 'vg software'); out.grid = ecmLabel_(g, 'size grid');
+  if (got.err) { out.err = got.err; return out; }
+  const os = ecmPad_(got['OS!A1:Z6'], 26);
+  if (os.length) {
+    out.buyer = ecmLabel_(os, 'buyer'); out.style = ecmLabel_(os, 'style №') || ecmLabel_(os, 'style no'); out.desc = ecmLabel_(os, 'style description');
+    out.vg = ecmLabel_(os, 'vg software'); out.grid = ecmLabel_(os, 'size grid');
   }
-  const f2 = ss.getSheetByName('F2');
-  if (!f2) { out.err = 'No F2 (Fabric Completion Report) tab'; return out; }
-  const v = f2.getRange('A1:AL30').getValues();
+  const v = ecmPad_(got['F2!A1:AL30'], 38);
   let h = -1;
   for (let r = 0; r < v.length && h < 0; r++) { const t = v[r].map(ecmNorm_); if (t.indexOf('cut qty') > -1 && t.indexOf('fabric net used') > -1) h = r; }
-  if (h < 0) { out.err = 'FCR header not found in F2'; return out; }
+  if (h < 0) { out.err = 'FCR (F2) not found'; return out; }
   const map = {}; v[h].forEach((c, i) => { const k = ECM_F2_COLS[ecmNorm_(c)]; if (k && map[k] == null) map[k] = i; });
-  let uoms = [], tally = [];
-  const cs = ss.getSheetByName('CS');
-  if (cs) {
-    const c = cs.getRange('A1:BA16').getDisplayValues(); let ch = -1;
-    for (let r = 0; r < c.length && ch < 0; r++) if (c[r].map(ecmNorm_).indexOf('uom') > -1) ch = r;
-    if (ch > -1) { const iu = c[ch].map(ecmNorm_).indexOf('uom'), it = c[ch].map(ecmNorm_).findIndex(x => x.indexOf('fabric tally') === 0);
-      for (let r = ch + 1; r < c.length; r++) { uoms.push(c[r][iu] || ''); tally.push(it > -1 ? c[r][it] : ''); } }
-  }
+  const uoms = [], tally = [], c = ecmPad_(got['CS!A1:BA16'], 53);
+  let ch = -1;
+  for (let r = 0; r < c.length && ch < 0; r++) if (c[r].map(ecmNorm_).indexOf('uom') > -1) ch = r;
+  if (ch > -1) { const hn = c[ch].map(ecmNorm_), iu = hn.indexOf('uom'), it = hn.findIndex(x => x.indexOf('fabric tally') === 0);
+    for (let r = ch + 1; r < c.length; r++) { uoms.push(c[r][iu] || ''); tally.push(it > -1 ? c[r][it] : ''); } }
   if (!out.style) { const s = String(v[2] && v[2][2] || ''); out.style = s.split(':').slice(1).join(':').trim(); }
   for (let r = h + 1, n = 0; r < v.length && n < 10; r++) {
     const row = v[r], first = ecmNorm_(row[2]);
@@ -69,6 +76,7 @@ function ecmReadFile_(ss) {
     if (!e.uom) e.uom = String(uoms[n - 1] || '').trim();
     const t = String(tally[n - 1] || ''); e.tally = /✔|✅|ok|yes/i.test(t) ? 1 : /❌|✖|no/i.test(t) ? 0 : null;
     if (!e.cat && !e.toq && !e.cut && !e.nu) continue;
+    Object.keys(e).forEach(k => { if (typeof e[k] === 'number') e[k] = Math.round(e[k] * 10000) / 10000; });
     out.cats.push(e);
   }
   return out;
@@ -118,13 +126,15 @@ function ecmRefresh_(budget) {
   Object.keys(idx.files).forEach(id => { if (!seen[id]) delete idx.files[id]; });
   todo.sort((a, b) => b.mod - a.mod);
   let done = 0;
-  for (const j of todo) {
+  for (let i = 0; i < todo.length; i += 15) {
     if (Date.now() - t0 > budget) break;
-    let e;
-    try { e = ecmReadFile_(SpreadsheetApp.openById(j.f.getId())); } catch (err) { e = { cats: [], err: String(err.message || err) }; }
-    e.id = j.f.getId(); e.u = j.u; e.t = j.f.getName(); e.mod = j.mod;
-    e.flags = ecmFlags_(e);
-    idx.files[e.id] = e; done++;
+    const part = todo.slice(i, i + 15), got = ecmGet_(part.map(j => j.f.getId()), ECM_R);
+    part.forEach((j, k) => {
+      const e = ecmParse_(got[k]);
+      e.id = j.f.getId(); e.u = j.u; e.t = j.f.getName(); e.mod = j.mod;
+      e.flags = ecmFlags_(e);
+      idx.files[e.id] = e; done++;
+    });
   }
   idx.built = Date.now(); idx.pending = todo.length - done;
   ecmIndexFile_().setContent(JSON.stringify(idx));
@@ -158,44 +168,37 @@ function ecmStyle_(p) {
   if (!base) return { ok: false, error: 'Style file not found in the e-Cutmax audit list' };   // only indexed e-Cutmax files can be opened
   const c = CacheService.getScriptCache(), key = 'ecms_' + id + '_' + base.mod;
   if (String(p.fresh) !== '1') { const hit = c.get(key); if (hit) return JSON.parse(hit); }
-  const ss = SpreadsheetApp.openById(id), tz = 'Asia/Kolkata';
-  const fresh = ecmReadFile_(ss); fresh.flags = ecmFlags_(fresh);
+  const tz = 'Asia/Kolkata';
+  const got0 = ecmGet_([id], ECM_R)[0], fresh = ecmParse_(got0); fresh.flags = ecmFlags_(fresh);
+  if (fresh.err && !fresh.cats.length) return { ok: false, error: fresh.err };
   const out = { ok: true, id: id, u: base.u, t: base.t, buyer: fresh.buyer, style: fresh.style, desc: fresh.desc, vg: fresh.vg, grid: fresh.grid, cats: fresh.cats, flags: fresh.flags,
     modS: Utilities.formatDate(new Date(base.mod), tz, 'dd-MMM-yyyy HH:mm'), pos: [], sizes: [], cuts: [], util: [] };
+  const rr = ['OS!A1:AB80']; fresh.cats.forEach(cat => { if (cat.cut > 0) rr.push('M' + cat.sheet + '!B16:N616'); rr.push('C' + cat.sheet + '!C9:S9'); });
+  const got = ecmGet_([id], rr, 'FORMATTED_VALUE')[0];
+  if (got.err) return out;
   // POs and size break-up (OS)
-  const os = ss.getSheetByName('OS');
-  if (os) {
-    const g = os.getRange('A1:Z60').getDisplayValues(); let h = -1;
-    for (let r = 0; r < g.length && h < 0; r++) if (g[r].some(x => ecmNorm_(x) === 'po №.' || ecmNorm_(x) === 'po no.')) h = r;
-    if (h > -1) {
-      const hd = g[h].map(ecmNorm_), ip = hd.findIndex(x => x === 'po №.' || x === 'po no.'), ic = hd.indexOf('color'), id2 = hd.findIndex(x => x.indexOf('destination') === 0), idd = hd.findIndex(x => x.indexOf('delivery') === 0), itd = hd.indexOf('tod');
-      const s0 = itd > -1 ? itd + 1 : 10; let s1 = g[h].length - 1;
-      out.sizes = []; for (let k = s0; k < g[h].length; k++) { const nm = String(g[h][k]).trim(); if (!nm || /total|note/i.test(nm)) { s1 = k - 1; break; } out.sizes.push(nm); }
-      for (let r = h + 1; r < g.length; r++) {
-        const row = g[r]; if (!String(row[ip] || '').trim()) continue;
-        const q = out.sizes.map((_, k) => ecmNum_(row[s0 + k]));
-        out.pos.push({ po: row[ip], color: ic > -1 ? row[ic] : '', dest: id2 > -1 ? row[id2] : '', del: idd > -1 ? row[idd] : '', tod: itd > -1 ? row[itd] : '', q: q, tot: q.reduce((a, b) => a + b, 0) });
-      }
+  const g = ecmPad_(got['OS!A1:AB80'], 28); let h = -1;
+  for (let r = 0; r < g.length && h < 0; r++) if (g[r].some(x => ecmNorm_(x) === 'po №.' || ecmNorm_(x) === 'po no.')) h = r;
+  if (h > -1) {
+    const hd = g[h].map(ecmNorm_), ip = hd.findIndex(x => x === 'po №.' || x === 'po no.'), ic = hd.indexOf('color'), id2 = hd.findIndex(x => x.indexOf('destination') === 0), idd = hd.findIndex(x => x.indexOf('delivery') === 0), itd = hd.indexOf('tod');
+    const s0 = itd > -1 ? itd + 1 : 10;
+    for (let k = s0; k < g[h].length; k++) { const nm = String(g[h][k]).trim(); if (!nm || /total|note/i.test(nm)) break; out.sizes.push(nm); }
+    for (let r = h + 1; r < g.length; r++) {
+      const row = g[r]; if (!String(row[ip] || '').trim()) continue;
+      const q = out.sizes.map((_, k) => ecmNum_(row[s0 + k]));
+      out.pos.push({ po: row[ip], color: ic > -1 ? row[ic] : '', dest: id2 > -1 ? row[id2] : '', del: idd > -1 ? row[idd] : '', tod: itd > -1 ? row[itd] : '', q: q, tot: q.reduce((a, b) => a + b, 0) });
     }
   }
-  // cut log (M sheets) + utilisation summary (C sheets) for categories with data
+  // cut log (M sheets) + utilisation summary (C sheets)
   fresh.cats.forEach(cat => {
-    const m = ss.getSheetByName('M' + cat.sheet);
-    if (m && cat.cut > 0) {
-      const last = Math.min(m.getLastRow(), 16 + 3 * 200);
-      if (last >= 16) {
-        const v = m.getRange(16, 2, last - 15, 13).getValues(); let cur = null;
-        v.forEach(r => {
-          if (r[0] === 1 && r[1] !== '' && r[1] != null) { cur = { cat: cat.n, no: r[1], lot: r[2], lay: ecmNum_(r[3]), mlen: ecmNum_(r[4]), mw: ecmNum_(r[6]), fw: ecmNum_(r[7]), date: r[12] instanceof Date ? Utilities.formatDate(r[12], tz, 'yyyy-MM-dd') : String(r[12] || '') }; }
-          else if (r[0] === 3 && cur) { cur.qty = ecmNum_(r[2]); cur.ways = ecmNum_(r[3]); cur.laylen = ecmNum_(r[4]); cur.reqM = ecmNum_(r[5]); cur.consM = ecmNum_(r[6]); cur.reqKg = ecmNum_(r[7]); cur.consKg = ecmNum_(r[8]); cur.start = r[9]; cur.end = r[10]; if (cur.lay > 0 || cur.qty > 0) out.cuts.push(cur); cur = null; }
-        });
-      }
-    }
-    const cs = ss.getSheetByName('C' + cat.sheet);
-    if (cs) {
-      const r = cs.getRange('C9:S9').getValues()[0].map(ecmNum_);
-      if (r.some(x => x)) out.util.push({ cat: cat.n, rolls: r[0], issued: r[1], cut: r[2], net: r[3], netCons: r[4], endBits: r[5], fpm: r[6], uebLen: r[7], ueb: r[8], reb: r[9], leb: r[10], rc: r[11], used: r[12], grossCons: r[13], broll: r[14], brollRe: r[15], brollLeft: r[16] });
-    }
+    const v = ecmPad_(got['M' + cat.sheet + '!B16:N616'], 13); let cur = null;
+    v.forEach(r => {
+      const t = Number(r[0]);
+      if (t === 1 && String(r[1]).trim() !== '') cur = { cat: cat.n, no: r[1], lot: r[2], lay: ecmNum_(r[3]), mlen: ecmNum_(r[4]), mw: ecmNum_(r[6]), fw: ecmNum_(r[7]), date: String(r[12] || '') };
+      else if (t === 3 && cur) { cur.qty = ecmNum_(r[2]); cur.ways = ecmNum_(r[3]); cur.laylen = ecmNum_(r[4]); cur.reqM = ecmNum_(r[5]); cur.consM = ecmNum_(r[6]); cur.reqKg = ecmNum_(r[7]); cur.consKg = ecmNum_(r[8]); cur.start = r[9]; cur.end = r[10]; if (cur.lay > 0 || cur.qty > 0) out.cuts.push(cur); cur = null; }
+    });
+    const cr = ((got['C' + cat.sheet + '!C9:S9'] || [])[0] || []).map(ecmNum_);
+    if (cr.some(x => x)) out.util.push({ cat: cat.n, rolls: cr[0] || 0, issued: cr[1] || 0, cut: cr[2] || 0, net: cr[3] || 0, netCons: cr[4] || 0, endBits: cr[5] || 0, fpm: cr[6] || 0, uebLen: cr[7] || 0, ueb: cr[8] || 0, reb: cr[9] || 0, leb: cr[10] || 0, rc: cr[11] || 0, used: cr[12] || 0, grossCons: cr[13] || 0, broll: cr[14] || 0, brollRe: cr[15] || 0, brollLeft: cr[16] || 0 });
   });
   try { c.put(key, JSON.stringify(out), 900); } catch (e) {}
   return out;
