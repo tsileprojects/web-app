@@ -84,7 +84,7 @@ function cotDash_(p) {
 function cotStyleHist_(p) {
   const q = String(p.q || '').toLowerCase().trim(), unit = String(p.unit || '').toUpperCase();
   if (q.length < 2) return { ok: false, error: 'Type at least 2 letters of the style' };
-  const c = CacheService.getScriptCache(), key = 'cots2_' + Utilities.base64EncodeWebSafe(unit + '|' + q).slice(0, 200);
+  const c = CacheService.getScriptCache(), key = 'cots3_' + Utilities.base64EncodeWebSafe(unit + '|' + q).slice(0, 200);
   const hit = c.get(key); if (hit) return JSON.parse(hit);
   // fast path: let the sheet filter the rows (gviz query) instead of reading the whole DPR_Data
   const src = { id: COTD.id, sheet: 'DPR_Data' }, qs = q.replace(/'/g, '');
@@ -114,7 +114,7 @@ function cotStyleHist_(p) {
   const bats = out.map(b => {
     const f = b.rows[0], l = b.rows[b.rows.length - 1], lr = b.rows.filter(x => x.days >= 1).pop() || l;
     let pro = 0, aval = 0, earn = 0, best = 0; b.rows.forEach(x => { pro += x.pro; aval += x.aval; earn += x.earn; if (x.eff > best) best = x.eff; });
-    return { unit: f.u, line: f.line, buyer: l.buyer, style: f.style, color: f.color, sam: l.sam, start: f.d, last: l.d, running: l.d === latest,
+    return { unit: f.u, line: f.line, buyer: l.buyer, style: f.style, color: f.color, sam: l.sam, start: f.d, last: lr.d, running: lr.d === latest,
       days: lr.days, pro: pro, eff: aval ? r1(earn / aval * 100) : 0, best: r1(best), lastEff: r1(lr.eff), ores: lr.ores, dres: lr.dres, mp: l.mp, util: l.util,
       daily: b.rows.map(x => [x.d, x.days, x.util, x.tgt, x.pro, r1(x.eff), x.slab, x.dres]) };
   }).sort((x, y) => x.start < y.start ? 1 : -1).slice(0, 80);
