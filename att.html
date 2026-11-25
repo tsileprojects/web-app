@@ -6,6 +6,11 @@
 <meta name="theme-color" content="#0B2545">
 <title>TSPL | Attendance</title>
 <link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<link rel="manifest" href="att.webmanifest">
+<link rel="apple-touch-icon" href="img/app-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Attendance">
 <style>
 :root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--g:#15803D;--a:#B45309;--r:#B91C1C;--b:#1D4ED8;--soft:#F8FAFC}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;padding-bottom:76px}
@@ -310,6 +315,7 @@ td{padding:8px;border-bottom:1px solid var(--line);text-align:right;white-space:
   load(false);
 })();
 </script>
+<script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});</script>
 <script src="js/help.js" defer></script>
 </body>
 </html>
