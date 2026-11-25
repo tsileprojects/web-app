@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | GSD OB &amp; TCR Indent Dashboard</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--g:#15803D;--a:#B45309;--r:#B91C1C;--b:#1D4ED8}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff}
+.hw{max-width:1480px;margin:0 auto;padding:12px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.hw h1{margin:0;font-size:18px;font-weight:700}.hw h1 span{color:var(--gold)}.hw .sub{font-size:12px;color:#CBD5E1;margin-top:2px}
+.hb{height:38px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.hb.gold{background:var(--gold);border-color:var(--gold);color:#0B2545}.hb.on{background:#fff;color:var(--navy)}
+.bar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:4}
+.bw{max-width:1480px;margin:0 auto;padding:10px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.lbl{font-size:12px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+input,select{height:38px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff}
+main{max-width:1480px;margin:0 auto;padding:18px 22px 40px;display:flex;flex-direction:column;gap:16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;border-top:3px solid var(--c,#0B2545);cursor:pointer}
+.kpi.sel{outline:2px solid var(--c)}
+.kpi .l{font-size:11.5px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase}.kpi .v{font-size:26px;font-weight:700;margin:6px 0 2px}.kpi .n{font-size:12.5px;color:var(--mute)}
+.row2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px}@media(max-width:1000px){.row2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.card h2 small{font-weight:400;color:var(--mute);font-size:12px}
+.tw{overflow:auto}table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:700;color:var(--mute);text-align:right;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;background:#fff;position:sticky;top:0}
+td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th.l,td.l{text-align:left}td.wrap{white-space:normal;min-width:160px}tr.tot td{font-weight:700;background:#F8FAFC}
+.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;display:inline-block}
+.t-done{background:#DCFCE7;color:#166534}.t-prog{background:#FEF3C7;color:#92400E}.t-todo{background:#FEE2E2;color:#991B1B}.t-new{background:#DBEAFE;color:#1E40AF}.t-rep{background:#EDE9FE;color:#5B21B6}
+.bar2{display:flex;height:8px;border-radius:99px;overflow:hidden;background:#EEF2F7;min-width:90px}
+.load{padding:60px;text-align:center;color:var(--mute)}.spin{width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 12px}@keyframes s{to{transform:rotate(360deg)}}
+.note{font-size:12px;color:var(--mute)}
+.g{color:var(--g)}.a{color:var(--a)}.r{color:var(--r)}
+</style>
+</head>
+<body>
+<header><div class="hw">
+  <div style="display:flex;align-items:center;gap:14px"><a id="homeBtn" class="hb gold" href="dept_gsd.html">&#8962; Home</a>
+  <div><h1>GSD <span>| OB &amp; TCR Indent Dashboard</span></h1><div class="sub" id="sub">Loading…</div></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="hb on" id="pgD" type="button">Dashboard</button><button class="hb" id="pgM" type="button">MIS · indent list</button><a class="hb" href="gsheet.html?k=indent">Log register</a><button class="hb" id="btnXls" type="button" hidden>Download Excel</button><button class="hb" id="btnRefresh" type="button">Refresh</button></div>
+</div></header>
+<div class="bar"><div class="bw">
+  <span class="lbl">Dates</span><input type="date" id="from"> <span>to</span> <input type="date" id="to">
+  <select id="fMer"><option value="">All merchants</option></select>
+  <select id="fReq"><option value="">All requests</option></select>
+  <select id="fAss"><option value="">All assignees</option></select>
+  <select id="fSt"><option value="">All task status</option><option value="todo">Yet to do</option><option value="prog">In progress</option><option value="done">Completed</option></select>
+  <input type="search" id="q" placeholder="Search buyer, style…" style="width:200px">
+</div></div>
+<main id="app"><div class="load"><div class="spin"></div>Loading indents…</div></main>
+<script src="security.js"></script>
+<script src="js/tspl-config.js?v=20261122e"></script>
+<script>
+(function () {
+  'use strict';
+  var U = {}; try { U = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); } catch (e) {}
+  (function () { var h = document.getElementById('homeBtn'), d = 'dept_gsd.html'; if (window.top !== window.self) d = 'home.html'; else if (U.redirect) d = U.redirect; h.href = d; })();
+  if (/^dept_gsd/.test(U.redirect || '') || !/^(unit_|dept_|merchant|kpi_|audit)/.test(U.redirect || '')) document.getElementById('btnXls').hidden = false;
+  var now = new Date(), iso = function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+  var F = { from: iso(new Date(now.getFullYear(), now.getMonth(), 1)), to: iso(now), mer: '', req: '', ass: '', st: '', q: '', page: 'dash', kpi: '' }, D = null;
+  document.getElementById('from').value = F.from; document.getElementById('to').value = F.to;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function jsonp(params, cb) {
+    var name = '__gsd' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, 90000);
+    document.body.appendChild(s);
+  }
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function dl(d) { return d ? d.slice(8, 10) + '-' + MON[+d.slice(5, 7) - 1] + '-' + d.slice(2, 4) : ''; }
+  function stTag(s, t) { return '<span class="tag t-' + s + '">' + esc(t || (s === 'done' ? 'Completed' : s === 'prog' ? 'In progress' : 'Yet to do')) + '</span>'; }
+  function isNew(r) { return /new/i.test(r.sstat); }
+  function isRep(r) { return /repeat/i.test(r.sstat); }
+  function kpi(id, l, v, n, col) { return '<div class="kpi' + (F.kpi === id ? ' sel' : '') + '" data-k="' + id + '" style="--c:' + col + '"><div class="l">' + l + '</div><div class="v" style="color:' + col + '">' + v + '</div><div class="n">' + n + '</div></div>'; }
+  function opts(id, vals, cur, all) { var el = document.getElementById(id); el.innerHTML = '<option value="">' + all + '</option>' + vals.map(function (v) { return '<option' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join(''); }
+  function uniq(a) { var o = {}; a.forEach(function (x) { if (x) o[x] = 1; }); return Object.keys(o).sort(); }
+  function rows() {
+    return D.rows.filter(function (r) { return (!F.mer || r.merch === F.mer) && (!F.req || r.req === F.req) && (!F.ass || r.to === F.ass) && (!F.st || r.st === F.st) &&
+      (!F.q || (r.buyer + ' ' + r.style + ' ' + r.desc + ' ' + r.merch + ' ' + r.info).toLowerCase().indexOf(F.q) > -1) &&
+      (!F.kpi || (F.kpi === 'new' ? isNew(r) : F.kpi === 'rep' ? isRep(r) : F.kpi === 'all' ? true : r.st === F.kpi)); });
+  }
+  function render() {
+    if (!D) return;
+    opts('fMer', uniq(D.rows.map(function (r) { return r.merch; })), F.mer, 'All merchants');
+    opts('fReq', uniq(D.rows.map(function (r) { return r.req; })), F.req, 'All requests');
+    opts('fAss', uniq(D.rows.map(function (r) { return r.to; })), F.ass, 'All assignees');
+    var base = D.rows.filter(function (r) { return (!F.mer || r.merch === F.mer) && (!F.req || r.req === F.req) && (!F.ass || r.to === F.ass) && (!F.st || r.st === F.st) && (!F.q || (r.buyer + ' ' + r.style + ' ' + r.desc + ' ' + r.merch + ' ' + r.info).toLowerCase().indexOf(F.q) > -1); });
+    var R = rows(), c = { n: 0, rep: 0, all: base.length, prog: 0, done: 0, todo: 0 };
+    base.forEach(function (r) { if (isNew(r)) c.n++; if (isRep(r)) c.rep++; c[r.st]++; });
+    var h = '<div class="kpis">' + kpi('new', 'New styles', c.n, 'indents for new styles', '#1D4ED8') + kpi('rep', 'Repeat styles', c.rep, 'repeated styles', '#7C3AED') + kpi('all', 'Total indents', c.all, dl(F.from) + ' to ' + dl(F.to), '#0B2545') +
+      kpi('prog', 'In progress', c.prog, 'being worked on', '#B45309') + kpi('done', 'Completed', c.done, c.all ? Math.round(c.done / c.all * 100) + '% of indents' : '–', '#15803D') + kpi('todo', 'Indent balance', c.todo, 'yet to do', '#B91C1C') + '</div>';
+    if (F.page === 'dash') {
+      // cluster-wise summary
+      var cl = {}; R.forEach(function (r) { var mo = MON[+r.d.slice(5, 7) - 1] + ' ' + r.d.slice(0, 4), k = (r.cluster || '–') + '|' + mo + '|' + (r.req || '–'); var o = cl[k] || (cl[k] = { cl: r.cluster || '–', mo: mo, req: r.req || '–', n: 0, prog: 0, done: 0, todo: 0 }); o.n++; o[r.st]++; });
+      var cr = Object.keys(cl).map(function (k) { return cl[k]; }).sort(function (a, b) { return a.cl.localeCompare(b.cl) || a.mo.localeCompare(b.mo) || b.n - a.n; });
+      var tot = { n: 0, prog: 0, done: 0, todo: 0 }; cr.forEach(function (o) { ['n', 'prog', 'done', 'todo'].forEach(function (k) { tot[k] += o[k]; }); });
+      var pb = function (o) { var w = function (v) { return o.n ? v / o.n * 100 + '%' : '0'; }; return '<div class="bar2"><i style="width:' + w(o.done) + ';background:#16A34A"></i><i style="width:' + w(o.prog) + ';background:#F59E0B"></i><i style="width:' + w(o.todo) + ';background:#F87171"></i></div>'; };
+      h += '<div class="row2"><section class="card"><h2>Cluster-wise indents received <small>by month and request type</small></h2><div class="tw"><table><thead><tr><th class="l">Cluster</th><th class="l">Month</th><th class="l">Request for</th><th>Styles received</th><th>In progress</th><th>Completed</th><th>Yet to do</th><th class="l">Status</th></tr></thead><tbody>' +
+        cr.map(function (o, i) { var first = i === 0 || cr[i - 1].cl !== o.cl; return '<tr><td class="l">' + (first ? '<b>' + esc(o.cl) + '</b>' : '') + '</td><td class="l">' + esc(o.mo) + '</td><td class="l">' + esc(o.req) + '</td><td><b>' + o.n + '</b></td><td class="a">' + o.prog + '</td><td class="g">' + o.done + '</td><td class="r">' + o.todo + '</td><td class="l">' + pb(o) + '</td></tr>'; }).join('') +
+        '<tr class="tot"><td class="l" colspan="3">Grand total</td><td>' + tot.n + '</td><td>' + tot.prog + '</td><td>' + tot.done + '</td><td>' + tot.todo + '</td><td class="l">' + pb(tot) + '</td></tr></tbody></table></div></section>';
+      var as = {}; R.forEach(function (r) { var k = r.to || 'Yet to assign'; var o = as[k] || (as[k] = { n: 0, prog: 0, done: 0, todo: 0 }); o.n++; o[r.st]++; });
+      var ar = Object.keys(as).sort(function (a, b) { return as[b].n - as[a].n; });
+      h += '<section class="card"><h2>Task progress by person <small>assigned to</small></h2><div class="tw"><table><thead><tr><th class="l">Assigned to</th><th>Received</th><th>In progress</th><th>Completed</th><th>Yet to do</th><th class="l">Done %</th></tr></thead><tbody>' +
+        ar.map(function (k) { var o = as[k]; return '<tr style="cursor:pointer" data-ass="' + esc(k) + '"><td class="l"><b>' + esc(k) + '</b></td><td>' + o.n + '</td><td class="a">' + o.prog + '</td><td class="g">' + o.done + '</td><td class="r">' + o.todo + '</td><td class="l">' + (o.n ? Math.round(o.done / o.n * 100) : 0) + '% ' + pb(o) + '</td></tr>'; }).join('') +
+        '<tr class="tot"><td class="l">Grand total</td><td>' + tot.n + '</td><td>' + tot.prog + '</td><td>' + tot.done + '</td><td>' + tot.todo + '</td><td class="l">' + (tot.n ? Math.round(tot.done / tot.n * 100) : 0) + '%</td></tr></tbody></table></div></section></div>';
+    }
+    var full = F.page === 'mis';
+    h += '<section class="card"><h2>' + (full ? 'GSD | OB &amp; TCR indent list' : 'Latest indents') + ' <small>' + R.length + ' indents' + (full ? '' : ' · open "MIS · indent list" for all columns') + '</small></h2><div class="tw" style="max-height:' + (full ? '70vh' : '520px') + '"><table><thead><tr><th>#</th><th class="l">Date</th><th class="l">Merchant</th><th class="l">Buyer</th><th class="l">Style number</th>' + (full ? '<th class="l">Description</th><th class="l">Cluster</th><th class="l">Construction info</th><th class="l">Reference sample</th>' : '') + '<th class="l">Style status</th><th class="l">Request for</th><th class="l">Assigned to</th><th class="l">Task status</th>' + (full ? '<th class="l">Start</th><th class="l">End</th><th>Hours</th><th class="l">Review by</th><th class="l">Review status</th>' : '') + '</tr></thead><tbody>' +
+      (R.length ? R.map(function (r, i) { return '<tr><td>' + (i + 1) + '</td><td class="l">' + dl(r.d) + ' <span class="note">' + esc(r.d.slice(11)) + '</span></td><td class="l">' + esc(r.merch) + '</td><td class="l">' + esc(r.buyer) + '</td><td class="l"><b>' + esc(r.style) + '</b></td>' +
+        (full ? '<td class="l wrap">' + esc(r.desc) + '</td><td class="l">' + esc(r.cluster) + '</td><td class="l wrap">' + esc(r.info) + '</td><td class="l">' + esc(r.ref) + '</td>' : '') +
+        '<td class="l">' + (isNew(r) ? '<span class="tag t-new">' + esc(r.sstat) + '</span>' : isRep(r) ? '<span class="tag t-rep">' + esc(r.sstat) + '</span>' : esc(r.sstat)) + '</td><td class="l">' + esc(r.req) + '</td><td class="l">' + esc(r.to) + '</td><td class="l">' + stTag(r.st, r.task) + '</td>' +
+        (full ? '<td class="l">' + esc(r.start) + '</td><td class="l">' + esc(r.end) + '</td><td>' + esc(r.hours) + '</td><td class="l">' + esc(r.review) + '</td><td class="l">' + esc(r.rstat) + '</td>' : '') + '</tr>'; }).join('') : '<tr><td class="l note" colspan="18">No indents for this selection.</td></tr>') +
+      '</tbody></table></div></section><div class="note">Source: "GSD | Log Register" sheet, Log tab (indent form entries) · data refreshed ' + esc(D.at) + ' · click a figure at the top to filter the list.</div>';
+    document.getElementById('app').innerHTML = h;
+  }
+  function load(fresh) {
+    document.getElementById('app').innerHTML = '<div class="load"><div class="spin"></div>Loading indents…</div>';
+    var p = { action: 'gsd_dash', from: F.from, to: F.to }; if (fresh) p.fresh = 1;
+    jsonp(p, function (r) {
+      if (!r || !r.ok) { document.getElementById('app').innerHTML = '<div class="load">Could not load indents' + (r && r.error ? ': ' + esc(r.error) : '') + '. Press Refresh.</div>'; return; }
+      D = r; document.getElementById('sub').textContent = r.rows.length + ' indents · ' + dl(r.from) + ' to ' + dl(r.to) + ' · refreshed ' + r.at; render();
+    });
+  }
+  document.getElementById('app').addEventListener('click', function (e) {
+    var k = e.target.closest('[data-k]'); if (k) { var id = k.getAttribute('data-k'); F.kpi = F.kpi === id ? '' : id; render(); return; }
+    var a = e.target.closest('[data-ass]'); if (a) { F.ass = a.getAttribute('data-ass') === 'Yet to assign' ? '' : a.getAttribute('data-ass'); render(); }
+  });
+  ['fMer', 'fReq', 'fAss', 'fSt'].forEach(function (id, i) { document.getElementById(id).addEventListener('change', function () { F[['mer', 'req', 'ass', 'st'][i]] = this.value; render(); }); });
+  document.getElementById('q').addEventListener('input', function () { F.q = this.value.toLowerCase().trim(); render(); });
+  document.getElementById('from').addEventListener('change', function () { F.from = this.value; load(); });
+  document.getElementById('to').addEventListener('change', function () { F.to = this.value; load(); });
+  document.getElementById('btnRefresh').addEventListener('click', function () { load(true); });
+  function setPage(p) { F.page = p; document.getElementById('pgD').className = 'hb' + (p === 'dash' ? ' on' : ''); document.getElementById('pgM').className = 'hb' + (p === 'mis' ? ' on' : ''); render(); }
+  document.getElementById('pgD').addEventListener('click', function () { setPage('dash'); });
+  document.getElementById('pgM').addEventListener('click', function () { setPage('mis'); });
+  document.getElementById('btnXls').addEventListener('click', function () {
+    if (!D) return; var btn = this; btn.disabled = true;
+    function go() { var R = rows(), hd = ['Date', 'Merchant', 'Buyer', 'Style number', 'Description', 'Cluster', 'Style status', 'Construction info', 'Reference sample', 'Request for', 'Assigned to', 'Task status', 'Start', 'End', 'Hours', 'Review by', 'Review status'];
+      var ws = XLSX.utils.aoa_to_sheet([['GSD | OB & TCR indents · ' + dl(F.from) + ' to ' + dl(F.to)], [], hd].concat(R.map(function (r) { return [r.d, r.merch, r.buyer, r.style, r.desc, r.cluster, r.sstat, r.info, r.ref, r.req, r.to, r.task, r.start, r.end, r.hours, r.review, r.rstat]; })));
+      var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Indents'); XLSX.writeFile(wb, 'GSD_Indents_' + F.from + '_to_' + F.to + '.xlsx'); btn.disabled = false; }
+    if (window.XLSX) return go(); var sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'; sc.onload = go; sc.onerror = function () { btn.disabled = false; }; document.head.appendChild(sc);
+  });
+  if (/[?&]page=mis\b/.test(location.search)) setPage('mis');
+  load(false);
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | GSD Sheets</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--soft:#F8FAFC}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff}
+.hw{max-width:1600px;margin:0 auto;padding:12px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.hw h1{margin:0;font-size:18px;font-weight:700}.hw h1 span{color:var(--gold)}.hw .sub{font-size:12px;color:#CBD5E1;margin-top:2px}
+.hb{height:38px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+.hb.gold{background:var(--gold);border-color:var(--gold);color:#0B2545}.hb.on{background:#fff;color:var(--navy)}
+.bar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.bw{max-width:1600px;margin:0 auto;padding:10px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:4px;background:#EEF2F7;padding:4px;border-radius:10px}
+.seg button{height:34px;padding:0 12px;border:0;border-radius:8px;background:transparent;color:#334155;font:inherit;font-weight:600;cursor:pointer}
+.seg button.on{background:var(--navy);color:#fff}
+.inp,select{height:38px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff}.inp{width:260px}
+.btn{height:38px;padding:0 14px;border-radius:8px;border:1px solid #CBD5E1;background:#fff;font:inherit;font-weight:600;cursor:pointer;color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+main{max-width:1600px;margin:0 auto;padding:16px 22px 40px;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.titles{font-size:13px;color:var(--mute);display:flex;flex-direction:column;gap:2px}
+.meta{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;font-size:13px;color:var(--mute)}
+.tw{overflow:auto;max-height:calc(100vh - 250px);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:separate;border-spacing:0;width:100%}
+th{position:sticky;top:0;z-index:2;background:var(--navy);color:#fff;font-size:12px;font-weight:600;text-align:left;padding:9px 10px;white-space:nowrap;cursor:pointer;border-right:1px solid rgba(255,255,255,.12)}
+th.rn,td.rn{position:sticky;left:0;z-index:1;text-align:right;color:#94A3B8;background:#F8FAFC;font-size:11px;min-width:48px}
+th.rn{z-index:3;background:#081A33;color:#94A3B8}
+td{padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;max-width:380px;overflow:hidden;text-overflow:ellipsis}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody tr:nth-child(even) td{background:#FAFBFD}tbody tr:hover td{background:#EEF4FF}
+tbody tr:nth-child(even) td.rn,tbody tr td.rn{background:#F8FAFC}
+.pill{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:99px}
+.load{padding:60px;text-align:center;color:var(--mute)}.spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 12px}@keyframes s{to{transform:rotate(360deg)}}
+#ed{display:none;height:calc(100vh - 120px);border:0;width:100%;background:#fff;border-radius:12px}
+.note{font-size:12px;color:var(--mute)}
+</style>
+</head>
+<body>
+<header><div class="hw">
+  <div style="display:flex;align-items:center;gap:14px"><a id="homeBtn" class="hb gold" href="dept_gsd.html">&#8962; Home</a>
+  <div><h1 id="ttl">GSD <span>| Sheet</span></h1><div class="sub" id="sub">Loading…</div></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="hb on" id="vView" type="button">Dashboard view</button><button class="hb" id="vEdit" type="button">Edit in Google Sheet</button><button class="hb" id="btnXls" type="button" hidden>Download Excel</button><button class="hb" id="btnRefresh" type="button">Refresh</button></div>
+</div></header>
+<div class="bar" id="bar"><div class="bw">
+  <div class="seg" id="tabs" role="group" aria-label="Tabs"></div>
+  <input id="q" class="inp" type="search" placeholder="Search all rows… (press Enter)">
+  <select id="ord"><option value="desc">Latest rows first</option><option value="asc">Top of sheet first</option></select>
+</div></div>
+<main id="main"><div class="load"><div class="spin"></div>Loading sheet…</div></main>
+<iframe id="ed" title="Google Sheet editor"></iframe>
+<script src="security.js"></script>
+<script src="js/tspl-config.js?v=20261122e"></script>
+<script>
+(function () {
+  'use strict';
+  var U = {}; try { U = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); } catch (e) {}
+  (function () { var h = document.getElementById('homeBtn'), d = 'dept_gsd.html';
+    if (window.top !== window.self) d = 'home.html'; else if (U.redirect) d = U.redirect; h.href = d; })();
+  if (/^dept_gsd/.test(U.redirect || '') || !/^(unit_|dept_|merchant|kpi_|audit)/.test(U.redirect || '')) document.getElementById('btnXls').hidden = false;
+  var P = new URLSearchParams(location.search), K = P.get('k') || 'needle', S = { tab: P.get('tab') || '', page: 0, order: 'desc', q: '', sort: -1, dir: 1 }, D = null;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function jsonp(params, cb) {
+    var name = '__gs' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, 120000);
+    document.body.appendChild(s);
+  }
+  var isNum = function (v) { return /^[-+]?[\d,]*\.?\d+%?$/.test(String(v).trim()); };
+  var tone = function (v) { var t = String(v).toLowerCase();
+    if (/^(completed?|done|approved|achiev|achived|ok|yes)$/.test(t) || /complet|approved/.test(t)) return 'background:#DCFCE7;color:#166534';
+    if (/not achi|reject|pending|yet to|no match|cancel/.test(t)) return 'background:#FEE2E2;color:#991B1B';
+    if (/progress|hold|review/.test(t)) return 'background:#FEF3C7;color:#92400E';
+    return ''; };
+  function load(fresh) {
+    document.getElementById('main').innerHTML = '<div class="load"><div class="spin"></div>Loading sheet…</div>';
+    var p = { action: 'gs_view', k: K, page: S.page, order: S.order }; if (S.tab) p.tab = S.tab; if (S.q) p.q = S.q; if (fresh) p.fresh = 1;
+    jsonp(p, function (r) {
+      if (!r || !r.ok) { document.getElementById('main').innerHTML = '<div class="load">Could not load this sheet' + (r && r.error ? ': ' + esc(r.error) : '') + '. Press Refresh to try again.</div>'; return; }
+      D = r; S.tab = String(r.tab.gid); S.sort = -1; render();
+    });
+  }
+  function render() {
+    var r = D; document.title = 'TSPL | ' + r.title;
+    document.getElementById('ttl').innerHTML = 'GSD <span>| ' + esc(r.title) + '</span>';
+    document.getElementById('sub').textContent = r.file + ' · ' + r.tab.name + ' · ' + (r.q ? r.matches + ' matching rows' : r.total.toLocaleString('en-IN') + ' rows') + ' · refreshed ' + r.at;
+    document.getElementById('tabs').innerHTML = r.tabs.map(function (t) { return '<button type="button" data-g="' + t.gid + '" class="' + (String(t.gid) === S.tab ? 'on' : '') + '">' + esc(t.name) + '</button>'; }).join('');
+    var cols = r.header.map(function (h, i) { return i; }).filter(function (i) { return String(r.header[i]).trim() !== '' || r.rows.some(function (x) { return String(x[i + 1]).trim() !== ''; }); });
+    var numc = {}; cols.forEach(function (i) { var n = 0, t = 0; r.rows.slice(0, 200).forEach(function (x) { var v = String(x[i + 1]).trim(); if (v) { t++; if (isNum(v)) n++; } }); numc[i] = t && n / t > 0.8; });
+    var stat = {}; cols.forEach(function (i) { if (/status|result|approv/i.test(r.header[i])) stat[i] = 1; });
+    var rows = r.rows.slice();
+    if (S.sort > -1) { var k = S.sort + 1; rows.sort(function (a, b) { var x = a[k], y = b[k]; if (numc[S.sort]) { x = parseFloat(String(x).replace(/,/g, '')) || 0; y = parseFloat(String(y).replace(/,/g, '')) || 0; return (x - y) * S.dir; } return String(x).localeCompare(String(y)) * S.dir; }); }
+    var h = '';
+    if (r.titles && r.titles.length) h += '<div class="card titles">' + r.titles.map(function (t) { return '<div>' + esc(t) + '</div>'; }).join('') + '</div>';
+    h += '<section class="card"><div class="meta"><span>' + (r.q ? 'Search "' + esc(r.q) + '" · ' + r.matches + ' rows found' + (r.matches > 1500 ? ' (first 1,500 shown)' : '') : 'Showing rows ' + (rows.length ? (r.asc ? 'from the top' : 'latest first') : '') + ' · page ' + (r.page + 1) + ' of ' + r.pages + ' · ' + r.per.toLocaleString() + ' rows per page') + ' · click a heading to sort</span>' +
+      (r.q ? '<button class="btn" id="clr" type="button">Clear search</button>' : '<span><button class="btn" id="prev" type="button"' + (r.page <= 0 ? ' disabled' : '') + '>‹ Newer</button> <button class="btn" id="next" type="button"' + (r.page >= r.pages - 1 ? ' disabled' : '') + '>Older ›</button></span>') + '</div>';
+    h += '<div class="tw" style="margin-top:10px"><table><thead><tr><th class="rn">Row</th>' + cols.map(function (i) { return '<th data-c="' + i + '">' + esc(r.header[i] || ('Col ' + (i + 1))) + (S.sort === i ? (S.dir > 0 ? ' ▲' : ' ▼') : '') + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      (rows.length ? rows.map(function (x) { return '<tr><td class="rn">' + x[0] + '</td>' + cols.map(function (i) { var v = x[i + 1], st = stat[i] && v ? tone(v) : ''; return '<td class="' + (numc[i] ? 'num' : '') + '" title="' + esc(v) + '">' + (st ? '<span class="pill" style="' + st + '">' + esc(v) + '</span>' : esc(v)) + '</td>'; }).join('') + '</tr>'; }).join('') : '<tr><td class="rn"></td><td colspan="' + cols.length + '" style="padding:30px;text-align:center;color:#475569">No rows.</td></tr>') +
+      '</tbody></table></div></section>';
+    h += '<div class="note">Live from the Google Sheet "' + esc(r.file) + '" · read-only view. To change data, use "Edit in Google Sheet" (opens here, in the same tab, with your normal sheet access).</div>';
+    document.getElementById('main').innerHTML = h;
+  }
+  document.getElementById('main').addEventListener('click', function (e) {
+    var th = e.target.closest('th[data-c]'); if (th) { var c = +th.getAttribute('data-c'); if (S.sort === c) S.dir = -S.dir; else { S.sort = c; S.dir = 1; } render(); return; }
+    if (e.target.id === 'prev') { S.page--; load(); } else if (e.target.id === 'next') { S.page++; load(); } else if (e.target.id === 'clr') { S.q = ''; document.getElementById('q').value = ''; S.page = 0; load(); }
+  });
+  document.getElementById('tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-g]'); if (!b) return; S.tab = b.getAttribute('data-g'); S.page = 0; S.q = ''; document.getElementById('q').value = ''; if (edOn) openEd(); else load(); });
+  document.getElementById('q').addEventListener('keydown', function (e) { if (e.key === 'Enter') { S.q = this.value.trim(); S.page = 0; load(); } });
+  document.getElementById('ord').addEventListener('change', function () { S.order = this.value; S.page = 0; load(); });
+  document.getElementById('btnRefresh').addEventListener('click', function () { if (edOn) openEd(); else load(true); });
+  var edOn = false;
+  function openEd() { if (!D) return; var f = document.getElementById('ed'); f.src = 'https://docs.google.com/spreadsheets/d/' + D.id + '/edit#gid=' + S.tab; }
+  function setView(edit) { edOn = edit; document.getElementById('vView').className = 'hb' + (edit ? '' : ' on'); document.getElementById('vEdit').className = 'hb' + (edit ? ' on' : '');
+    document.getElementById('main').style.display = edit ? 'none' : ''; document.getElementById('ed').style.display = edit ? 'block' : 'none';
+    document.getElementById('q').style.display = document.getElementById('ord').style.display = edit ? 'none' : '';
+    if (edit) openEd(); }
+  document.getElementById('vView').addEventListener('click', function () { setView(false); });
+  document.getElementById('vEdit').addEventListener('click', function () { setView(true); });
+  document.getElementById('btnXls').addEventListener('click', function () {
+    if (!D) return; var btn = this; btn.disabled = true;
+    function go() { var cols = D.header.map(function (h, i) { return i; }); var ws = XLSX.utils.aoa_to_sheet([D.header].concat(D.rows.map(function (x) { return x.slice(1); })));
+      var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, String(D.tab.name).slice(0, 30).replace(/[\\\/?*\[\]:]/g, ' ')); XLSX.writeFile(wb, (D.title + ' - ' + D.tab.name).replace(/[^\w\- ]+/g, ' ') + '.xlsx'); btn.disabled = false; }
+    if (window.XLSX) return go(); var sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'; sc.onload = go; sc.onerror = function () { btn.disabled = false; }; document.head.appendChild(sc);
+  });
+  if (P.get('edit') === '1') { load(); setTimeout(function () { setView(true); }, 1500); } else load();
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>
