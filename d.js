@@ -39,7 +39,7 @@ function gsView_(p) {
   const top = g0[nm + 'A1:' + L + '12'] || [], colA = g0[nm + 'A1:D' + (tab.rows || 1000)] || [];
   let last = colA.length; while (last > 0 && !(colA[last - 1] || []).some(x => String(x).trim() !== '')) last--;
   // header = the row among the first 12 with the most filled cells (earliest on a tie)
-  let hdr = 0, best = -1; top.forEach((r, i) => { const n = r.filter(x => String(x).trim() !== '').length; if (n > best) { best = n; hdr = i; } });
+  let hdr = 0, best = -1; top.forEach((r, i) => { const n = r.filter(x => { const t = String(x).trim(); return t !== '' && !/^[-+]?[\d,.]+%?$/.test(t) && !/^\d{1,2}[\/-]\w{1,3}[\/-]\d{2,4}/.test(t); }).length; if (n > best) { best = n; hdr = i; } });
   const dataStart = hdr + 2;   // 1-based first data row
   let rowsOut = [], total = Math.max(0, last - dataStart + 1), from = dataStart, pages = Math.max(1, Math.ceil(total / N)), matches = null;
   if (q) {
@@ -66,5 +66,29 @@ function gsView_(p) {
     at: Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd-MMM-yyyy HH:mm') };
   const js = JSON.stringify(out);
   try { const parts = {}; let n = 0; for (let i = 0; i < js.length; i += 95000) parts[key + '_' + (n++)] = js.slice(i, i + 95000); if (n <= 40) { parts[key + '_n'] = String(n); c.putAll(parts, 300); } } catch (e) {}
+  return out;
+}
+
+/* ---- GSD | OB & TCR Indent dashboard (action=gsd_dash&from=yyyy-mm-dd&to=yyyy-mm-dd) — from the Log tab of "GSD | Log Register" ---- */
+function gsdDash_(p) {
+  const tz = 'Asia/Kolkata', now = new Date();
+  const from = String(p.from || Utilities.formatDate(new Date(now.getFullYear(), now.getMonth(), 1), tz, 'yyyy-MM-dd'));
+  const to = String(p.to || Utilities.formatDate(now, tz, 'yyyy-MM-dd'));
+  const c = CacheService.getScriptCache(), key = 'gsd1_' + from + '_' + to;
+  if (String(p.fresh) !== '1') { const hit = c.get(key); if (hit) return JSON.parse(hit); }
+  const id = GS_VIEW.indent[0], rg = "'Log'!A2:U20000";
+  const got = ecmGet_([id], [rg], 'FORMATTED_VALUE')[0];
+  if (got.err) return { ok: false, error: got.err };
+  const pd = s => { const m = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/); if (!m) return null; return m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2) + (m[4] ? ' ' + ('0' + m[4]).slice(-2) + ':' + m[5] : ''); };
+  const rows = [];
+  (got[rg] || []).forEach((r, i) => {
+    const d = pd(r[0]); if (!d) return; const day = d.slice(0, 10); if (day < from || day > to) return;
+    const ts = String(r[17] || '').trim(), tl = ts.toLowerCase();
+    rows.push({ n: i + 2, d: d, buyer: r[1] || '', style: r[2] || '', desc: r[3] || '', cluster: r[4] || '', sstat: r[5] || '', info: r[6] || '', merch: r[7] || '', ref: r[8] || '', req: r[9] || '', spec: r[10] || '',
+      to: r[12] || '', pick: r[13] || '', start: r[14] || '', end: r[16] || '', task: ts, st: /complet|done/.test(tl) ? 'done' : /progress|wip|started/.test(tl) ? 'prog' : 'todo', hours: r[18] || '', review: r[19] || '', rstat: r[20] || '' });
+  });
+  rows.sort((a, b) => a.d < b.d ? 1 : -1);
+  const out = { ok: true, from: from, to: to, rows: rows, at: Utilities.formatDate(now, tz, 'dd-MMM-yyyy HH:mm') };
+  try { c.put(key, JSON.stringify(out), 120); } catch (e) {}
   return out;
 }
