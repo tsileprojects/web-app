@@ -3,6 +3,7 @@
     try {
         var u = JSON.parse(sessionStorage.getItem('userLoggedIn') || 'null');
         var page = (location.pathname.split('/').pop() || 'index.html').toLowerCase();
+        if (u && u.redirect === 'att.html' && ['att.html', 'index.html', ''].indexOf(page) < 0) location.replace('att.html');
         if (u && u.redirect === 'audit.html' && ['audit.html', 'index.html', ''].indexOf(page) < 0) location.replace('audit.html');
         if (u && u.redirect === 'merchant.html' && ['merchant.html', 'fsa.html', 'index.html', ''].indexOf(page) < 0) location.replace('merchant.html');
     } catch (e) {}

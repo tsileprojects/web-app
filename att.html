@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B2545">
+<title>TSPL | Attendance</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--g:#15803D;--a:#B45309;--r:#B91C1C;--b:#1D4ED8;--soft:#F8FAFC}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;padding-bottom:76px}
+header{background:var(--navy);color:#fff;position:sticky;top:0;z-index:6}
+.hw{max-width:1280px;margin:0 auto;padding:10px 18px;display:flex;flex-wrap:wrap;align-items:center;gap:10px;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}.brand h1{margin:0;font-size:17px}.brand h1 span{color:var(--gold)}.brand .sub{font-size:12px;color:#CBD5E1}
+.hb{height:36px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+.hb.gold{background:var(--gold);border-color:var(--gold);color:#0B2545}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ctl select,.ctl input{height:36px;border-radius:8px;border:0;padding:0 10px;font:inherit}
+nav.tabs{max-width:1280px;margin:0 auto;padding:0 18px 8px;display:flex;gap:4px;overflow-x:auto}
+nav.tabs button{height:36px;padding:0 14px;border:0;border-radius:8px;background:transparent;color:#CBD5E1;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap}
+nav.tabs button.on{background:#fff;color:var(--navy)}
+main{max-width:1280px;margin:0 auto;padding:16px 18px 30px;display:flex;flex-direction:column;gap:14px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;border-top:3px solid var(--c,#0B2545)}
+.kpi .l{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--mute);text-transform:uppercase}.kpi .v{font-size:24px;font-weight:700;margin:4px 0 2px}.kpi .n{font-size:12px;color:var(--mute)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.card h2{margin:0 0 10px;font-size:15px;color:var(--navy);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.card h2 small{font-weight:400;color:var(--mute);font-size:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.units{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.unit{border:1px solid var(--line);border-radius:12px;padding:12px;cursor:pointer;background:#fff}.unit:hover{border-color:#94A3B8}
+.unit b{font-size:16px}.pbar{height:8px;border-radius:99px;background:#EEF2F7;overflow:hidden;display:flex;margin:8px 0 6px}.pbar i{display:block;height:100%}
+.tw{overflow:auto}table{width:100%;border-collapse:collapse}
+th{font-size:12px;font-weight:700;color:var(--mute);text-align:right;padding:8px;border-bottom:2px solid var(--line);white-space:nowrap;background:#fff;position:sticky;top:0;z-index:1}
+td{padding:8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th.l,td.l{text-align:left}
+.tag{font-size:11.5px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;display:inline-block}
+.tP{background:#DCFCE7;color:#166534}.tA{background:#FEE2E2;color:#991B1B}.tL{background:#DBEAFE;color:#1E40AF}.tHD{background:#FEF3C7;color:#92400E}.tN{background:#EEF2F7;color:#475569}.tY{background:#DCFCE7;color:#166534}.tNo{background:#FEE2E2;color:#991B1B}
+.btn{height:38px;padding:0 14px;border-radius:8px;border:1px solid #CBD5E1;background:#fff;font:inherit;font-weight:600;cursor:pointer;color:var(--ink)}
+.btn.pri{background:var(--navy);color:#fff;border-color:var(--navy)}.btn:disabled{opacity:.5;cursor:default}
+.inp,select.inp{height:38px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.wk{display:flex;align-items:center;gap:10px;padding:10px 4px;border-bottom:1px solid var(--line)}
+.wk .who{flex:1;min-width:0}.wk .who b{display:block;font-size:14px}.wk .who span{font-size:12px;color:var(--mute)}
+.seg{display:inline-flex;border:1px solid #CBD5E1;border-radius:9px;overflow:hidden;flex:none}
+.seg button{height:40px;min-width:44px;border:0;border-right:1px solid #CBD5E1;background:#fff;font:inherit;font-weight:700;cursor:pointer;color:#475569}
+.seg button:last-child{border-right:0}
+.seg button.on.P{background:#16A34A;color:#fff}.seg button.on.A{background:#DC2626;color:#fff}.seg button.on.L{background:#2563EB;color:#fff}.seg button.on.HD{background:#D97706;color:#fff}
+.hint{font-size:12px;color:var(--mute)}.g{color:var(--g)}.r{color:var(--r)}.a{color:var(--a)}
+.load{padding:50px;text-align:center;color:var(--mute)}.spin{width:30px;height:30px;border:3px solid var(--line);border-top-color:var(--navy);border-radius:50%;animation:s 1s linear infinite;margin:0 auto 12px}@keyframes s{to{transform:rotate(360deg)}}
+.empty{padding:28px;text-align:center;border:2px dashed #CBD5E1;border-radius:12px;color:var(--mute)}
+.sample{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;border-radius:10px;padding:8px 12px;font-weight:600;font-size:13px}
+.bars{display:flex;align-items:flex-end;gap:4px;height:140px;padding-top:8px}.bars div{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end}.bars i{width:70%;max-width:26px;border-radius:4px 4px 0 0;background:#1D4ED8}.bars small{font-size:10px;color:var(--mute)}
+#dlg{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;z-index:20;align-items:center;justify-content:center;padding:14px}
+#dlg .box{background:#fff;border-radius:14px;max-width:520px;width:100%;padding:18px;max-height:92vh;overflow:auto}
+#dlg label{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:10px 0 4px}#dlg .inp{width:100%}
+.savebar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--line);padding:10px 18px;display:none;z-index:7;box-shadow:0 -4px 16px rgba(0,0,0,.06)}
+.savebar .in{max-width:1280px;margin:0 auto;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+@media(max-width:640px){.hw{padding:8px 12px}main{padding:12px}.kpi .v{font-size:20px}.brand h1{font-size:15px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="hw">
+    <div class="brand"><a id="homeBtn" class="hb gold" href="index.html">&#8962;</a><div><h1>TSPL <span>Attendance</span></h1><div class="sub" id="sub">Loading…</div></div></div>
+    <div class="ctl"><select id="unit" aria-label="Factory"></select><input type="date" id="date" aria-label="Date"><button class="hb" id="btnRefresh" type="button">Refresh</button><button class="hb" id="btnOut" type="button">Log out</button></div>
+  </div>
+  <nav class="tabs" id="tabs"><button data-t="home" class="on">Home</button><button data-t="mark">Mark attendance</button><button data-t="workers">Workers</button><button data-t="reports">Reports</button><button data-t="alerts">Alerts</button></nav>
+</header>
+<main id="app"><div class="load"><div class="spin"></div>Loading…</div></main>
+<div class="savebar" id="savebar"><div class="in"><span id="saveInfo">0 changes</span><span class="row"><button class="btn" id="btnUndo" type="button">Undo changes</button><button class="btn pri" id="btnSave" type="button">Save attendance</button></span></div></div>
+<div id="dlg" role="dialog" aria-modal="true"><div class="box" id="dlgBox"></div></div>
+<script src="security.js"></script>
+<script src="js/tspl-config.js?v=20261122e"></script>
+<script>
+(function () {
+  'use strict';
+  var U = {}; try { U = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); } catch (e) {}
+  var KEY = sessionStorage.getItem('attKey') || '', USER = U.username || '';
+  var MAP = { hohr: 'ALL', hr_fipl: 'FIPL', hr_ts2: 'TS2', hr_ts4: 'TS4', hr_ts9: 'TS9', hr_ap2: 'AP2' };
+  var MYUNIT = MAP[USER] || (U.redirect === 'att.html' ? 'ALL' : 'ALL');
+  var CAN = !!(KEY && MAP[USER]);                     // HR logins can mark / edit; others (HO viewers) read-only
+  var IS_APP = U.redirect === 'att.html';
+  (function () { var h = document.getElementById('homeBtn'); if (IS_APP) { h.style.display = 'none'; } else { document.getElementById('btnOut').style.display = 'none'; h.href = window.top !== window.self ? 'home.html' : (U.redirect || 'main_ho.html'); h.innerHTML = '&#8962; Home'; } })();
+  document.getElementById('btnOut').addEventListener('click', function () { sessionStorage.clear(); location.href = 'index.html'; });
+  var UNITS = ['FIPL', 'TS2', 'TS4', 'TS9', 'AP2'];
+  var today = new Date(), iso = function (d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+  var S = { tab: 'home', unit: MYUNIT, date: iso(today), day: null, trend: null, edits: {}, q: '', line: '', filter: '', sample: false, rep: null };
+  var uSel = document.getElementById('unit');
+  uSel.innerHTML = (MYUNIT === 'ALL' ? '<option value="ALL">All factories</option>' + UNITS.map(function (u) { return '<option>' + u + '</option>'; }).join('') : '<option>' + MYUNIT + '</option>');
+  uSel.value = S.unit; document.getElementById('date').value = S.date; document.getElementById('date').max = S.date;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function jsonp(params, cb) {
+    var name = '__att' + Date.now() + Math.floor(Math.random() * 1e5), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, 90000);
+    document.body.appendChild(s);
+  }
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  function dl(d) { return d.slice(8, 10) + '-' + MON[+d.slice(5, 7) - 1]; }
+  function kpi(l, v, n, col) { return '<div class="kpi" style="--c:' + col + '"><div class="l">' + l + '</div><div class="v" style="color:' + col + '">' + v + '</div><div class="n">' + n + '</div></div>'; }
+  var STN = { P: 'Present', A: 'Absent', L: 'Leave', HD: 'Half day' };
+  function stTag(s) { return s ? '<span class="tag t' + s + '">' + STN[s] + '</span>' : '<span class="tag tN">Not marked</span>'; }
+  function repTag(w) { return /^y/i.test(w.reply) ? '<span class="tag tY">Said coming</span>' : /^n/i.test(w.reply) ? '<span class="tag tNo">Not coming' + (w.why ? ' · ' + esc(w.why) : '') + '</span>' : (w.tg ? '<span class="tag tN">No reply</span>' : '<span class="hint">Not on Telegram</span>'); }
+  function eff(w) { return S.edits[w.code] != null ? S.edits[w.code] : w.st; }
+  function pct(a, b) { return b ? Math.round(a / b * 100) : 0; }
+
+  /* ---------- sample preview (only shown, never saved) ---------- */
+  function sampleDay() {
+    var lines = { FIPL: ['1', '2', '3'], TS2: ['1', '4'], TS4: ['5', '6', '7'], TS9: ['8', '9'], AP2: ['1', '2'] }, out = [], n = 0, rs = ['Sick', 'Personal work', 'Family function'];
+    (S.unit === 'ALL' ? UNITS : [S.unit]).forEach(function (u) { lines[u].forEach(function (l) { for (var i = 1; i <= 8; i++) { n++; var r = (n * 37) % 10; out.push({ code: 'S' + u + l + i, name: 'Sample worker ' + n, unit: u, line: l, shift: 'G', mobile: '', dept: 'Sewing', desig: 'Tailor', tg: r !== 9, reply: r < 7 ? 'Yes' : r < 9 ? 'No' : '', why: r >= 7 && r < 9 ? rs[n % 3] : '', st: r < 6 ? 'P' : r === 7 ? 'A' : '', sr: '', by: '' }); } }); });
+    return { ok: true, unit: S.unit, date: S.date, working: true, workers: out };
+  }
+
+  function load(fresh) {
+    if (S.tab === 'reports') return loadReport();
+    document.getElementById('app').innerHTML = '<div class="load"><div class="spin"></div>Loading attendance…</div>';
+    var n = 2, done = function () { if (--n === 0) render(); };
+    jsonp({ action: 'att_day', unit: S.unit, date: S.date }, function (r) { S.day = r && r.ok ? r : { ok: false, error: r && r.error, workers: [] }; done(); });
+    var p = { action: 'att_trend', unit: S.unit, days: 14 }; if (fresh) p.fresh = 1;
+    jsonp(p, function (r) { S.trend = r && r.ok ? r : null; done(); });
+  }
+  function day() { return S.sample ? sampleDay() : S.day; }
+  function counts(ws) { var c = { head: ws.length, P: 0, A: 0, L: 0, HD: 0, N: 0, yes: 0, no: 0, nr: 0, tg: 0 };
+    ws.forEach(function (w) { var s = eff(w); if (s) c[s]++; else c.N++; if (/^y/i.test(w.reply)) c.yes++; else if (/^n/i.test(w.reply)) c.no++; else if (w.tg) c.nr++; if (w.tg) c.tg++; });
+    c.pres = c.P + c.HD * 0.5; c.pct = pct(c.pres, c.head - c.N > 0 ? c.head - c.N : 0); return c; }
+  function render() {
+    var D = day();
+    document.getElementById('sub').textContent = (S.unit === 'ALL' ? 'All factories' : S.unit) + ' · ' + dl(S.date) + ' ' + S.date.slice(0, 4) + (CAN ? ' · ' + USER : ' · view only') + (S.sample ? ' · SAMPLE PREVIEW' : '');
+    [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.className = b.getAttribute('data-t') === S.tab ? 'on' : ''; });
+    if (!D || D.ok === false) { document.getElementById('app').innerHTML = '<div class="load">Could not load attendance' + (D && D.error ? ': ' + esc(D.error) : '') + '. Press Refresh.</div>'; return; }
+    var h = S.sample ? '<div class="sample">Sample preview: made-up workers to show how the app works. Nothing here is saved. <button class="btn" data-act="nosample" type="button" style="height:30px;margin-left:8px">Exit preview</button></div>' : '';
+    if (!D.workers.length && !S.sample && S.tab !== 'workers') { h += emptyState(); document.getElementById('app').innerHTML = h; return; }
+    h += ({ home: viewHome, mark: viewMark, workers: viewWorkers, alerts: viewAlerts }[S.tab] || viewHome)(D);
+    document.getElementById('app').innerHTML = h; bar();
+  }
+  function emptyState() {
+    return '<div class="card"><div class="empty"><h2 style="justify-content:center">No workers yet</h2><p>Add the workers list to start. Download the template, fill it (or use your own Excel with the same column names) and import it.</p><div class="row" style="justify-content:center">' +
+      (CAN ? '<button class="btn pri" data-act="import" type="button">Import workers Excel</button>' : '') + '<button class="btn" data-act="template" type="button">Download template</button><button class="btn" data-act="sample" type="button">Preview with sample data</button></div></div></div>';
+  }
+  function viewHome(D) {
+    var c = counts(D.workers), h = '';
+    if (D.working === false) h += '<div class="sample" style="background:#EEF2F7;color:#334155;border-color:#CBD5E1">' + dl(S.date) + ' is a holiday / weekly off.</div>';
+    h += '<div class="kpis">' + kpi('Headcount', c.head, 'active workers', '#0B2545') + kpi('Present', c.P + (c.HD ? ' + ' + c.HD + ' half' : ''), c.pct + '% of marked', '#15803D') + kpi('Absent', c.A, 'marked by HR', '#B91C1C') + kpi('Leave', c.L, 'approved leave', '#1D4ED8') + kpi('Not marked', c.N, CAN ? 'still to mark' : 'HR still to mark', c.N ? '#B45309' : '#15803D') +
+      kpi('Telegram replies', c.yes + ' / ' + c.no, 'coming / not coming · ' + c.nr + ' no reply', '#7C3AED') + '</div>';
+    if (S.unit === 'ALL') {
+      var bu = {}; D.workers.forEach(function (w) { (bu[w.unit] = bu[w.unit] || []).push(w); });
+      h += '<section class="card"><h2>Factories today <small>tap a factory to open it</small></h2><div class="units">' + UNITS.concat(Object.keys(bu).filter(function (u) { return UNITS.indexOf(u) < 0; })).filter(function (u) { return bu[u]; }).map(function (u) { var k = counts(bu[u]), w = function (v) { return k.head ? v / k.head * 100 + '%' : 0; };
+        return '<div class="unit" data-unit="' + u + '"><div class="row" style="justify-content:space-between"><b>' + u + '</b><span class="' + (k.pct >= 90 ? 'g' : k.pct >= 80 ? 'a' : 'r') + '" style="font-weight:700">' + (k.head - k.N ? k.pct + '%' : '–') + '</span></div><div class="pbar"><i style="width:' + w(k.P) + ';background:#16A34A"></i><i style="width:' + w(k.HD) + ';background:#F59E0B"></i><i style="width:' + w(k.L) + ';background:#3B82F6"></i><i style="width:' + w(k.A) + ';background:#EF4444"></i></div><div class="hint">' + k.head + ' workers · ' + k.P + ' P · ' + k.A + ' A · ' + k.L + ' L · ' + k.N + ' not marked</div><div class="hint">Telegram: ' + k.yes + ' coming · ' + k.no + ' not coming</div></div>'; }).join('') + '</div></section>';
+    }
+    // trend
+    var T = S.trend, bars = '';
+    if (T && !S.sample) { bars = T.days.map(function (d) { var P = 0, HD = 0, m = 0; Object.keys(T.data).forEach(function (k) { if (k.indexOf(d + '|') === 0) { var o = T.data[k]; P += o.P; HD += o.HD; m += o.P + o.A + o.L + o.HD; } }); var v = m ? (P + HD / 2) / m * 100 : 0;
+      return '<div title="' + dl(d) + ': ' + (m ? Math.round(v) + '%' : 'not marked') + '"><span class="hint" style="font-size:10px">' + (m ? Math.round(v) : '') + '</span><i style="height:' + (m ? Math.max(4, v) : 2) + '%;background:' + (!m ? '#E2E8F0' : v >= 90 ? '#16A34A' : v >= 80 ? '#F59E0B' : '#EF4444') + '"></i><small>' + d.slice(8) + '</small></div>'; }).join(''); }
+    var bl = {}; D.workers.forEach(function (w) { var k = (S.unit === 'ALL' ? w.unit + ' · ' : '') + (w.line ? 'Line ' + w.line : 'No line'); (bl[k] = bl[k] || []).push(w); });
+    h += '<div class="grid2"><section class="card"><h2>Attendance % · last 14 days <small>present ÷ marked</small></h2>' + (bars ? '<div class="bars">' + bars + '</div>' : '<div class="hint">Shows once attendance is marked for a few days.</div>') + '</section>' +
+      '<section class="card"><h2>' + (S.unit === 'ALL' ? 'By factory and line' : 'By line') + '</h2><div class="tw" style="max-height:300px"><table><thead><tr><th class="l">Line</th><th>Workers</th><th>P</th><th>A</th><th>L</th><th>Not marked</th><th>%</th></tr></thead><tbody>' +
+      Object.keys(bl).sort().map(function (k) { var c2 = counts(bl[k]); return '<tr><td class="l"><b>' + esc(k) + '</b></td><td>' + c2.head + '</td><td class="g">' + c2.P + '</td><td class="r">' + c2.A + '</td><td>' + c2.L + '</td><td class="a">' + c2.N + '</td><td><b>' + (c2.head - c2.N ? c2.pct + '%' : '–') + '</b></td></tr>'; }).join('') + '</tbody></table></div></section></div>';
+    var no = D.workers.filter(function (w) { return /^n/i.test(w.reply); });
+    if (no.length) h += '<section class="card"><h2>Said not coming today (Telegram) <small>' + no.length + '</small></h2><div class="tw"><table><thead><tr><th class="l">Worker</th><th class="l">Factory · line</th><th class="l">Reason</th><th class="l">Replied</th><th class="l">HR status</th></tr></thead><tbody>' +
+      no.map(function (w) { return '<tr><td class="l"><b>' + esc(w.name) + '</b> <span class="hint">' + esc(w.code) + '</span></td><td class="l">' + esc(w.unit) + ' · ' + esc(w.line) + '</td><td class="l">' + esc(w.why) + '</td><td class="l">' + esc(w.rt) + '</td><td class="l">' + stTag(eff(w)) + '</td></tr>'; }).join('') + '</tbody></table></div></section>';
+    return h;
+  }
+  function viewMark(D) {
+    var ws = D.workers, lines = {}; ws.forEach(function (w) { lines[(S.unit === 'ALL' ? w.unit + ' · ' : '') + w.line] = 1; });
+    var list = ws.filter(function (w) { var lk = (S.unit === 'ALL' ? w.unit + ' · ' : '') + w.line; return (!S.line || lk === S.line) && (!S.q || (w.name + ' ' + w.code + ' ' + w.mobile).toLowerCase().indexOf(S.q) > -1) && (!S.filter || (S.filter === 'N' ? !eff(w) : eff(w) === S.filter)); });
+    var c = counts(ws);
+    var h = '<section class="card"><h2>Mark attendance · ' + dl(S.date) + ' <small>' + c.head + ' workers · ' + (c.head - c.N) + ' marked · ' + c.N + ' to mark</small></h2>' +
+      (CAN || S.sample ? '' : '<div class="hint" style="margin-bottom:8px">View only. Factory HR logins can mark attendance.</div>') +
+      '<div class="row" style="margin-bottom:8px"><input class="inp" id="mq" type="search" placeholder="Search name, code, mobile" value="' + esc(S.q) + '" style="flex:1;min-width:180px"><select class="inp" id="mline"><option value="">All lines</option>' + Object.keys(lines).sort().map(function (l) { return '<option' + (l === S.line ? ' selected' : '') + '>' + esc(l) + '</option>'; }).join('') + '</select>' +
+      '<select class="inp" id="mfil"><option value="">Everyone</option><option value="N"' + (S.filter === 'N' ? ' selected' : '') + '>Not marked</option><option value="P"' + (S.filter === 'P' ? ' selected' : '') + '>Present</option><option value="A"' + (S.filter === 'A' ? ' selected' : '') + '>Absent</option><option value="L"' + (S.filter === 'L' ? ' selected' : '') + '>Leave</option><option value="HD"' + (S.filter === 'HD' ? ' selected' : '') + '>Half day</option></select></div>' +
+      ((CAN || S.sample) ? '<div class="row" style="margin-bottom:6px"><button class="btn" data-act="fillTg" type="button">Use Telegram replies for unmarked</button><button class="btn" data-act="allP" type="button">Mark all unmarked Present</button><span class="hint">Telegram: Yes → Present, No → Absent with reason. You can change any worker after.</span></div>' : '') +
+      '<div>' + (list.length ? list.map(function (w) { var s = eff(w), dis = (CAN || S.sample) ? '' : ' disabled';
+        return '<div class="wk"><div class="who"><b>' + esc(w.name) + '</b><span>' + esc(w.code) + ' · ' + (S.unit === 'ALL' ? esc(w.unit) + ' · ' : '') + 'Line ' + esc(w.line || '–') + (w.desig ? ' · ' + esc(w.desig) : '') + '</span><div style="margin-top:4px">' + repTag(w) + (S.edits[w.code] != null ? ' <span class="tag tHD">changed</span>' : (w.by ? ' <span class="hint">by ' + esc(w.by) + '</span>' : '')) + '</div></div>' +
+          '<div class="seg" role="group" aria-label="Status for ' + esc(w.name) + '">' + ['P', 'A', 'L', 'HD'].map(function (k) { return '<button type="button" class="' + k + (s === k ? ' on' : '') + '" data-code="' + esc(w.code) + '" data-st="' + k + '" title="' + STN[k] + '"' + dis + '>' + k + '</button>'; }).join('') + '</div></div>'; }).join('') : '<div class="hint" style="padding:20px">No workers match.</div>') + '</div></section>';
+    return h;
+  }
+  function viewWorkers(D) {
+    var ws = D.workers.filter(function (w) { return !S.q || (w.name + ' ' + w.code + ' ' + w.mobile + ' ' + w.line + ' ' + w.dept).toLowerCase().indexOf(S.q) > -1; });
+    var tg = D.workers.filter(function (w) { return w.tg; }).length;
+    return '<div class="kpis">' + kpi('Workers', D.workers.length, 'active', '#0B2545') + kpi('On Telegram', tg, pct(tg, D.workers.length) + '% joined the bot', '#7C3AED') + kpi('Not on Telegram', D.workers.length - tg, 'ask them to join', '#B45309') + '</div>' +
+      '<section class="card"><h2>Workers <small>' + ws.length + ' shown</small></h2><div class="row" style="margin-bottom:10px"><input class="inp" id="wq" type="search" placeholder="Search name, code, mobile, line" value="' + esc(S.q) + '" style="flex:1;min-width:200px">' +
+      (CAN ? '<button class="btn pri" data-act="add" type="button">Add worker</button><button class="btn" data-act="import" type="button">Import Excel</button>' : '') + '<button class="btn" data-act="template" type="button">Template</button><button class="btn" data-act="xlsW" type="button">Download list</button></div>' +
+      '<div class="tw" style="max-height:65vh"><table><thead><tr><th class="l">Emp code</th><th class="l">Name</th><th class="l">Factory</th><th class="l">Line</th><th class="l">Department</th><th class="l">Designation</th><th class="l">Shift</th><th class="l">Mobile</th><th class="l">Telegram</th>' + (CAN ? '<th></th>' : '') + '</tr></thead><tbody>' +
+      (ws.length ? ws.map(function (w) { return '<tr><td class="l">' + esc(w.code) + '</td><td class="l"><b>' + esc(w.name) + '</b></td><td class="l">' + esc(w.unit) + '</td><td class="l">' + esc(w.line) + '</td><td class="l">' + esc(w.dept) + '</td><td class="l">' + esc(w.desig) + '</td><td class="l">' + esc(w.shift) + '</td><td class="l">' + esc(w.mobile) + '</td><td class="l">' + (w.tg ? '<span class="tag tY">Joined</span>' : '<span class="tag tN">Not yet</span>') + '</td>' + (CAN ? '<td><button class="btn" data-edit="' + esc(w.code) + '" type="button" style="height:32px">Edit</button></td>' : '') + '</tr>'; }).join('') : '<tr><td class="l hint" colspan="10" style="padding:20px">No workers yet. ' + (CAN ? 'Use Import Excel or Add worker.' : '') + '</td></tr>') +
+      '</tbody></table></div></section>';
+  }
+  function viewAlerts(D) {
+    var c = counts(D.workers), al = [];
+    if (S.unit === 'ALL') { var bu = {}; D.workers.forEach(function (w) { (bu[w.unit] = bu[w.unit] || []).push(w); }); Object.keys(bu).forEach(function (u) { var k = counts(bu[u]); if (k.head - k.N > 0 && k.pct < 85) al.push(['r', u + ' attendance ' + k.pct + '% today', 'Below 85%: ' + k.A + ' absent, ' + k.L + ' on leave.']); if (k.N && k.N > k.head * 0.2) al.push(['a', u + ': ' + k.N + ' workers not marked', 'HR has not marked attendance for them yet.']); }); }
+    else { if (c.head - c.N > 0 && c.pct < 85) al.push(['r', S.unit + ' attendance ' + c.pct + '% today', c.A + ' absent, ' + c.L + ' on leave.']); if (c.N) al.push(['a', c.N + ' workers not marked yet', 'Open Mark attendance to finish today.']); }
+    if (c.no) al.push(['a', c.no + ' workers said they are not coming', 'From the Telegram bot this morning. See Home for names and reasons.']);
+    if (c.nr) al.push(['a', c.nr + ' workers did not reply on Telegram', 'They may not have seen the message.']);
+    var notg = D.workers.filter(function (w) { return !w.tg; }).length; if (notg) al.push(['b', notg + ' workers have not joined the Telegram bot', 'Share the bot link so they can tell you each morning if they are coming.']);
+    var h = '<section class="card"><h2>Alerts · ' + dl(S.date) + '</h2>' + (al.length ? al.map(function (a) { return '<div class="wk"><span class="tag ' + (a[0] === 'r' ? 'tA' : a[0] === 'a' ? 'tHD' : 'tL') + '">' + (a[0] === 'r' ? 'Act now' : a[0] === 'a' ? 'Watch' : 'Info') + '</span><div class="who"><b>' + esc(a[1]) + '</b><span>' + esc(a[2]) + '</span></div></div>'; }).join('') : '<div class="g" style="font-weight:600">No alerts today.</div>') + '</section>';
+    h += '<section class="card"><h2>Absent 3 days or more in a row <small>last 14 days</small></h2><div id="streaks" class="hint">' + (S.sample ? 'Shows from real attendance.' : 'Checking…') + '</div></section>';
+    if (!S.sample) setTimeout(streaks, 0);
+    return h;
+  }
+  function streaks() {
+    var to = S.date, f = new Date(S.date + 'T12:00:00'); f.setDate(f.getDate() - 13);
+    jsonp({ action: 'att_report', unit: S.unit, from: iso(f), to: to }, function (r) {
+      var el = document.getElementById('streaks'); if (!el) return; if (!r || !r.ok) { el.textContent = 'Could not check.'; return; }
+      var out = r.rows.map(function (w) { var ds = Object.keys(w.days).sort(), best = 0, cur = 0, last = ''; ds.forEach(function (d) { if (w.days[d] === 'A') { cur++; best = Math.max(best, cur); last = d; } else cur = 0; }); return { w: w, n: best, last: last, now: cur }; }).filter(function (o) { return o.n >= 3; }).sort(function (a, b) { return b.now - a.now || b.n - a.n; });
+      el.innerHTML = out.length ? '<div class="tw"><table><thead><tr><th class="l">Worker</th><th class="l">Factory · line</th><th>Days in a row</th><th class="l">Last absent</th><th class="l">Still absent</th></tr></thead><tbody>' + out.map(function (o) { return '<tr><td class="l"><b>' + esc(o.w.name) + '</b> <span class="hint">' + esc(o.w.code) + '</span></td><td class="l">' + esc(o.w.unit) + ' · ' + esc(o.w.line) + '</td><td class="r"><b>' + o.n + '</b></td><td class="l">' + dl(o.last) + '</td><td class="l">' + (o.now ? '<span class="tag tA">Yes</span>' : 'No') + '</td></tr>'; }).join('') + '</tbody></table></div>' : '<span class="g">Nobody absent 3 days in a row.</span>';
+    });
+  }
+  function loadReport() {
+    var f = new Date(S.date + 'T12:00:00'); f.setDate(1); S.rf = S.rf || iso(f); S.rt = S.rt || S.date;
+    document.getElementById('app').innerHTML = '<div class="load"><div class="spin"></div>Building report…</div>';
+    [].forEach.call(document.querySelectorAll('#tabs button'), function (b) { b.className = b.getAttribute('data-t') === S.tab ? 'on' : ''; });
+    jsonp({ action: 'att_report', unit: S.unit, from: S.rf, to: S.rt }, function (r) { S.rep = r; viewReport(); });
+  }
+  function viewReport() {
+    var r = S.rep; if (!r || !r.ok) { document.getElementById('app').innerHTML = '<div class="load">Could not build the report.</div>'; return; }
+    var rows = r.rows.filter(function (w) { return !S.q || (w.name + ' ' + w.code + ' ' + w.line).toLowerCase().indexOf(S.q) > -1; });
+    var t = { P: 0, A: 0, L: 0, HD: 0 }; rows.forEach(function (w) { t.P += w.P; t.A += w.A; t.L += w.L; t.HD += w.HD; });
+    var m = t.P + t.A + t.L + t.HD;
+    var h = '<section class="card"><h2>Attendance report</h2><div class="row"><span class="hint">From</span><input class="inp" type="date" id="rf" value="' + S.rf + '"><span class="hint">to</span><input class="inp" type="date" id="rt" value="' + S.rt + '"><input class="inp" id="rq" type="search" placeholder="Search worker" value="' + esc(S.q) + '"><button class="btn pri" data-act="runRep" type="button">Show</button><button class="btn" data-act="xlsR" type="button">Download Excel</button></div></section>' +
+      '<div class="kpis">' + kpi('Worker-days marked', m, dl(r.from) + ' to ' + dl(r.to), '#0B2545') + kpi('Present', t.P + (t.HD ? ' + ' + t.HD + ' half' : ''), m ? Math.round((t.P + t.HD / 2) / m * 100) + '% attendance' : '–', '#15803D') + kpi('Absent', t.A, m ? Math.round(t.A / m * 100) + '% absenteeism' : '–', '#B91C1C') + kpi('Leave', t.L, 'approved', '#1D4ED8') + '</div>' +
+      '<section class="card"><h2>Worker-wise <small>' + rows.length + ' workers</small></h2><div class="tw" style="max-height:62vh"><table><thead><tr><th class="l">Emp code</th><th class="l">Name</th><th class="l">Factory</th><th class="l">Line</th><th>Present</th><th>Half day</th><th>Absent</th><th>Leave</th><th>Attendance %</th><th>Telegram yes / no</th></tr></thead><tbody>' +
+      rows.sort(function (a, b) { return b.A - a.A; }).map(function (w) { var mm = w.P + w.A + w.L + w.HD, p = mm ? Math.round((w.P + w.HD / 2) / mm * 100) : null; return '<tr><td class="l">' + esc(w.code) + '</td><td class="l"><b>' + esc(w.name) + '</b>' + (/^left/i.test(w.status) ? ' <span class="tag tN">Left</span>' : '') + '</td><td class="l">' + esc(w.unit) + '</td><td class="l">' + esc(w.line) + '</td><td class="g">' + w.P + '</td><td>' + w.HD + '</td><td class="r">' + w.A + '</td><td>' + w.L + '</td><td><b class="' + (p == null ? '' : p >= 90 ? 'g' : p >= 80 ? 'a' : 'r') + '">' + (p == null ? '–' : p + '%') + '</b></td><td>' + w.yes + ' / ' + w.no + '</td></tr>'; }).join('') + '</tbody></table></div></section>';
+    document.getElementById('app').innerHTML = h;
+  }
+  function bar() { var n = Object.keys(S.edits).length; document.getElementById('savebar').style.display = n && S.tab === 'mark' ? 'block' : 'none'; document.getElementById('saveInfo').textContent = n + ' change' + (n === 1 ? '' : 's') + ' not saved yet'; }
+  function setSt(code, st) { var w = day().workers.filter(function (x) { return x.code === code; })[0]; if (!w) return; if (w.st === st) delete S.edits[code]; else S.edits[code] = st; render(); }
+
+  /* ---------- save (small parts so long lists go through) ---------- */
+  document.getElementById('btnSave').addEventListener('click', function () {
+    if (S.sample) { alert('Sample preview: nothing is saved.'); S.edits = {}; render(); return; }
+    var ws = day().workers, list = Object.keys(S.edits).map(function (c) { var w = ws.filter(function (x) { return x.code === c; })[0]; return [c, S.edits[c], S.edits[c] === 'A' && w && /^n/i.test(w.reply) ? w.why : '']; });
+    var btn = this, parts = []; for (var i = 0; i < list.length; i += 40) parts.push(list.slice(i, i + 40));
+    btn.disabled = true; var saved = 0, k = 0;
+    (function next() { if (k >= parts.length) { btn.disabled = false; S.edits = {}; document.getElementById('saveInfo').textContent = saved + ' saved'; load(true); return; }
+      btn.textContent = 'Saving ' + (k + 1) + ' / ' + parts.length + '…';
+      jsonp({ action: 'att_mark', user: USER, key: KEY, date: S.date, d: JSON.stringify(parts[k]) }, function (r) {
+        if (!r || !r.ok) { btn.disabled = false; btn.textContent = 'Save attendance'; alert('Could not save: ' + (r && r.error ? r.error : 'network') + '. Your changes are kept, please try again.'); return; }
+        saved += r.saved; k++; btn.textContent = 'Save attendance'; next(); }); })();
+  });
+  document.getElementById('btnUndo').addEventListener('click', function () { S.edits = {}; render(); });
+
+  /* ---------- workers: add / edit / import ---------- */
+  var COLS = [['code', 'Emp Code'], ['name', 'Name'], ['unit', 'Factory'], ['line', 'Line'], ['shift', 'Shift'], ['mobile', 'Mobile'], ['dept', 'Department'], ['desig', 'Designation']];
+  function dlg(h) { document.getElementById('dlgBox').innerHTML = h; document.getElementById('dlg').style.display = 'flex'; }
+  function closeDlg() { document.getElementById('dlg').style.display = 'none'; }
+  document.getElementById('dlg').addEventListener('click', function (e) { if (e.target === this || e.target.getAttribute('data-act') === 'close') closeDlg(); });
+  function editForm(w) {
+    w = w || { unit: MYUNIT === 'ALL' ? 'FIPL' : MYUNIT };
+    dlg('<h2 style="margin:0 0 6px;font-size:17px;color:#0B2545">' + (w.code ? 'Edit worker' : 'Add worker') + '</h2>' + COLS.map(function (c) { var v = w[c[0]] || '';
+      if (c[0] === 'unit') return '<label for="f_unit">Factory</label><select class="inp" id="f_unit"' + (MYUNIT === 'ALL' ? '' : ' disabled') + '>' + UNITS.map(function (u) { return '<option' + (u === v ? ' selected' : '') + '>' + u + '</option>'; }).join('') + '</select>';
+      return '<label for="f_' + c[0] + '">' + c[1] + '</label><input class="inp" id="f_' + c[0] + '" value="' + esc(v) + '"' + (c[0] === 'code' && w.code ? ' readonly' : '') + (c[0] === 'mobile' ? ' inputmode="tel"' : '') + '>'; }).join('') +
+      (w.code ? '<label><input type="checkbox" id="f_left"> Worker has left the company (removes from daily list)</label>' : '') +
+      '<div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" data-act="close" type="button">Cancel</button><button class="btn pri" id="f_save" type="button">Save</button></div><div id="f_msg" class="hint" style="margin-top:8px"></div>');
+    document.getElementById('f_save').addEventListener('click', function () {
+      var g = function (k) { var el = document.getElementById('f_' + k); return el ? el.value.trim() : ''; };
+      if (!g('code') || !g('name')) { document.getElementById('f_msg').textContent = 'Emp code and name are needed.'; return; }
+      var left = document.getElementById('f_left') && document.getElementById('f_left').checked;
+      sendWorkers([[g('code'), g('name'), g('unit') || MYUNIT, g('line'), g('shift'), g('mobile'), g('dept'), g('desig'), left ? 'Left' : 'Active']], function (ok, msg) { if (ok) { closeDlg(); load(true); } else document.getElementById('f_msg').textContent = msg; });
+    });
+  }
+  function sendWorkers(rows, cb, prog) {
+    var parts = []; for (var i = 0; i < rows.length; i += 25) parts.push(rows.slice(i, i + 25)); var k = 0, add = 0, upd = 0;
+    (function next() { if (k >= parts.length) return cb(true, add + ' added, ' + upd + ' updated');
+      if (prog) prog(k, parts.length);
+      jsonp({ action: 'att_wsave', user: USER, key: KEY, d: JSON.stringify(parts[k]) }, function (r) { if (!r || !r.ok) return cb(false, 'Could not save: ' + (r && r.error ? r.error : 'network')); add += r.added; upd += r.updated; k++; next(); }); })();
+  }
+  function withXLSX(fn) { if (window.XLSX) return fn(); var sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'; sc.onload = fn; document.head.appendChild(sc); }
+  function importDlg() {
+    dlg('<h2 style="margin:0 0 6px;font-size:17px;color:#0B2545">Import workers from Excel</h2><p class="hint">Columns needed: <b>Emp Code, Name, Factory</b>. Optional: Line, Shift, Mobile, Department, Designation, Status (write "Left" for workers who have left). The first sheet is read. Existing workers (same Emp Code) are updated, new ones are added.' + (MYUNIT === 'ALL' ? '' : ' Only ' + MYUNIT + ' workers are imported.') + '</p><input type="file" id="imf" accept=".xlsx,.xls,.csv" class="inp" style="padding:6px"><div id="imp" class="hint" style="margin-top:10px"></div><div class="row" style="margin-top:14px;justify-content:flex-end"><button class="btn" data-act="close" type="button">Close</button><button class="btn pri" id="imgo" type="button" disabled>Import</button></div>');
+    var rows = [];
+    document.getElementById('imf').addEventListener('change', function () { var f = this.files[0]; if (!f) return; withXLSX(function () { var rd = new FileReader(); rd.onload = function (e) {
+      var wb = XLSX.read(e.target.result, { type: 'array' }), a = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: false });
+      var hi = a.findIndex(function (r) { return r.some(function (c) { return /emp|code/i.test(c); }) && r.some(function (c) { return /name/i.test(c); }); }); if (hi < 0) { document.getElementById('imp').textContent = 'Could not find a heading row with Emp Code and Name.'; return; }
+      var H = a[hi].map(function (c) { return String(c).toLowerCase().trim(); }), col = function (re) { return H.findIndex(function (c) { return re.test(c); }); };
+      var ix = { code: col(/emp|code|id/), name: col(/name/), unit: col(/factory|unit|location/), line: col(/line/), shift: col(/shift/), mobile: col(/mobile|phone|contact/), dept: col(/dep/), desig: col(/desig|role/), st: col(/status/) };
+      rows = a.slice(hi + 1).map(function (r) { var g = function (k) { return ix[k] > -1 ? String(r[ix[k]]).trim() : ''; }; return [g('code'), g('name'), (g('unit') || (MYUNIT === 'ALL' ? '' : MYUNIT)).toUpperCase(), g('line'), g('shift'), g('mobile').replace(/\D/g, '').slice(-10), g('dept'), g('desig'), g('st')]; }).filter(function (r) { return r[0] && r[1] && (MYUNIT === 'ALL' || r[2] === MYUNIT); });
+      var bad = rows.filter(function (r) { return !r[2]; }).length;
+      document.getElementById('imp').innerHTML = '<b>' + rows.length + ' workers found</b>' + (bad ? ' · <span class="r">' + bad + ' without factory (will be skipped)</span>' : '') + '<br>First: ' + esc(rows.slice(0, 3).map(function (r) { return r[0] + ' ' + r[1] + ' (' + r[2] + ')'; }).join(', '));
+      rows = rows.filter(function (r) { return r[2]; }); document.getElementById('imgo').disabled = !rows.length; }; rd.readAsArrayBuffer(f); }); });
+    document.getElementById('imgo').addEventListener('click', function () { var b = this; b.disabled = true; sendWorkers(rows, function (ok, msg) { document.getElementById('imp').innerHTML = (ok ? '<span class="g"><b>Done:</b> ' : '<span class="r">') + esc(msg) + '</span>'; if (ok) load(true); else b.disabled = false; }, function (k, n) { document.getElementById('imp').textContent = 'Importing part ' + (k + 1) + ' of ' + n + '…'; }); });
+  }
+
+  /* ---------- events ---------- */
+  document.getElementById('tabs').addEventListener('click', function (e) { var b = e.target.closest('[data-t]'); if (!b) return; if (Object.keys(S.edits).length && S.tab === 'mark' && !confirm('You have changes not saved. Leave without saving?')) return; S.edits = {}; S.tab = b.getAttribute('data-t'); S.q = ''; S.line = ''; S.filter = ''; if (S.tab === 'reports') loadReport(); else if (S.day) render(); else load(); });
+  uSel.addEventListener('change', function () { S.unit = this.value; S.edits = {}; S.line = ''; load(); });
+  document.getElementById('date').addEventListener('change', function () { S.date = this.value; S.edits = {}; load(); });
+  document.getElementById('btnRefresh').addEventListener('click', function () { load(true); });
+  var app = document.getElementById('app');
+  app.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-st]'); if (b && !b.disabled) return setSt(b.getAttribute('data-code'), b.getAttribute('data-st'));
+    var u = e.target.closest('[data-unit]'); if (u && MYUNIT === 'ALL') { S.unit = u.getAttribute('data-unit'); uSel.value = S.unit; load(); return; }
+    var ed = e.target.closest('[data-edit]'); if (ed) { editForm(day().workers.filter(function (w) { return w.code === ed.getAttribute('data-edit'); })[0]); return; }
+    var a = e.target.closest('[data-act]'); if (!a) return; var act = a.getAttribute('data-act'), D = day();
+    if (act === 'sample') { S.sample = true; render(); }
+    else if (act === 'nosample') { S.sample = false; S.edits = {}; render(); }
+    else if (act === 'add') editForm(null);
+    else if (act === 'import') importDlg();
+    else if (act === 'allP') { D.workers.forEach(function (w) { if (!eff(w)) S.edits[w.code] = 'P'; }); render(); }
+    else if (act === 'fillTg') { D.workers.forEach(function (w) { if (!eff(w)) { if (/^y/i.test(w.reply)) S.edits[w.code] = 'P'; else if (/^n/i.test(w.reply)) S.edits[w.code] = 'A'; } }); render(); }
+    else if (act === 'runRep') { S.rf = document.getElementById('rf').value; S.rt = document.getElementById('rt').value; loadReport(); }
+    else if (act === 'template') withXLSX(function () { var ws = XLSX.utils.aoa_to_sheet([COLS.map(function (c) { return c[1]; }).concat(['Status']), ['[EMP CODE]', '[WORKER NAME]', MYUNIT === 'ALL' ? 'FIPL' : MYUNIT, '1', 'G', '[10-DIGIT MOBILE]', 'Sewing', 'Tailor', 'Active']]); var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Workers'); XLSX.writeFile(wb, 'TSPL_Workers_Template.xlsx'); });
+    else if (act === 'xlsW') withXLSX(function () { var ws = XLSX.utils.aoa_to_sheet([COLS.map(function (c) { return c[1]; }).concat(['Telegram'])].concat(D.workers.map(function (w) { return COLS.map(function (c) { return w[c[0]]; }).concat([w.tg ? 'Joined' : '']); }))); var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Workers'); XLSX.writeFile(wb, 'TSPL_Workers_' + S.unit + '.xlsx'); });
+    else if (act === 'xlsR') withXLSX(function () { var r = S.rep, ws = XLSX.utils.aoa_to_sheet([['TSPL attendance · ' + (S.unit === 'ALL' ? 'All factories' : S.unit) + ' · ' + r.from + ' to ' + r.to], [], ['Emp code', 'Name', 'Factory', 'Line', 'Department', 'Present', 'Half day', 'Absent', 'Leave', 'Attendance %', 'Telegram yes', 'Telegram no']].concat(r.rows.map(function (w) { var m = w.P + w.A + w.L + w.HD; return [w.code, w.name, w.unit, w.line, w.dept, w.P, w.HD, w.A, w.L, m ? Math.round((w.P + w.HD / 2) / m * 100) : '', w.yes, w.no]; }))); var wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Attendance'); XLSX.writeFile(wb, 'TSPL_Attendance_' + S.unit + '_' + r.from + '_to_' + r.to + '.xlsx'); });
+  });
+  app.addEventListener('input', function (e) {
+    if (e.target.id === 'mq' || e.target.id === 'wq' || e.target.id === 'rq') { S.q = e.target.value.toLowerCase().trim(); var id = e.target.id, pos = e.target.selectionStart; if (S.tab === 'reports') viewReport(); else render(); var el = document.getElementById(id); if (el) { el.focus(); try { el.setSelectionRange(pos, pos); } catch (x) {} } }
+  });
+  app.addEventListener('change', function (e) { if (e.target.id === 'mline') { S.line = e.target.value; render(); } else if (e.target.id === 'mfil') { S.filter = e.target.value; render(); } });
+  window.addEventListener('beforeunload', function (e) { if (Object.keys(S.edits).length && !S.sample) { e.preventDefault(); e.returnValue = ''; } });
+  load(false);
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>

@@ -22,7 +22,8 @@ const userGroups = {
     users20: { redirect: "dept_fsa.html", users: [{ username: "sathish", password: "2008" }] },
     users21: { redirect: "ceo.html", users: [{ username: "ceo", hash: "9039256e1679e7d2f8611670c6775a1ffc66e28a47246b66fe0757431990d517" }] },   // Director & CEO - password kept only as a SHA-256 hash
     users22: { redirect: "merchant.html", users: [{ username: "merchant", hash: "2c8123797bf2f71e63734c95d685f336d1914a7cc1606652339ffdb3e583be0c" }] },   // Merchants (one shared login) - FSA dashboard only, password kept as a SHA-256 hash
-    users23: { redirect: "audit.html", users: [{ username: "audit", hash: "b98a99eae5715cd616c780929d52c5a2fd7f559abedf98a0866a6f73191bb7dd" }] }   // Auditors (HO audit) - e-Cutmax & FCR Audit page only, password kept as a SHA-256 hash
+    users23: { redirect: "audit.html", users: [{ username: "audit", hash: "b98a99eae5715cd616c780929d52c5a2fd7f559abedf98a0866a6f73191bb7dd" }] },   // Auditors (HO audit) - e-Cutmax & FCR Audit page only, password kept as a SHA-256 hash
+    users24: { redirect: "att.html", users: [{ username: "hohr", hash: "25cd70c311dd4aa21e4d4ceea371906f64979a5e38b56ab771666a554c6615c8" }, { username: "hr_fipl", hash: "de82ff5bca74a7a43be5a9e89de4cb27a93cda6337c71f6541af697817888803" }, { username: "hr_ts2", hash: "281cba4501a28bbca0173b9a2bd61ee4e2629ceb798be5e12a42c020154755e2" }, { username: "hr_ts4", hash: "5b5192b23863379df80976f61c3fcc67423f27c789b6a8ce66b60a994518e354" }, { username: "hr_ts9", hash: "05aa6694ff6fac17c8037cb5bb2f48efddd0ef7facebdb98fc894a2817250dbe" }, { username: "hr_ap2", hash: "7d83dd9ada08d5392ecf713c62a56371dac17fee08ebe839c4062e97af1e74c9" }] }   // Attendance app: HO HR (all factories) + one HR login per factory; passwords kept as SHA-256 hashes
 };
 
 async function sha256Hex(text) {
@@ -147,6 +148,7 @@ function handleLogin() {
                 );
 
                 if (matchedUser) {
+                    if (userGroups[group].redirect === 'att.html') sessionStorage.setItem('attKey', await sha256Hex(password + ':tspl-att'));
                     sessionStorage.setItem('userLoggedIn', JSON.stringify({
                         username,
                         redirect: userGroups[group].redirect
