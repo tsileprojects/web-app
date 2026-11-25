@@ -83,6 +83,7 @@ tbody tr:nth-child(even) td.rn,tbody tr td.rn{background:#F8FAFC}
     var p = { action: 'gs_view', k: K, page: S.page, order: S.order }; if (S.tab) p.tab = S.tab; if (S.q) p.q = S.q; if (fresh) p.fresh = 1;
     jsonp(p, function (r) {
       if (!r || !r.ok) { document.getElementById('main').innerHTML = '<div class="load">Could not load this sheet' + (r && r.error ? ': ' + esc(r.error) : '') + '. Press Refresh to try again.</div>'; return; }
+      var want = P.get('tabname'); if (want && !S.tab && !S.tn) { S.tn = 1; var t = r.tabs.filter(function (x) { return x.name.toLowerCase() === want.toLowerCase(); })[0]; if (t && String(t.gid) !== String(r.tab.gid)) { S.tab = String(t.gid); return load(); } }
       D = r; S.tab = String(r.tab.gid); S.sort = -1; render();
     });
   }
@@ -91,7 +92,7 @@ tbody tr:nth-child(even) td.rn,tbody tr td.rn{background:#F8FAFC}
     document.getElementById('ttl').innerHTML = 'GSD <span>| ' + esc(r.title) + '</span>';
     document.getElementById('sub').textContent = r.file + ' · ' + r.tab.name + ' · ' + (r.q ? r.matches + ' matching rows' : r.total.toLocaleString('en-IN') + ' rows') + ' · refreshed ' + r.at;
     document.getElementById('tabs').innerHTML = r.tabs.map(function (t) { return '<button type="button" data-g="' + t.gid + '" class="' + (String(t.gid) === S.tab ? 'on' : '') + '">' + esc(t.name) + '</button>'; }).join('');
-    var cols = r.header.map(function (h, i) { return i; }).filter(function (i) { return String(r.header[i]).trim() !== '' || r.rows.some(function (x) { return String(x[i + 1]).trim() !== ''; }); });
+    var cols = r.header.map(function (h, i) { return i; }).filter(function (i) { return r.rows.length ? r.rows.some(function (x) { return String(x[i + 1]).trim() !== ''; }) : String(r.header[i]).trim() !== ''; });
     var numc = {}; cols.forEach(function (i) { var n = 0, t = 0; r.rows.slice(0, 200).forEach(function (x) { var v = String(x[i + 1]).trim(); if (v) { t++; if (isNum(v)) n++; } }); numc[i] = t && n / t > 0.8; });
     var stat = {}; cols.forEach(function (i) { if (/status|result|approv/i.test(r.header[i])) stat[i] = 1; });
     var rows = r.rows.slice();
