@@ -1,94 +1,117 @@
-/* ================= GSD SHEET VIEWER feed (action=gs_view&k=<key>[&tab=<sheetId>]) =================
-   Read-only. Shows the GSD team's Google Sheets as portal pages. Only the sheets listed here can be read.
-   Uses the Sheets API (values:batchGet / spreadsheets.get) through ecmGet_'s token. */
-const GS_VIEW = {
-  needle: ['1rekp5LyRhUQLjxLTtqhLA57SeUDDvejtkI4EKRVYcGs', 'Needle Details'],
-  mc: ['1-zpviK1eMMCwiEdjpXcV1jLyeiYqPRh_DRC55Aa4trU', 'Machine Details'],
-  mcold: ['1cDxz9fqGzRszWDXOggdChaOMImVwCB27atVYaDDYvcQ', 'Machine Details (old)'],
-  cotreq: ['17rqWjNTT3JF-4oY0XfQhj7z1bpLUD6WTjV0Eql0RE9E', 'COT Request'],
-  indent: ['10i2hs5eF23gCO50ixFnPrBfnTFqnpIiCd4WXxHUnxbI', 'Indent Details'],
-  ulp: ['1nW7CoUhPhpuHjWVSjfEmcrKJF_3wcoQ1NUCzerwi_F0', 'Unit Line Plans'],
-  mcl_fipl: ['19Tp4xb4Gb0UfkXHDYIjjQET-8H2JnJJk7BwL0demTWE', 'FIPL | Mc List & Line Plan'],
-  mcl_ts2: ['1U-SejE8qkwk9RuBSAUj1jWKlZQcy5uKm8EjCQqwJcZY', 'TS2 | Mc List & Line Plan'],
-  mcl_ts4: ['1Gp5BWM-MB_U9NvywWSqWNFcpf7pppmSIYRwYlftKj28', 'TS4 | Mc List & Line Plan'],
-  mcl_ts9: ['1-xvNlcODe6h03-BndxUCXU5psDFUnVYQ8aJFc1jQaG0', 'TS9 | Mc List & Line Plan'],
-  mcl_ap2: ['1FYPDUDUo3pK2syfgmWqV0cNZCevrO7wfwX2uBcpPcJo', 'AP2 | Mc List & Line Plan'],
-  mcl_tspl: ['1nkCRjl3V2ZzUczFZj2kuF8Wd_fEuBQ-Vfz-g9Si3a2Q', 'TSPL / CMD | Mc List & Line Plan']
+/* ================= TSPL ATTENDANCE APP feed (att.html) =================
+   Same data as the Telegram attendance bot ("TSPL Attendance Bot" sheet, botSS_()):
+     Workers    - master list (bot columns A:K, plus L Department, M Designation)
+     Attendance - workers' own Yes/No replies from Telegram (pre-intimation)
+     Register   - HR's final attendance per day (P / A / L / HD), written by this app (created on first use)
+   Reads: att_day, att_trend, att_report. Writes (att_mark, att_wsave) need the HR user's app key. */
+const ATT_UNITS = ['FIPL', 'TS2', 'TS4', 'TS9', 'AP2'];
+const ATT_USERS = {
+  hohr: { unit: 'ALL', key: '558401bd815433e9dcefbd3d82eaf3ae7185b4611b4dde1367de948c267bed76' },
+  hr_fipl: { unit: 'FIPL', key: '999dc1e54ee7f4c1610c67b11c5ff2aa82a1815ebffae2f899b0dfa470bca2c4' },
+  hr_ts2: { unit: 'TS2', key: '1b72900cb8e1414c3c655fb25ad3e9f7d3000d4854da51f41de4af87fe53b413' },
+  hr_ts4: { unit: 'TS4', key: '1a6a50eccb7919cfda6d613cf0f8f7b9b4b5fff58a526fb33bfbe8dad7b9633b' },
+  hr_ts9: { unit: 'TS9', key: '1552ea57d9f2a8b77f36e9bc2b92731a448eafe671b13547e3b7798dbfdfd4bd' },
+  hr_ap2: { unit: 'AP2', key: '47c4743c8020ea333f18f7483a73bfe59f1295556cbb07730fa48f6d941c8d24' }
 };
-function gsMeta_(id) {
-  const r = UrlFetchApp.fetch('https://sheets.googleapis.com/v4/spreadsheets/' + id + '?fields=properties.title,sheets(properties(sheetId,title,index,hidden,gridProperties(rowCount,columnCount)))',
-    { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
-  if (r.getResponseCode() !== 200) throw new Error('Sheet not readable (' + r.getResponseCode() + ')');
-  const j = JSON.parse(r.getContentText());
-  return { title: j.properties.title, tabs: (j.sheets || []).map(s => s.properties).filter(p => !p.hidden).sort((a, b) => a.index - b.index)
-    .map(p => ({ gid: p.sheetId, name: p.title, rows: p.gridProperties ? p.gridProperties.rowCount : 0, cols: p.gridProperties ? p.gridProperties.columnCount : 0 })) };
+const ATT_REG_HEAD = ['Date', 'Emp Code', 'Name', 'Unit', 'Line', 'Status', 'Reason', 'Marked by', 'Time'];
+function attAuth_(p) {
+  const u = ATT_USERS[String(p.user || '')];
+  if (!u || String(p.key || '') !== u.key) throw new Error('Not allowed - please log in again with your HR login');
+  return u;
 }
-function gsColL_(n) { let s = ''; while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = (n - 1 - m) / 26 | 0; } return s; }
-function gsView_(p) {
-  const k = String(p.k || ''), def = GS_VIEW[k];
-  if (!def) return { ok: false, error: 'Unknown sheet' };
-  const q = String(p.q || '').trim().toLowerCase(), pg = Math.max(0, Number(p.page) || 0), N = 1000, asc = String(p.order) === 'asc';
-  const c = CacheService.getScriptCache(), key = 'gsv2_' + k + '_' + (p.tab || '') + '_' + pg + '_' + (asc ? 'a' : 'd') + '_' + Utilities.base64EncodeWebSafe(q).slice(0, 60);
-  if (String(p.fresh) !== '1') { const n = Number(c.get(key + '_n') || 0); if (n) { const parts = c.getAll(Array.from({ length: n }, (_, i) => key + '_' + i)); let s = ''; for (let i = 0; i < n; i++) { if (parts[key + '_' + i] == null) { s = ''; break; } s += parts[key + '_' + i]; } if (s) return JSON.parse(s); } }
-  const meta = gsMeta_(def[0]);
-  if (!meta.tabs.length) return { ok: false, error: 'No visible tabs' };
-  const tab = meta.tabs.filter(t => String(t.gid) === String(p.tab))[0] || meta.tabs[0];
-  const cols = Math.min(tab.cols || 26, 110), L = gsColL_(cols), nm = "'" + tab.name.replace(/'/g, "''") + "'!";
-  const g0 = ecmGet_([def[0]], [nm + 'A1:' + L + '12', nm + 'A1:D' + (tab.rows || 1000)], 'FORMATTED_VALUE')[0];
-  if (g0.err) return { ok: false, error: g0.err };
-  const top = g0[nm + 'A1:' + L + '12'] || [], colA = g0[nm + 'A1:D' + (tab.rows || 1000)] || [];
-  let last = colA.length; while (last > 0 && !(colA[last - 1] || []).some(x => String(x).trim() !== '')) last--;
-  // header = the row among the first 12 with the most filled cells (earliest on a tie)
-  let hdr = 0, best = -1; top.forEach((r, i) => { const n = r.filter(x => { const t = String(x).trim(); return t !== '' && !/^[-+]?[\d,.]+%?$/.test(t) && !/^\d{1,2}[\/-]\w{1,3}[\/-]\d{2,4}/.test(t); }).length; if (n > best) { best = n; hdr = i; } });
-  const dataStart = hdr + 2;   // 1-based first data row
-  let rowsOut = [], total = Math.max(0, last - dataStart + 1), from = dataStart, pages = Math.max(1, Math.ceil(total / N)), matches = null;
-  if (q) {
-    const all = ecmGet_([def[0]], [nm + 'A' + dataStart + ':' + L + Math.max(dataStart, last)], 'FORMATTED_VALUE')[0];
-    const vv = (all[nm + 'A' + dataStart + ':' + L + Math.max(dataStart, last)] || []).map((r, i) => ({ r: r, n: dataStart + i })).filter(o => o.r.join(' ').toLowerCase().indexOf(q) > -1);
-    matches = vv.length; if (!asc) vv.reverse();
-    rowsOut = vv.slice(0, 1500).map(o => [o.n].concat(o.r)); pages = 1;
-  } else if (total) {
-    let a, b;
-    if (asc) { a = dataStart + pg * N; b = Math.min(last, a + N - 1); } else { b = last - pg * N; a = Math.max(dataStart, b - N + 1); }
-    if (b >= a) {
-      const rg = nm + 'A' + a + ':' + L + b, got = ecmGet_([def[0]], [rg], 'FORMATTED_VALUE')[0];
-      rowsOut = (got[rg] || []).map((r, i) => [a + i].concat(r));
-      while (rowsOut.length < b - a + 1) rowsOut.push([a + rowsOut.length]);
-      if (!asc) rowsOut.reverse();
-    }
-  }
-  const head = top.slice(0, hdr + 1);
-  const w = [head].concat([rowsOut.map(r => r.slice(1))]).reduce((m, block) => block.reduce((mm, r) => { let l = r.length; while (l && String(r[l - 1]).trim() === '') l--; return Math.max(mm, l); }, m), 0);
-  const fix = r => { r = (r || []).slice(0, w).map(x => String(x == null ? '' : x)); while (r.length < w) r.push(''); return r; };
-  const out = { ok: true, k: k, title: def[1], file: meta.title, id: def[0], tabs: meta.tabs.map(t => ({ gid: t.gid, name: t.name })), tab: { gid: tab.gid, name: tab.name },
-    titles: head.slice(0, hdr).map(r => r.filter(x => String(x).trim() !== '').join(' · ')).filter(Boolean), header: fix(head[hdr]),
-    rows: rowsOut.filter(r => r.slice(1).some(x => String(x).trim() !== '')).map(r => [r[0]].concat(fix(r.slice(1)))), total: total, page: pg, pages: pages, per: N, asc: asc, q: q, matches: matches,
-    at: Utilities.formatDate(new Date(), 'Asia/Kolkata', 'dd-MMM-yyyy HH:mm') };
-  const js = JSON.stringify(out);
-  try { const parts = {}; let n = 0; for (let i = 0; i < js.length; i += 95000) parts[key + '_' + (n++)] = js.slice(i, i + 95000); if (n <= 40) { parts[key + '_n'] = String(n); c.putAll(parts, 300); } } catch (e) {}
+function attD_(v) { return v instanceof Date ? Utilities.formatDate(v, BOT_TZ, 'yyyy-MM-dd') : String(v || '').slice(0, 10); }
+function attReg_() {
+  const ss = botSS_(); let sh = ss.getSheetByName('Register');
+  if (!sh) { sh = ss.insertSheet('Register'); sh.getRange(1, 1, 1, ATT_REG_HEAD.length).setValues([ATT_REG_HEAD]).setFontWeight('bold'); sh.setFrozenRows(1); }
+  return sh;
+}
+function attWorkers_() {
+  const sh = botSheet_('Workers'), n = sh.getLastRow();
+  if (n < 2) return [];
+  if (sh.getRange(1, 12).getValue() === '') sh.getRange(1, 12, 1, 2).setValues([['Department', 'Designation']]);
+  return sh.getRange(2, 1, n - 1, 13).getValues().map((r, i) => ({ row: i + 2, code: String(r[0]).trim(), name: String(r[1]).trim(), unit: String(r[2]).trim().toUpperCase(), line: String(r[3]).trim(), shift: String(r[4]).trim(),
+    mobile: String(r[5]).trim(), tg: !!String(r[7]).trim(), status: String(r[8]).trim(), dept: String(r[11]).trim(), desig: String(r[12]).trim() })).filter(w => w.code);
+}
+function attRows_(name, cols) { const sh = name === 'Register' ? attReg_() : botSheet_(name), n = sh.getLastRow(); return n > 1 ? sh.getRange(2, 1, n - 1, cols).getValues() : []; }
+function attInUnit_(unit, w) { return unit === 'ALL' || w.unit === unit; }
+
+/* one day: every worker with Telegram reply + HR register status */
+function attDay_(p) {
+  const unit = String(p.unit || 'ALL').toUpperCase(), d = String(p.date || botToday_());
+  const W = attWorkers_().filter(w => attInUnit_(unit, w) && !/^left/i.test(w.status));
+  const rep = {}, reg = {};
+  attRows_('Attendance', 10).forEach(r => { if (attD_(r[0]) === d) rep[String(r[1])] = { reply: String(r[5]), reason: String(r[6]), time: String(r[7] instanceof Date ? Utilities.formatDate(r[7], BOT_TZ, 'HH:mm') : r[7]) }; });
+  attRows_('Register', 9).forEach(r => { if (attD_(r[0]) === d) reg[String(r[1])] = { st: String(r[5]), reason: String(r[6]), by: String(r[7]), time: String(r[8]) }; });
+  let working = true; try { working = botWorkingDay_(d) || String(botSettings_()['Bot active']).toLowerCase() !== 'yes'; } catch (e) {}
+  return { ok: true, unit: unit, date: d, working: working, units: ATT_UNITS,
+    workers: W.map(w => ({ code: w.code, name: w.name, unit: w.unit, line: w.line, shift: w.shift, mobile: w.mobile, dept: w.dept, desig: w.desig, tg: w.tg,
+      reply: rep[w.code] ? rep[w.code].reply : '', why: rep[w.code] ? rep[w.code].reason : '', rt: rep[w.code] ? rep[w.code].time : '',
+      st: reg[w.code] ? reg[w.code].st : '', sr: reg[w.code] ? reg[w.code].reason : '', by: reg[w.code] ? reg[w.code].by : '' })) };
+}
+
+/* last N days per unit (register + replies) */
+function attTrend_(p) {
+  const days = Math.min(60, Number(p.days) || 14), unit = String(p.unit || 'ALL').toUpperCase();
+  const c = CacheService.getScriptCache(), ck = 'attT_' + unit + '_' + days; if (String(p.fresh) !== '1') { const h = c.get(ck); if (h) return JSON.parse(h); }
+  const list = []; for (let i = days - 1; i >= 0; i--) list.push(Utilities.formatDate(new Date(Date.now() - i * 864e5), BOT_TZ, 'yyyy-MM-dd'));
+  const inR = {}; list.forEach(d => inR[d] = 1);
+  const W = attWorkers_().filter(w => attInUnit_(unit, w) && !/^left/i.test(w.status)), uOf = {}; W.forEach(w => uOf[w.code] = w.unit);
+  const head = {}; W.forEach(w => head[w.unit] = (head[w.unit] || 0) + 1);
+  const T = {}; const k = (d, u) => (T[d + '|' + u] = T[d + '|' + u] || { P: 0, A: 0, L: 0, HD: 0, yes: 0, no: 0 });
+  const lastReg = {}; attRows_('Register', 9).forEach(r => { const d = attD_(r[0]); if (inR[d] && uOf[String(r[1])]) lastReg[d + '|' + r[1]] = String(r[5]).toUpperCase(); });
+  Object.keys(lastReg).forEach(x => { const [d, code] = x.split('|'), s = lastReg[x]; const o = k(d, uOf[code]); if (o[s] != null) o[s]++; });
+  const lastRep = {}; attRows_('Attendance', 10).forEach(r => { const d = attD_(r[0]); if (inR[d] && uOf[String(r[1])]) lastRep[d + '|' + r[1]] = String(r[5]); });
+  Object.keys(lastRep).forEach(x => { const [d, code] = x.split('|'); const o = k(d, uOf[code]); if (/^y/i.test(lastRep[x])) o.yes++; else if (/^n/i.test(lastRep[x])) o.no++; });
+  const out = { ok: true, unit: unit, days: list, head: head, data: T };
+  try { c.put(ck, JSON.stringify(out), 120); } catch (e) {}
   return out;
 }
 
-/* ---- GSD | OB & TCR Indent dashboard (action=gsd_dash&from=yyyy-mm-dd&to=yyyy-mm-dd) — from the Log tab of "GSD | Log Register" ---- */
-function gsdDash_(p) {
-  const tz = 'Asia/Kolkata', now = new Date();
-  const from = String(p.from || Utilities.formatDate(new Date(now.getFullYear(), now.getMonth(), 1), tz, 'yyyy-MM-dd'));
-  const to = String(p.to || Utilities.formatDate(now, tz, 'yyyy-MM-dd'));
-  const c = CacheService.getScriptCache(), key = 'gsd1_' + from + '_' + to;
-  if (String(p.fresh) !== '1') { const hit = c.get(key); if (hit) return JSON.parse(hit); }
-  const id = GS_VIEW.indent[0], rg = "'Log'!A2:U20000";
-  const got = ecmGet_([id], [rg], 'FORMATTED_VALUE')[0];
-  if (got.err) return { ok: false, error: got.err };
-  const pd = s => { const m = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2}))?/); if (!m) return null; return m[3] + '-' + ('0' + m[1]).slice(-2) + '-' + ('0' + m[2]).slice(-2) + (m[4] ? ' ' + ('0' + m[4]).slice(-2) + ':' + m[5] : ''); };
-  const rows = [];
-  (got[rg] || []).forEach((r, i) => {
-    const d = pd(r[0]); if (!d) return; const day = d.slice(0, 10); if (day < from || day > to) return;
-    const ts = String(r[17] || '').trim(), tl = ts.toLowerCase();
-    rows.push({ n: i + 2, d: d, buyer: r[1] || '', style: r[2] || '', desc: r[3] || '', cluster: r[4] || '', sstat: r[5] || '', info: r[6] || '', merch: r[7] || '', ref: r[8] || '', req: r[9] || '', spec: r[10] || '',
-      to: r[12] || '', pick: r[13] || '', start: r[14] || '', end: r[16] || '', task: ts, st: /complet|done/.test(tl) ? 'done' : /progress|wip|started/.test(tl) ? 'prog' : 'todo', hours: r[18] || '', review: r[19] || '', rstat: r[20] || '' });
-  });
-  rows.sort((a, b) => a.d < b.d ? 1 : -1);
-  const out = { ok: true, from: from, to: to, rows: rows, at: Utilities.formatDate(now, tz, 'dd-MMM-yyyy HH:mm') };
-  try { c.put(key, JSON.stringify(out), 120); } catch (e) {}
-  return out;
+/* report: per worker counts between two dates */
+function attReport_(p) {
+  const unit = String(p.unit || 'ALL').toUpperCase(), from = String(p.from || botToday_()), to = String(p.to || botToday_());
+  const W = attWorkers_().filter(w => attInUnit_(unit, w)), by = {}; W.forEach(w => by[w.code] = { code: w.code, name: w.name, unit: w.unit, line: w.line, dept: w.dept, status: w.status, P: 0, A: 0, L: 0, HD: 0, yes: 0, no: 0, days: {} });
+  const reg = {}; attRows_('Register', 9).forEach(r => { const d = attD_(r[0]); if (d >= from && d <= to && by[String(r[1])]) reg[d + '|' + r[1]] = { s: String(r[5]).toUpperCase(), why: String(r[6]) }; });
+  Object.keys(reg).forEach(x => { const code = x.split('|')[1], o = by[code], s = reg[x].s; if (o[s] != null) o[s]++; o.days[x.split('|')[0]] = s; });
+  const rep = {}; attRows_('Attendance', 10).forEach(r => { const d = attD_(r[0]); if (d >= from && d <= to && by[String(r[1])]) rep[d + '|' + r[1]] = String(r[5]); });
+  Object.keys(rep).forEach(x => { const o = by[x.split('|')[1]]; if (/^y/i.test(rep[x])) o.yes++; else if (/^n/i.test(rep[x])) o.no++; });
+  return { ok: true, unit: unit, from: from, to: to, rows: Object.keys(by).map(k => by[k]) };
+}
+
+/* HR marks attendance: d = JSON [[code, status, reason], ...] (sent in small parts) */
+function attMark_(p) {
+  const u = attAuth_(p), d = String(p.date || ''), rows = JSON.parse(p.d || '[]');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new Error('Bad date');
+  const W = {}; attWorkers_().forEach(w => W[w.code] = w);
+  const now = Utilities.formatDate(new Date(), BOT_TZ, 'dd-MMM HH:mm'), out = [];
+  rows.forEach(r => { const w = W[String(r[0])]; if (!w || (u.unit !== 'ALL' && w.unit !== u.unit)) return; const s = String(r[1]).toUpperCase(); if (['P', 'A', 'L', 'HD'].indexOf(s) < 0) return;
+    out.push([d, w.code, w.name, w.unit, w.line, s, String(r[2] || '').slice(0, 120), String(p.user), now]); });
+  if (out.length) { const lock = LockService.getScriptLock(); lock.waitLock(20000); try { const sh = attReg_(); sh.getRange(sh.getLastRow() + 1, 1, out.length, ATT_REG_HEAD.length).setValues(out); } finally { lock.releaseLock(); } }
+  CacheService.getScriptCache().removeAll(['attT_ALL_14', 'attT_' + u.unit + '_14']);
+  return { ok: true, saved: out.length };
+}
+
+/* add / edit / import workers: d = JSON [[code, name, unit, line, shift, mobile, dept, desig, status], ...] */
+function attWsave_(p) {
+  const u = attAuth_(p), rows = JSON.parse(p.d || '[]');
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const sh = botSheet_('Workers'), W = attWorkers_(), idx = {}; W.forEach(w => idx[w.code] = w);
+    let add = 0, upd = 0; const app = [];
+    rows.forEach(r => {
+      const code = String(r[0] || '').trim(), unit = String(r[2] || '').trim().toUpperCase(); if (!code || !String(r[1] || '').trim()) return;
+      if (u.unit !== 'ALL' && unit !== u.unit) return;
+      const ex = idx[code];
+      if (ex) { if (u.unit !== 'ALL' && ex.unit !== u.unit) return;
+        sh.getRange(ex.row, 1, 1, 6).setValues([[code, r[1], unit, r[3] || '', r[4] || '', r[5] || '']]);
+        sh.getRange(ex.row, 12, 1, 2).setValues([[r[6] || '', r[7] || '']]);
+        if (/^left/i.test(r[8] || '')) sh.getRange(ex.row, 9).setValue('Left');
+        else if (r[8] && /^left/i.test(ex.status)) sh.getRange(ex.row, 9).setValue(ex.tg ? 'Active' : '');
+        upd++; }
+      else { app.push([code, r[1], unit, r[3] || '', r[4] || '', r[5] || '', 'en', '', /^left/i.test(r[8] || '') ? 'Left' : '', new Date(), '', r[6] || '', r[7] || '']); idx[code] = { code: code, unit: unit }; add++; }
+    });
+    if (app.length) sh.getRange(sh.getLastRow() + 1, 1, app.length, 13).setValues(app);
+    try { botDrop_(); } catch (e) {}
+    return { ok: true, added: add, updated: upd };
+  } finally { lock.releaseLock(); }
 }
