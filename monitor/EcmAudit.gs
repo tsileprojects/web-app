@@ -13,7 +13,7 @@ const ECM_FOLDERS = [
   ['TS9', '1BBI8NKEpSM1Wv8UZWYAj94GxIV1GCQHk'], ['TS9', '1aBNSfLw1zSROTYhBPQdLBM1EbxOLz1w0'], ['TS9', '1eKc2efVwWke8RtzN-9LBQOAYc1vQ4Ey_'],
   ['AP2', '1KIwUxVVvVEFvjoRVRIEe7dHPlf_ul8sT']
 ];
-const ECM_V = 2, ECM_DAYS = 180, ECM_INDEX_NAME = 'TSPL_eCutmax_Audit_Index.json';
+const ECM_V = 3, ECM_DAYS = 180, ECM_INDEX_NAME = 'TSPL_eCutmax_Audit_Index.json';
 
 const ECM_F2_COLS = {
   'category': 'cat', 'color': 'col', 'style sub- description': 'sub', 'color order qty': 'oq', '+/- qty': 'pm', 'total order qty': 'toq', 'uom': 'uom',
@@ -47,6 +47,19 @@ function ecmGet_(ids, ranges, render) {
 }
 function ecmPad_(g, n) { return (g || []).map(r => { r = r.slice(); while (r.length < n) r.push(''); return r; }); }
 const ECM_R = ['OS!A1:Z6', 'F2!A1:AL30', 'CS!A1:BA16'];
+const ECM_RC = ECM_R.concat([1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => 'C' + n + '!C9:S9'));   // + lay-slip utilisation rows (end bits)
+function ecmGetC_(ids) {   // with the C sheets; a file missing one of them is read again without
+  const got = ecmGet_(ids, ECM_RC), redo = [];
+  got.forEach((g, i) => { if (g.err) redo.push(i); });
+  if (redo.length) { const g2 = ecmGet_(redo.map(i => ids[i]), ECM_R); redo.forEach((i, k) => { got[i] = g2[k]; }); }
+  return got;
+}
+function ecmEb_(got, n) {   // end bits for fabric n from C<n> row 9 (C..S)
+  const r = ((got['C' + n + '!C9:S9'] || [])[0] || []).map(ecmNum_);
+  if (!r.some(x => x)) return null;
+  const gen = r[5] || 0, ueb = r[8] || 0, reb = r[9] || 0, leb = r[10] || 0, rc = r[11] || 0;
+  return { gen: gen, ueb: ueb, reb: reb, leb: leb, rc: rc, rolls: r[0] || 0, issued: r[1] || 0, broll: r[14] || 0, brollRe: r[15] || 0, brollLeft: r[16] || 0 };
+}
 function ecmParse_(got) {
   const out = { cats: [] };
   if (got.err) { out.err = got.err; return out; }
@@ -78,6 +91,7 @@ function ecmParse_(got) {
     if (!e.cat && !e.toq && !e.cut && !e.nu) continue;
     Object.keys(e).forEach(k => { if (typeof e[k] === 'number') e[k] = Math.round(e[k] * 10000) / 10000; });
     if (e.an === 0.161 || e.an === 0.0045 || e.an === 0.00449) e.an = 0;   // left over from the e-Cutmax template = not entered
+    const eb = ecmEb_(got, n); if (eb) e.eb = eb;
     out.cats.push(e);
   }
   return out;
@@ -130,7 +144,7 @@ function ecmRefresh_(budget) {
   let done = 0;
   for (let i = 0; i < todo.length; i += 15) {
     if (Date.now() - t0 > budget) break;
-    const part = todo.slice(i, i + 15), got = ecmGet_(part.map(j => j.f.getId()), ECM_R);
+    const part = todo.slice(i, i + 15), got = ecmGetC_(part.map(j => j.f.getId()));
     part.forEach((j, k) => {
       const e = ecmParse_(got[k]);
       e.id = j.f.getId(); e.u = j.u; e.t = j.f.getName(); e.mod = j.mod; e.v = ECM_V;
@@ -171,7 +185,7 @@ function ecmStyle_(p) {
   const c = CacheService.getScriptCache(), key = 'ecms_' + id + '_' + base.mod;
   if (String(p.fresh) !== '1') { const hit = c.get(key); if (hit) return JSON.parse(hit); }
   const tz = 'Asia/Kolkata';
-  const got0 = ecmGet_([id], ECM_R)[0], fresh = ecmParse_(got0); fresh.flags = ecmFlags_(fresh);
+  const got0 = ecmGetC_([id])[0], fresh = ecmParse_(got0); fresh.flags = ecmFlags_(fresh);
   if (fresh.err && !fresh.cats.length) return { ok: false, error: fresh.err };
   const out = { ok: true, id: id, u: base.u, t: base.t, buyer: fresh.buyer, style: fresh.style, desc: fresh.desc, vg: fresh.vg, grid: fresh.grid, cats: fresh.cats, flags: fresh.flags,
     modS: Utilities.formatDate(new Date(base.mod), tz, 'dd-MMM-yyyy HH:mm'), pos: [], sizes: [], cuts: [], util: [] };
