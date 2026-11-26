@@ -210,7 +210,7 @@
     $('cmpT').innerHTML = UNITS.map(function (x) {
       var v = U[x] || {}, sh = tot ? v.pack / tot * 100 : 0;
       return '<tr class="click" data-u="' + x + '"' + (x === unit ? ' style="background:#f3f7ff"' : '') + '><td><b>' + x + '</b></td><td class="r"><b>' + fmt(v.pack) + '</b></td><td><div class="share"><div class="b"><i style="width:' + sh.toFixed(1) + '%"></i></div><span class="small muted">' + Math.round(sh) + '%</span></div></td><td class="r">' + fmt(wd ? v.pack / wd : null) + '</td><td class="r">' + fmt(v.fsa) + '</td></tr>';
-    }).join('') + '<tr class="tot"><td>Group</td><td class="r">' + fmt(tot) + '</td><td></td><td class="r">' + fmt(wd ? tot / wd : null) + '</td><td class="r">' + fmt(UNITS.reduce(function (s, x) { return s + (U[x] ? U[x].fsa : 0); }, 0)) + '</td></tr>';
+    }).join('') + '<tr class="tot" data-u="ALL"><td>Group</td><td class="r">' + fmt(tot) + '</td><td></td><td class="r">' + fmt(wd ? tot / wd : null) + '</td><td class="r">' + fmt(UNITS.reduce(function (s, x) { return s + (U[x] ? U[x].fsa : 0); }, 0)) + '</td></tr>';
     if (stView === 'mtd') renderStyles();
   }
   function best(days) { return (days || []).reduce(function (m, x) { return Math.max(m, x.pack || 0); }, 0) || null; }
@@ -265,7 +265,7 @@
       var U = r.units || {};
       x = '<div class="tbl-wrap" style="margin-top:16px"><table class="t"><thead><tr><th>Factory</th><th class="r">Checked</th><th class="r">Ironed</th><th class="r">Packed</th><th class="r">Pass %</th></tr></thead><tbody>' +
         UNITS.map(function (k) { var v = U[k] || {}; return '<tr class="click" data-u="' + k + '"><td><b>' + k + '</b></td><td class="r">' + fmt(v.chk) + '</td><td class="r">' + fmt(v.iron) + '</td><td class="r"><b>' + fmt(v.pack) + '</b></td><td class="r">' + (v.passPct == null ? '-' : v.passPct + '%') + '</td></tr>'; }).join('') +
-        '<tr class="tot"><td>Group</td><td class="r">' + fmt(t.chk) + '</td><td class="r">' + fmt(t.iron) + '</td><td class="r">' + fmt(t.pack) + '</td><td class="r">' + (t.passPct == null ? '-' : t.passPct + '%') + '</td></tr></tbody></table></div>';
+        '<tr class="tot" data-u="ALL"><td>Group</td><td class="r">' + fmt(t.chk) + '</td><td class="r">' + fmt(t.iron) + '</td><td class="r">' + fmt(t.pack) + '</td><td class="r">' + (t.passPct == null ? '-' : t.passPct + '%') + '</td></tr></tbody></table></div>';
     }
     $('dayExtra').innerHTML = x;
     if (stView === 'day') renderStyles();
