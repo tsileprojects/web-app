@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script src="js/unitlock.js?v=1"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Needle Issue System</title>
@@ -40,6 +41,7 @@
         var DASH = 'https://script.google.com/macros/s/AKfycbwSQPZyNVGIaqtkLeGa2gmi0lzFl9b5INTZQbcFuqzuihaM-OxdcT3i8hbGkH5XYfe6/exec?view=issue&unit=';
         var u = new URLSearchParams(location.search).get('unit');
         try { u = (u || localStorage.getItem('ndlUnit') || 'FIPL').toUpperCase(); } catch (e) { u = (u || 'FIPL').toUpperCase(); }
+        if (window.TSPL_LOCK) { u = window.TSPL_LOCK; }   // factory logins: own unit only (CMD/HO can switch)
         document.getElementById('unit').value = u;
         function setUnit() {
             u = document.getElementById('unit').value;
@@ -58,7 +60,7 @@
             document.getElementById('fDash').classList.toggle('on', d);
             document.getElementById('bForm').classList.toggle('on', !d);
             document.getElementById('bDash').classList.toggle('on', d);
-            document.getElementById('unit').style.display = d ? '' : 'none';
+            document.getElementById('unit').style.display = (d && !window.TSPL_LOCK) ? '' : 'none';
             document.getElementById('bRe').style.display = d ? '' : 'none';
             if (!d) document.getElementById('dMsg').style.display = 'none';
             if (d && (!document.getElementById('fDash').src || wasDash)) loadDash();
