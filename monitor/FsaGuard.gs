@@ -167,7 +167,7 @@ function fsaCheck_() {
   const want = {}, er = ex.getRange(2, 1, ex.getLastRow() - 1, 2), ev = er.getValues(), efm = er.getFormulas();   // a stored formula may have lost its ' and become live: use its formula text
   ev.forEach((r, i) => want[r[0]] = efm[i][1] || String(r[1]).replace(/^'/, ''));
   const allow = JSON.parse(PropertiesService.getScriptProperties().getProperty('FSA_ALLOW') || '{}');
-  let n = 0, M = null; try { M = fsaLayout_(SpreadsheetApp.openById(FSA_MASTER).getSheetByName(FSA_TAB)); } catch (e) {}
+  let n = 0, M = null; try { M = fsaLayout_(SpreadsheetApp.openById(FSA_MASTER).getSheetByName(FSA_TAB), true); } catch (e) {}
   Object.keys(FSA_SHEETS).forEach(name => {
     if (FSA_SKIP.test(name)) return;
     const id = FSA_SHEETS[name], key = 'FSA|' + id, ok = allow[id] || [];
@@ -179,11 +179,15 @@ function fsaCheck_() {
         message: bad.length + ' formula cell(s) changed from the master FSA report: ' + bad.slice(0, 10).join(', ') + '. HO: restore from the master copy.' });
       else autoResolve_(key, 'FSA formulas match the master again');
       if (M && !/MATALAN/.test(name)) {   // locked / unmerged photo boxes and entry areas = Save & Send can't clear, photos fail
-        const d = fsaLayoutDiff_(sh, M), lk = 'FSALAYOUT|' + id, prob = d.openMissing.concat(d.openBad).concat(d.mergeMissing.map(a => a + ' (box split)'));
+        let d = fsaLayoutDiff_(sh, M), lk = 'FSALAYOUT|' + id, prob = fsaLayoutProblems_(d), fixed = '';
+        if (prob.length) {   // self-heal: put the entry areas / photo boxes / drop-downs back at once, then look again
+          try { const did = fsaRepairOne_(sh, d, M); fixed = did.join('; '); axLog_('FSA guard', '', 'auto-repair', book.getName() + ': ' + fixed, 'monitor'); } catch (e) {}
+          d = fsaLayoutDiff_(sh, M); prob = fsaLayoutProblems_(d);
+        }
         if (prob.length) upsertIssue_({ key: lk, severity: 'Error', source: 'FSA guard', program: book.getName() + ' > ' + FSA_TAB,
           target: book.getUrl() + '#gid=' + sh.getSheetId(),
-          message: 'Entry / photo areas damaged: ' + prob.slice(0, 6).join(', ') + '. Save & Send may not clear the form. HO: run fsaLayoutRepair in the monitor.' });
-        else autoResolve_(lk, 'FSA entry / photo areas match the master again');
+          message: 'Entry / photo areas damaged and could not be repaired automatically: ' + prob.slice(0, 6).join(', ') + '. HO: check this report.' });
+        else autoResolve_(lk, fixed ? 'FSA guard repaired it automatically: ' + fixed : 'FSA entry / photo areas match the master again');
       }
     } catch (e) {}
   });
@@ -208,47 +212,71 @@ function fsaProtCompare() {
 }
 
 /* ---------- open (auditor-editable) areas + photo boxes: compare and repair ---------- */
-function fsaLayout_(sh) {
+function fsaLayout_(sh, withDv) {
   const open = [];
   sh.getProtections(SpreadsheetApp.ProtectionType.SHEET).forEach(p => p.getUnprotectedRanges().forEach(r => { let a = '#REF!'; try { a = r.getA1Notation(); } catch (e) {} open.push(a); }));
   const merges = sh.getRange('A1:Q' + Math.min(sh.getMaxRows(), 320)).getMergedRanges().map(r => r.getA1Notation());
-  return { open: open, merges: merges };
+  return { open: open, merges: merges, dv: withDv ? fsaDv_(sh) : null };
+}
+/* drop-down / number rules of the entry area (rows 1-60). A pasted or dragged cell carries its rule with it,
+   e.g. the Button Pull Test "Result" list moved from G20 up to G19. */
+const FSA_DV_BLOCK = 'A1:Q60';
+function fsaDv_(sh) {
+  const out = {};
+  sh.getRange(FSA_DV_BLOCK).getDataValidations().forEach((row, i) => row.forEach((d, j) => {
+    if (!d) return;
+    const t = String(d.getCriteriaType()), v = t === 'VALUE_IN_RANGE' ? [] : d.getCriteriaValues();
+    out[String.fromCharCode(65 + j) + (i + 1)] = { t: t, k: t + JSON.stringify(v), d: d };
+  }));
+  return out;
 }
 function fsaLayoutDiff_(sh, M) {
-  const L = fsaLayout_(sh);
+  const L = fsaLayout_(sh, !!M.dv);
+  const dvBad = !M.dv ? [] : Object.keys(Object.assign({}, M.dv, L.dv)).filter(a => (M.dv[a] ? M.dv[a].k : '') !== (L.dv[a] ? L.dv[a].k : '')).sort();
   return { L: L, openMissing: M.open.filter(a => L.open.indexOf(a) < 0), openBad: L.open.filter(a => a === '#REF!'),
-    openExtra: L.open.filter(a => a !== '#REF!' && M.open.indexOf(a) < 0), mergeMissing: M.merges.filter(a => L.merges.indexOf(a) < 0) };
+    openExtra: L.open.filter(a => a !== '#REF!' && M.open.indexOf(a) < 0), mergeMissing: M.merges.filter(a => L.merges.indexOf(a) < 0), dvBad: dvBad };
+}
+function fsaLayoutProblems_(d) {
+  return d.openMissing.concat(d.openBad).concat(d.mergeMissing.map(a => a + ' (box split)')).concat(d.dvBad.map(a => a + ' (drop-down / rule)'));
+}
+/** puts one report's open areas, photo boxes and entry rules back as in the master. Never touches values. */
+function fsaRepairOne_(sh, d, M) {
+  const did = [];
+  d.mergeMissing.forEach(a => {
+    const rg = sh.getRange(a), fv = rg.getFormulas(), vv = rg.getValues(), vals = fv.map((r, i) => r.map((f, j) => f || vv[i][j]));
+    const filled = vals.flat().filter(v => v !== '' && v !== null).length;
+    if (filled <= 1 && !rg.getMergedRanges().length) { rg.merge(); did.push('merged ' + a); } else did.push('LEFT ' + a + ' (has content)');
+  });
+  if (d.openMissing.length || d.openBad.length) {
+    const p = sh.getProtections(SpreadsheetApp.ProtectionType.SHEET)[0];
+    if (p) {
+      const keep = p.getUnprotectedRanges().filter(r => { try { return r.getA1Notation() !== '#REF!'; } catch (e) { return false; } });
+      p.setUnprotectedRanges(keep.concat(d.openMissing.map(a => sh.getRange(a))));
+      did.push('opened ' + (d.openMissing.join(',') || '-') + (d.openBad.length ? ' (removed ' + d.openBad.length + ' broken)' : ''));
+    }
+  }
+  d.dvBad.forEach(a => {
+    const m = M.dv[a];
+    if (m && m.t === 'VALUE_IN_RANGE') { did.push('LEFT rule ' + a); return; }
+    try { sh.getRange(a).setDataValidation(m ? m.d.copy().build() : null); did.push('rule ' + a); } catch (e) { did.push('rule ' + a + ' failed'); }
+  });
+  SpreadsheetApp.flush();
+  return did;
 }
 /** READ-ONLY scan of all reports */
 function fsaLayoutScan() { return fsaLayoutFix_(false); }
 /** REPAIR: puts back missing open areas / photo boxes exactly as in the master. Never removes an extra open area, never merges over content. */
 function fsaLayoutRepair() { return fsaLayoutFix_(true); }
 function fsaLayoutFix_(apply) {
-  const M = fsaLayout_(SpreadsheetApp.openById(FSA_MASTER).getSheetByName(FSA_TAB)), lines = [];
+  const M = fsaLayout_(SpreadsheetApp.openById(FSA_MASTER).getSheetByName(FSA_TAB), true), lines = [];
   Object.keys(FSA_SHEETS).forEach(n => {
     if (FSA_SKIP.test(n) || /MATALAN/.test(n)) return;
     try {
       const sh = SpreadsheetApp.openById(FSA_SHEETS[n]).getSheetByName(FSA_TAB), d = fsaLayoutDiff_(sh, M);
-      if (!d.openMissing.length && !d.openBad.length && !d.mergeMissing.length) { lines.push(n + ': OK'); return; }
-      const did = [];
-      if (apply) {
-        d.mergeMissing.forEach(a => {
-          const rg = sh.getRange(a), fv = rg.getFormulas(), vv = rg.getValues(), vals = fv.map((r, i) => r.map((f, j) => f || vv[i][j]));
-          const filled = vals.flat().filter(v => v !== '' && v !== null).length;
-          if (filled <= 1 && !rg.getMergedRanges().length) { rg.merge(); did.push('merged ' + a); } else did.push('LEFT ' + a + ' (has content)');
-        });
-        if (d.openMissing.length || d.openBad.length) {
-          const p = sh.getProtections(SpreadsheetApp.ProtectionType.SHEET)[0];
-          if (p) {
-            const keep = p.getUnprotectedRanges().filter(r => { try { return r.getA1Notation() !== '#REF!'; } catch (e) { return false; } });
-            p.setUnprotectedRanges(keep.concat(d.openMissing.map(a => sh.getRange(a))));
-            did.push('opened ' + d.openMissing.join(','));
-          }
-        }
-        SpreadsheetApp.flush();
-      }
+      if (!fsaLayoutProblems_(d).length) { lines.push(n + ': OK'); return; }
+      const did = apply ? fsaRepairOne_(sh, d, M) : [];
       lines.push(n + ': open missing [' + d.openMissing.join(' ') + '] bad ' + d.openBad.length + ' | photo boxes missing [' + d.mergeMissing.join(' ') + ']' +
-        (d.openExtra.length ? ' | extra open [' + d.openExtra.join(' ') + ']' : '') + (did.length ? ' => ' + did.join('; ') : ''));
+        ' | rules [' + d.dvBad.join(' ') + ']' + (d.openExtra.length ? ' | extra open [' + d.openExtra.join(' ') + ']' : '') + (did.length ? ' => ' + did.join('; ') : ''));
     } catch (e) { lines.push(n + ': ERROR ' + e.message); }
   });
   Logger.log(lines.join('\n'));
