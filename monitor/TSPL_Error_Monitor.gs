@@ -378,6 +378,13 @@ function doGet(e) {
       case 'deep_run': out = deepRun_(p); break;
       case 'deep_write': out = deepWrite_(p); break;
       case 'today': out = todayLive_(p.fresh); break;
+      case 'smp_data': out = smpData_(p); break;
+      case 'smp_report': out = smpReport_(p); break;
+      case 'smp_add': out = smpAdd_(p); break;
+      case 'smp_move': out = smpMove_(p); break;
+      case 'smp_edit': out = smpEdit_(p); break;
+      case 'smp_daily': out = smpDaily_(p); break;
+      case 'smp_mail': out = smpMail_(p); break;
       default: out = { ok: true, service: 'TSPL Error Monitor', time: new Date() };
     }
   } catch (err) { out = { ok: false, error: String(err && err.message || err) }; }

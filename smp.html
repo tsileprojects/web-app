@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Sampling Tracker</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F4F6FA;--card:#fff;--line:#E2E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--g:#15803D;--a:#B45309;--r:#B91C1C;--b:#1D4ED8;--soft:#F8FAFC}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff}
+.hw{max-width:1440px;margin:0 auto;padding:12px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:12px;justify-content:space-between}
+.hw h1{margin:0;font-size:18px;font-weight:700}.hw h1 span{color:var(--gold)}.hw .sub{font-size:12px;color:#CBD5E1;margin-top:2px}
+.hb{height:36px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.tabs{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.tw{max-width:1440px;margin:0 auto;padding:0 22px;display:flex;gap:4px;flex-wrap:wrap}
+.tabs button{border:0;background:none;font:inherit;font-weight:700;color:var(--mute);padding:13px 16px;border-bottom:3px solid transparent;cursor:pointer}
+.tabs button.on{color:var(--navy);border-bottom-color:var(--gold)}
+main{max-width:1440px;margin:0 auto;padding:16px 22px 110px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:14px}
+.card h2{margin:0 0 12px;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}.card h2 small{font-weight:500;color:var(--mute);font-size:12px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{border:1px solid #CBD5E1;background:#fff;border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:600;color:#334155;cursor:pointer}
+.chip b{margin-left:5px;color:var(--navy)}.chip.on{background:var(--navy);border-color:var(--navy);color:#fff}.chip.on b{color:var(--gold)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:700;color:var(--mute)}
+input,select,textarea{height:38px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff;color:var(--ink);min-width:0}
+textarea{height:60px;padding:8px 10px}
+.btn{height:38px;padding:0 16px;border-radius:8px;border:1px solid #CBD5E1;background:#fff;font:inherit;font-weight:700;cursor:pointer;color:var(--ink)}
+.btn.p{background:var(--navy);border-color:var(--navy);color:#fff}.btn.g{background:#16A34A;border-color:#16A34A;color:#fff}.btn:disabled{opacity:.55;cursor:default}
+.tbl{overflow:auto;max-height:calc(100vh - 290px);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%}
+th{position:sticky;top:0;background:#F1F5F9;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--mute);text-align:left;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap;z-index:1}
+td{padding:7px 8px;border-bottom:1px solid #EEF2F7;font-size:13px;vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+tr.sel td{background:#FFF8E6}tbody tr:hover td{background:#F8FAFF}
+.tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11.5px;font-weight:700;background:#EEF2F7;color:#334155;white-space:nowrap}
+.tag.A{background:#FEF3C7;color:#92400E}.tag.B{background:#E0F2FE;color:#075985}.tag.U{background:#EDE9FE;color:#5B21B6}.tag.C{background:#DCFCE7;color:#166534}
+.old{color:var(--r);font-weight:700}
+.act{position:fixed;left:0;right:0;bottom:0;background:#0B2545;color:#fff;padding:10px 22px;display:none;z-index:9;box-shadow:0 -6px 20px rgba(0,0,0,.2)}
+.act .in{max-width:1440px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px;align-items:center}.act select,.act input{height:36px}
+.msg{font-size:13px;font-weight:600;min-height:18px}.msg.ok{color:var(--g)}.msg.er{color:var(--r)}
+.lines td{padding:4px}.lines input{width:100%}
+.mail table{width:auto}.mail th,.mail td{position:static;text-transform:none;letter-spacing:0;white-space:normal;z-index:auto}
+.mail{background:#fff;border:1px solid var(--line);border-radius:10px;padding:16px;overflow:auto}
+.note{font-size:12.5px;color:var(--mute);background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:8px 12px;margin:8px 0}
+.warn{color:#92400E;background:#FFFBEB;border-color:#FDE68A}
+dialog{border:0;border-radius:14px;padding:0;width:min(720px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.35)}
+dialog .dh{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}dialog .db{padding:16px 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+.empty{padding:30px;text-align:center;color:var(--mute)}
+.load{padding:40px;text-align:center;color:var(--mute)}
+@media print{header,.tabs,.act,.noprint{display:none!important}main{padding:0}.card{border:0;padding:0}}
+</style>
+</head>
+<body>
+<header><div class="hw"><div><h1>Sampling <span>Tracker</span></h1><div class="sub" id="sub">Loading…</div></div>
+  <div class="row"><span class="sub" id="who"></span><button class="hb" id="btnRefresh" type="button">Refresh</button><a class="hb" id="homeBtn" href="dept_smp.html" style="display:inline-flex;align-items:center;text-decoration:none">⌂ Home</a></div></div></header>
+<div class="tabs"><div class="tw" id="tabs">
+  <button type="button" data-t="board" class="on">Open samples</button><button type="button" data-t="new">+ New indent</button>
+  <button type="button" data-t="tailors">Tailors present</button><button type="button" data-t="closed">Closed (7 days)</button><button type="button" data-t="report">Report &amp; mail</button>
+</div></div>
+<main id="app"><div class="load">Loading sampling data…</div></main>
+<div class="act" id="act"><div class="in">
+  <b id="actN"></b><span>Move to</span><select id="mvTo"></select><select id="mvSub"></select>
+  <label class="row" style="gap:6px;align-items:center">Date <input type="date" id="mvDate"></label>
+  <label class="row" id="mvQtyL" style="gap:6px;align-items:center">Qty <input type="number" id="mvQty" min="1" style="width:80px" title="Move only part of this line"></label>
+  <button class="btn g" id="mvGo" type="button">Move</button><button class="btn" id="mvClear" type="button">Clear</button><span class="msg" id="mvMsg"></span>
+</div></div>
+<dialog id="dlg"><div class="dh"><b id="dlgT">Correct sample</b><button class="btn" type="button" id="dlgX">Close</button></div><div class="db" id="dlgB"></div></dialog>
+
+<script src="security.js"></script>
+<script src="js/tspl-config.js?v=20261122e"></script>
+<script src="js/tspl-app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var A = window.TSPL_APP, $ = function (id) { return document.getElementById(id); }, esc = A.esc;
+  var D = null, TAB = 'board', F = { stage: '', mer: '', buyer: '', q: '' }, SEL = {}, REP = null;
+  var GCLS = { 'A. Pre-Production': 'A', 'B. Yet to Sew': 'B', 'Under Sewing': 'U', 'C. Sewing Finished': 'C' };
+  var U = {}; try { U = JSON.parse(sessionStorage.getItem('userLoggedIn') || '{}'); } catch (e) {}
+  if (window.top !== window.self) $('homeBtn').style.display = 'none'; else if (U.redirect) $('homeBtn').href = U.redirect;
+  function n0(v) { return (+v || 0).toLocaleString('en-IN'); }
+  function stg(s) { var x = (D.lists.stages || []).filter(function (z) { return z.s === s; })[0]; return x || { s: s, g: '', subs: [] }; }
+  function openStages() { return D.lists.stages.filter(function (s) { return s.g !== 'Closed'; }); }
+  function days(d) { if (!d) return ''; return Math.max(0, Math.round((new Date(D.today + 'T12:00:00') - new Date(d + 'T12:00:00')) / 864e5)); }
+  function who() { var u = A.user(); $('who').textContent = u ? 'Signed in: ' + (u.name || u.email) : ''; }
+
+  function load(fresh, after) {
+    A.jsonp({ action: 'smp_data', fresh: fresh ? 1 : null }, function (r) {
+      if (!r || !r.ok) { if (!D) $('app').innerHTML = '<div class="load">Could not load. Please press Refresh.' + (r && r.error ? ' (' + esc(r.error) + ')' : '') + '</div>'; return; }
+      D = r; var q = 0; D.open.forEach(function (x) { q += x.qty; });
+      $('sub').textContent = D.open.length + ' open lines · ' + n0(q) + ' pcs in WIP · ' + D.today;
+      Object.keys(SEL).forEach(function (id) { if (!D.open.some(function (x) { return x.id === id; })) delete SEL[id]; });
+      if (!(after && after.keep)) render(); who(); if (after && after.fn) after.fn();
+    }, 90000);
+  }
+  function render() {
+    document.querySelectorAll('#tabs button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-t') === TAB); });
+    if (!D) return;
+    if (TAB === 'board') board(); else if (TAB === 'new') newForm(); else if (TAB === 'tailors') tailors(); else if (TAB === 'closed') closed(); else report();
+    actBar();
+  }
+  $('tabs').addEventListener('click', function (e) { var b = e.target.closest('button[data-t]'); if (!b) return; TAB = b.getAttribute('data-t'); render(); });
+  $('btnRefresh').addEventListener('click', function () { REP = null; load(true); });
+
+  /* ---------------- board ---------------- */
+  function filtered() {
+    return D.open.filter(function (x) {
+      return (!F.stage || x.stage === F.stage) && (!F.mer || x.m1 === F.mer) && (!F.buyer || x.buyer === F.buyer) &&
+        (!F.q || (x.style + ' ' + x.buyer + ' ' + x.desc + ' ' + x.fab + ' ' + x.type + ' ' + x.group + ' ' + x.remark + ' ' + x.id).toLowerCase().indexOf(F.q) > -1);
+    }).sort(function (a, b) { var sa = D.lists.stages.map(function (s) { return s.s; }); return (sa.indexOf(a.stage) - sa.indexOf(b.stage)) || (a.entry < b.entry ? -1 : 1); });
+  }
+  function board() {
+    var cnt = {}, tot = 0; D.open.forEach(function (x) { cnt[x.stage] = (cnt[x.stage] || 0) + x.qty; tot += x.qty; });
+    var mers = [], buyers = []; D.open.forEach(function (x) { if (mers.indexOf(x.m1) < 0) mers.push(x.m1); if (buyers.indexOf(x.buyer) < 0) buyers.push(x.buyer); }); mers.sort(); buyers.sort();
+    var L = filtered(), lq = 0; L.forEach(function (x) { lq += x.qty; });
+    var h = '<div class="card"><div class="chips" id="stChips"><button class="chip' + (!F.stage ? ' on' : '') + '" data-s="">All<b>' + n0(tot) + '</b></button>' +
+      openStages().map(function (s) { return cnt[s.s] ? '<button class="chip' + (F.stage === s.s ? ' on' : '') + '" data-s="' + esc(s.s) + '">' + esc(s.s) + '<b>' + n0(cnt[s.s]) + '</b></button>' : ''; }).join('') + '</div>' +
+      '<div class="row"><label class="f">Merchant<select id="fMer"><option value="">All</option>' + mers.map(function (m) { return '<option' + (F.mer === m ? ' selected' : '') + '>' + esc(m) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f">Buyer<select id="fBuyer"><option value="">All</option>' + buyers.map(function (m) { return '<option' + (F.buyer === m ? ' selected' : '') + '>' + esc(m) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f" style="flex:1;min-width:200px">Search<input id="fQ" placeholder="Style, description, colour, ID…" value="' + esc(F.q) + '"></label>' +
+      '<button class="btn" type="button" id="selAll">Tick all shown (' + L.length + ')</button></div>' +
+      '<div class="note">Tick the samples that moved, choose the new stage at the bottom and press <b>Move</b>. To move only part of a line, tick one line and enter the qty. Click ✎ to correct a line.</div>' +
+      '<div class="tbl"><table><thead><tr><th></th><th>Stage</th><th>Status</th><th>Merchant</th><th>Buyer</th><th>Style</th><th>Sample type</th><th>Description</th><th>Fabric &amp; combo</th><th>Size</th><th class="n">Qty</th><th>In since</th><th class="n">Days</th><th>Remark</th><th></th></tr></thead><tbody>' +
+      (L.length ? L.map(function (x) { var s = stg(x.stage), dd = days(x.entry);
+        return '<tr data-id="' + esc(x.id) + '"' + (SEL[x.id] ? ' class="sel"' : '') + '><td><input type="checkbox" data-ck="' + esc(x.id) + '"' + (SEL[x.id] ? ' checked' : '') + ' aria-label="Select ' + esc(x.style) + '" style="height:18px;width:18px"></td>' +
+          '<td><span class="tag ' + (GCLS[s.g] || '') + '">' + esc(x.stage) + '</span></td><td>' + esc(x.sub) + '</td><td>' + esc(x.m1) + '</td><td>' + esc(x.buyer) + '</td><td><b>' + esc(x.style) + '</b></td>' +
+          '<td>' + esc(x.group) + (x.type && x.type !== x.group ? ' <span style="color:var(--mute)">· ' + esc(x.type) + '</span>' : '') + '</td><td>' + esc(x.desc) + '</td><td>' + esc(x.fab) + '</td><td>' + esc(x.size) + '</td><td class="n"><b>' + n0(x.qty) + '</b></td>' +
+          '<td style="white-space:nowrap">' + esc(x.entry) + '</td><td class="n' + (dd > 10 ? ' old' : '') + '">' + dd + '</td><td>' + esc(x.remark) + '</td><td><button class="btn" style="height:28px;padding:0 9px" type="button" data-ed="' + esc(x.id) + '" aria-label="Correct">✎</button></td></tr>'; }).join('')
+        : '<tr><td colspan="15" class="empty">No open samples for this filter.</td></tr>') +
+      '</tbody><tfoot><tr><td colspan="10" style="font-weight:700">Shown: ' + L.length + ' lines</td><td class="n"><b>' + n0(lq) + '</b></td><td colspan="4"></td></tr></tfoot></table></div></div>';
+    $('app').innerHTML = h;
+    $('stChips').onclick = function (e) { var b = e.target.closest('[data-s]'); if (!b) return; F.stage = b.getAttribute('data-s'); render(); };
+    $('fMer').onchange = function () { F.mer = this.value; render(); }; $('fBuyer').onchange = function () { F.buyer = this.value; render(); };
+    $('fQ').oninput = function () { F.q = this.value.toLowerCase().trim(); var p = this.selectionStart; render(); var i = $('fQ'); i.focus(); i.setSelectionRange(p, p); };
+    $('selAll').onclick = function () { var all = L.every(function (x) { return SEL[x.id]; }); L.forEach(function (x) { if (all) delete SEL[x.id]; else SEL[x.id] = 1; }); render(); };
+    $('app').querySelector('tbody').onclick = function (e) {
+      var ed = e.target.closest('[data-ed]'); if (ed) return editDlg(ed.getAttribute('data-ed'));
+      var tr = e.target.closest('tr[data-id]'); if (!tr) return; var id = tr.getAttribute('data-id');
+      if (SEL[id]) delete SEL[id]; else SEL[id] = 1; tr.classList.toggle('sel', !!SEL[id]); var ck = tr.querySelector('[data-ck]'); if (ck) ck.checked = !!SEL[id]; actBar();
+    };
+  }
+  function actBar() {
+    var ids = Object.keys(SEL), show = (TAB === 'board' || TAB === 'closed') && ids.length;
+    $('act').style.display = show ? 'block' : 'none'; if (!show) return;
+    var pool = D.open.concat(D.recent), q = 0; ids.forEach(function (id) { var x = pool.filter(function (z) { return z.id === id; })[0]; if (x) q += x.qty; });
+    $('actN').textContent = ids.length + ' line' + (ids.length > 1 ? 's' : '') + ' · ' + n0(q) + ' pcs';
+    if (!$('mvTo').options.length) {
+      $('mvTo').innerHTML = D.lists.stages.map(function (s) { return '<option value="' + esc(s.s) + '">' + esc(s.s) + (s.g === 'Closed' ? '  (close)' : '') + '</option>'; }).join('');
+      $('mvTo').value = '7. Handed Over'; subOpts();
+    }
+    if (!$('mvDate').value) { $('mvDate').value = D.today; $('mvDate').max = D.today; $('mvDate').min = D.settings.live; }
+    $('mvQtyL').style.display = ids.length === 1 ? '' : 'none';
+  }
+  function subOpts() { var s = stg($('mvTo').value); $('mvSub').innerHTML = s.subs.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join(''); $('mvSub').style.display = s.subs.length > 1 ? '' : 'none'; }
+  $('mvTo').addEventListener('change', subOpts);
+  $('mvClear').addEventListener('click', function () { SEL = {}; $('mvQty').value = ''; render(); });
+  $('mvGo').addEventListener('click', function () {
+    var ids = Object.keys(SEL); if (!ids.length) return;
+    var b = this; b.disabled = true; $('mvMsg').className = 'msg'; $('mvMsg').textContent = 'Saving…';
+    A.call({ action: 'smp_move', ids: ids.join(','), to: $('mvTo').value, sub: $('mvSub').value, date: $('mvDate').value, qty: ids.length === 1 ? $('mvQty').value : '' }, function (r) {
+      b.disabled = false;
+      if (!r || !r.ok) { $('mvMsg').className = 'msg er'; $('mvMsg').textContent = (r && r.error) || 'No connection - try again'; return; }
+      $('mvMsg').className = 'msg ok'; $('mvMsg').textContent = 'Moved ' + r.moved + ' line(s), ' + n0(r.qty) + ' pcs'; SEL = {}; $('mvQty').value = ''; REP = null;
+      setTimeout(function () { $('mvMsg').textContent = ''; }, 4000); load(true);
+    });
+  });
+
+  /* ---------------- edit dialog ---------------- */
+  function dl(id, arr) { return '<datalist id="' + id + '">' + arr.map(function (v) { return '<option value="' + esc(v) + '">'; }).join('') + '</datalist>'; }
+  function lists() { return dl('lBuyer', D.lists.buyers) + dl('lType', Object.keys(D.lists.types)) + dl('lDesc', D.lists.descs); }
+  function editDlg(id) {
+    var x = D.open.concat(D.recent).filter(function (z) { return z.id === id; })[0]; if (!x) return;
+    var closedX = !D.open.some(function (z) { return z.id === id; });
+    $('dlgT').textContent = 'Correct ' + x.id + ' · ' + x.style;
+    $('dlgB').innerHTML = lists() + '<div class="grid">' +
+      '<label class="f">Merchant<select id="eMer">' + D.lists.merchants.map(function (m) { return '<option value="' + esc(m[0]) + '"' + (m[0] === x.mer ? ' selected' : '') + '>' + esc(m[0]) + '</option>'; }).join('') + (D.lists.merchants.some(function (m) { return m[0] === x.mer; }) ? '' : '<option selected>' + esc(x.mer) + '</option>') + '</select></label>' +
+      '<label class="f">Buyer<input id="eBuyer" list="lBuyer" value="' + esc(x.buyer) + '"></label><label class="f">Style No<input id="eStyle" value="' + esc(x.style) + '"></label>' +
+      '<label class="f">Sample type (as in indent)<input id="eType" list="lType" value="' + esc(x.type) + '"></label>' +
+      '<label class="f">Sample group (report)<select id="eGroup">' + D.lists.groups.map(function (g) { return '<option' + (g === x.group ? ' selected' : '') + '>' + esc(g) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f">Description<input id="eDesc" list="lDesc" value="' + esc(x.desc) + '"></label><label class="f">Fabric &amp; combo<input id="eFab" value="' + esc(x.fab) + '"></label>' +
+      '<label class="f">Size<input id="eSize" value="' + esc(x.size) + '"></label><label class="f">Qty<input id="eQty" type="number" min="1" value="' + x.qty + '"' + (closedX ? ' disabled' : '') + '></label>' +
+      '<label class="f">Indent date<input id="eInd" type="date" value="' + esc(x.indent) + '"></label></div><label class="f" style="margin-top:10px">Remark<textarea id="eRem">' + esc(x.remark) + '</textarea></label>' +
+      '<div class="row" style="margin-top:12px"><button class="btn p" id="eSave" type="button">Save correction</button><span class="msg" id="eMsg"></span></div>' +
+      '<div class="note">Qty changes are counted in today\'s "Indent Recvd" column (as + or −) so the WIP stays correct. Every correction is logged.</div>';
+    $('eType').oninput = function () { var g = D.lists.types[this.value]; if (g && D.lists.groups.indexOf(g) > -1) $('eGroup').value = g; };
+    $('eSave').onclick = function () {
+      var d = { mer: $('eMer').value, buyer: $('eBuyer').value, style: $('eStyle').value, type: $('eType').value, group: $('eGroup').value, desc: $('eDesc').value, fab: $('eFab').value, size: $('eSize').value, remark: $('eRem').value, indent: $('eInd').value };
+      if (!closedX) d.qty = $('eQty').value;
+      var b = this; b.disabled = true; $('eMsg').textContent = 'Saving…';
+      A.call({ action: 'smp_edit', id: id, d: JSON.stringify(d) }, function (r) { b.disabled = false; if (!r || !r.ok) { $('eMsg').className = 'msg er'; $('eMsg').textContent = (r && r.error) || 'Try again'; return; } $('dlg').close(); REP = null; load(true); });
+    };
+    $('dlg').showModal();
+  }
+  $('dlgX').addEventListener('click', function () { $('dlg').close(); });
+
+  /* ---------------- new indent ---------------- */
+  var NL = [{}, {}, {}];
+  function newForm() {
+    var h = lists() + '<div class="card"><h2>New indent <small>one indent can have many colours / sizes - add a line for each</small></h2><div class="grid">' +
+      '<label class="f">Received in sampling on<input type="date" id="nDate" value="' + D.today + '" max="' + D.today + '" min="' + D.settings.live + '"></label>' +
+      '<label class="f">Merchant<select id="nMer"><option value="">Pick…</option>' + D.lists.merchants.map(function (m) { return '<option value="' + esc(m[0]) + '">' + esc(m[0]) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f">Buyer<input id="nBuyer" list="lBuyer" placeholder="Pick or type"></label><label class="f">Style No<input id="nStyle"></label><label class="f">Board No<input id="nBoard"></label>' +
+      '<label class="f">Indent date<input type="date" id="nInd" value="' + D.today + '"></label>' +
+      '<label class="f">Sample type (as in indent)<input id="nType" list="lType" placeholder="e.g. 1ST FIT, PP, GOLD SEAL"></label>' +
+      '<label class="f">Sample group (report)<select id="nGroup"><option value="">Pick…</option>' + D.lists.groups.map(function (g) { return '<option>' + esc(g) + '</option>'; }).join('') + '</select></label>' +
+      '<label class="f">Description<input id="nDesc" list="lDesc" placeholder="T-SHIRT, PANT…"></label>' +
+      '<label class="f">Starts at stage<select id="nStage">' + openStages().map(function (s) { return '<option>' + esc(s.s) + '</option>'; }).join('') + '</select></label></div>' +
+      '<label class="f" style="margin-top:10px">Remark<textarea id="nRem"></textarea></label>' +
+      '<h2 style="margin-top:14px">Lines</h2><table class="lines"><thead><tr><th>Fabric &amp; combo / colour</th><th>Size</th><th class="n">Qty</th><th></th></tr></thead><tbody id="nLines"></tbody></table>' +
+      '<div class="row" style="margin-top:8px"><button class="btn" id="nAdd" type="button">+ Add line</button><span style="flex:1"></span><b id="nTot"></b><button class="btn p" id="nSave" type="button">Save indent</button></div><div class="msg" id="nMsg"></div></div>';
+    $('app').innerHTML = h; drawLines();
+    $('nType').oninput = function () { var g = D.lists.types[this.value.trim()]; if (g && D.lists.groups.indexOf(g) > -1) $('nGroup').value = g; };
+    $('nAdd').onclick = function () { NL.push({}); drawLines(); };
+    $('nSave').onclick = saveNew;
+  }
+  function drawLines() {
+    $('nLines').innerHTML = NL.map(function (l, i) { return '<tr><td><input data-l="' + i + '" data-k="fab" value="' + esc(l.fab || '') + '"></td><td><input data-l="' + i + '" data-k="size" value="' + esc(l.size || '') + '" style="max-width:120px"></td><td><input type="number" min="1" data-l="' + i + '" data-k="qty" value="' + esc(l.qty || '') + '" style="max-width:90px;text-align:right"></td><td><button class="btn" type="button" data-rm="' + i + '" aria-label="Remove line" style="height:32px">✕</button></td></tr>'; }).join('');
+    $('nLines').oninput = function (e) { var t = e.target; if (t.dataset.l == null) return; NL[+t.dataset.l][t.dataset.k] = t.value; tot(); };
+    $('nLines').onclick = function (e) { var b = e.target.closest('[data-rm]'); if (!b) return; NL.splice(+b.dataset.rm, 1); if (!NL.length) NL.push({}); drawLines(); };
+    tot();
+  }
+  function tot() { var q = 0; NL.forEach(function (l) { q += +l.qty || 0; }); $('nTot').textContent = q ? 'Total ' + q + ' pcs' : ''; }
+  function saveNew() {
+    var m = $('nMsg'); m.className = 'msg er';
+    var d = { mer: $('nMer').value, buyer: $('nBuyer').value.trim(), style: $('nStyle').value.trim(), board: $('nBoard').value.trim(), indent: $('nInd').value, type: $('nType').value.trim(), group: $('nGroup').value, desc: $('nDesc').value.trim(), remark: $('nRem').value.trim(), stage: $('nStage').value,
+      lines: NL.filter(function (l) { return +l.qty > 0; }) };
+    if (!d.mer) return (m.textContent = 'Pick the merchant'); if (!d.buyer) return (m.textContent = 'Enter the buyer'); if (!d.style) return (m.textContent = 'Enter the style number');
+    if (!d.group) return (m.textContent = 'Pick the sample group'); if (!d.lines.length) return (m.textContent = 'Enter the qty in at least one line');
+    var b = $('nSave'); b.disabled = true; m.className = 'msg'; m.textContent = 'Saving…';
+    A.call({ action: 'smp_add', date: $('nDate').value, d: JSON.stringify(d) }, function (r) {
+      b.disabled = false;
+      if (!r || !r.ok) { m.className = 'msg er'; m.textContent = (r && r.error) || 'No connection - try again'; return; }
+      m.className = 'msg ok'; m.textContent = 'Saved ' + r.ids.length + ' line(s), ' + r.qty + ' pcs (' + r.ids.join(', ') + '). You can enter the next indent.';
+      NL = [{}, {}, {}]; ['nStyle', 'nBoard', 'nRem'].forEach(function (k) { $(k).value = ''; }); drawLines(); REP = null; load(true, { keep: 1 });
+    });
+  }
+
+  /* ---------------- tailors ---------------- */
+  function tailors() {
+    var rows = Object.keys(D.daily).sort().reverse().slice(0, 15);
+    $('app').innerHTML = '<div class="card"><h2>Tailors present <small>shows in the WIP summary as "Using 29+1 Mock Opt"</small></h2><div class="row">' +
+      '<label class="f">Date<input type="date" id="tDate" value="' + D.today + '" max="' + D.today + '" min="' + D.settings.live + '"></label>' +
+      '<label class="f">Tailors present<input type="number" id="tT" min="0" style="width:120px" value="' + ((D.daily[D.today] || {}).t || '') + '"></label>' +
+      '<label class="f">Mock operators<input type="number" id="tM" min="0" style="width:120px" value="' + ((D.daily[D.today] || {}).m != null ? D.daily[D.today].m : 1) + '"></label>' +
+      '<button class="btn p" id="tSave" type="button">Save</button><span class="msg" id="tMsg"></span></div>' +
+      (rows.length ? '<table style="margin-top:14px;max-width:420px"><thead><tr><th>Date</th><th>Shows as</th></tr></thead><tbody>' + rows.map(function (d) { var x = D.daily[d]; return '<tr><td>' + d + '</td><td>Using ' + x.t + (x.m ? '+' + x.m + ' Mock Opt' : '') + '</td></tr>'; }).join('') + '</tbody></table>' : '') + '</div>';
+    $('tDate').onchange = function () { var x = D.daily[this.value] || {}; $('tT').value = x.t || ''; $('tM').value = x.m != null ? x.m : 1; };
+    $('tSave').onclick = function () {
+      var b = this; b.disabled = true; $('tMsg').className = 'msg'; $('tMsg').textContent = 'Saving…';
+      A.call({ action: 'smp_daily', date: $('tDate').value, tailors: $('tT').value, mock: $('tM').value }, function (r) { b.disabled = false; if (!r || !r.ok) { $('tMsg').className = 'msg er'; $('tMsg').textContent = (r && r.error) || 'Try again'; return; } REP = null; load(true, { fn: function () { $('tMsg').className = 'msg ok'; $('tMsg').textContent = 'Saved'; } }); });
+    };
+  }
+
+  /* ---------------- closed (undo) ---------------- */
+  function closed() {
+    var L = D.recent.slice().sort(function (a, b) { return a.cdate < b.cdate ? 1 : -1; });
+    $('app').innerHTML = '<div class="card"><h2>Closed in the last 7 days <small>handed over, cancelled, rejected, sent to TS9 - tick and move back if closed by mistake</small></h2><div class="tbl"><table><thead><tr><th></th><th>Closed on</th><th>As</th><th>Merchant</th><th>Buyer</th><th>Style</th><th>Sample type</th><th>Fabric &amp; combo</th><th>Size</th><th class="n">Qty</th><th></th></tr></thead><tbody>' +
+      (L.length ? L.map(function (x) { return '<tr data-id="' + esc(x.id) + '"' + (SEL[x.id] ? ' class="sel"' : '') + '><td><input type="checkbox" data-ck="' + esc(x.id) + '"' + (SEL[x.id] ? ' checked' : '') + ' style="height:18px;width:18px" aria-label="Select"></td><td>' + esc(x.cdate) + '</td><td>' + esc(x.cas || x.stage) + '</td><td>' + esc(x.m1) + '</td><td>' + esc(x.buyer) + '</td><td><b>' + esc(x.style) + '</b></td><td>' + esc(x.group) + '</td><td>' + esc(x.fab) + '</td><td>' + esc(x.size) + '</td><td class="n">' + n0(x.qty) + '</td><td><button class="btn" style="height:28px;padding:0 9px" type="button" data-ed="' + esc(x.id) + '">✎</button></td></tr>'; }).join('') : '<tr><td colspan="11" class="empty">Nothing closed in the last 7 days.</td></tr>') + '</tbody></table></div>' +
+      '<div class="note">Moving a closed line back to an open stage takes it off that day\'s handover / cancel count.</div></div>';
+    $('app').querySelector('tbody').onclick = function (e) {
+      var ed = e.target.closest('[data-ed]'); if (ed) return editDlg(ed.getAttribute('data-ed'));
+      var tr = e.target.closest('tr[data-id]'); if (!tr) return; var id = tr.getAttribute('data-id'); if (SEL[id]) delete SEL[id]; else SEL[id] = 1; tr.classList.toggle('sel', !!SEL[id]); tr.querySelector('[data-ck]').checked = !!SEL[id];
+      if (Object.keys(SEL).length && $('mvTo').options.length && !stg($('mvTo').value).subs.length) {} if ($('mvTo').options.length && $('mvTo').value === '7. Handed Over') { $('mvTo').value = '9. Awaiting to Dispatch'; subOpts(); } actBar();
+    };
+  }
+
+  /* ---------------- report & mail ---------------- */
+  var RDATE = null;
+  function report() {
+    RDATE = RDATE || D.today;
+    var h = '<div class="card noprint"><div class="row"><label class="f">Report date<input type="date" id="rDate" value="' + RDATE + '" max="' + D.today + '"></label>' +
+      '<button class="btn g" id="rSend" type="button">Send mail to management</button><button class="btn" id="rCopy" type="button">Copy mail (paste in Outlook / Gmail)</button>' +
+      '<button class="btn" id="rXls" type="button">Download Excel</button><button class="btn" id="rPrint" type="button">Print</button><span class="msg" id="rMsg"></span></div><div id="rNote"></div></div>' +
+      '<div class="mail" id="rMail"><div class="load">Preparing the report…</div></div>';
+    $('app').innerHTML = h;
+    $('rDate').onchange = function () { RDATE = this.value; REP = null; getRep(); };
+    $('rSend').onclick = sendMail; $('rCopy').onclick = copyMail; $('rXls').onclick = xls; $('rPrint').onclick = function () { window.print(); };
+    getRep();
+  }
+  function getRep() {
+    if (REP && REP.date === RDATE) return showRep();
+    A.jsonp({ action: 'smp_report', date: RDATE, fresh: 1 }, function (r) {
+      if (!r || !r.ok) { $('rMail').innerHTML = '<div class="load">Could not build the report. ' + esc((r && r.error) || 'Please try again.') + '</div>'; return; }
+      REP = r; if (TAB === 'report') showRep();
+    }, 120000);
+  }
+  function showRep() {
+    $('rMail').innerHTML = REP.mail;
+    var notes = [];
+    if (!REP.mailTo) notes.push('<div class="note warn">Mail list is empty. Add the email addresses in the Google Sheet <b>TSPL_Sampling_Tracker → Settings → "Mail to"</b> (and "Mail cc"). Until then use <b>Copy mail</b>.</div>');
+    var bad = REP.days.filter(function (d) { return d.live && d.gap; });
+    if (bad.length) notes.push('<div class="note warn">Check: on ' + bad.map(function (d) { return d.d; }).join(', ') + ' opening + received − handover − cancel does not equal WIP. Please tell HO.</div>');
+    notes.push('<div class="note">Subject: <b>' + esc(REP.subject) + '</b> · Built ' + esc(REP.built) + '. Days before ' + esc(REP.live) + ' come from your Excel.</div>');
+    $('rNote').innerHTML = notes.join('');
+    $('rSend').disabled = !REP.mailTo;
+  }
+  function sendMail() {
+    if (!REP) return; if (!window.confirm('Send the sampling mail for ' + REP.date + ' to the management list now?')) return;
+    var b = $('rSend'); b.disabled = true; $('rMsg').className = 'msg'; $('rMsg').textContent = 'Sending…';
+    A.call({ action: 'smp_mail', date: REP.date }, function (r) { b.disabled = false; if (!r || !r.ok) { $('rMsg').className = 'msg er'; $('rMsg').textContent = (r && r.error) || 'Not sent - try again'; return; } $('rMsg').className = 'msg ok'; $('rMsg').textContent = 'Mail sent to ' + r.to; });
+  }
+  function copyMail() {
+    if (!REP) return; var m = $('rMsg');
+    try {
+      if (window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+        navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([REP.mail], { type: 'text/html' }), 'text/plain': new Blob([$('rMail').innerText], { type: 'text/plain' }) })])
+          .then(function () { m.className = 'msg ok'; m.textContent = 'Copied - paste into a new mail (Ctrl+V)'; }, fallback);
+      } else fallback();
+    } catch (e) { fallback(); }
+    function fallback() { var r = document.createRange(); r.selectNodeContents($('rMail')); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); try { document.execCommand('copy'); m.className = 'msg ok'; m.textContent = 'Copied - paste into a new mail (Ctrl+V)'; } catch (e) { m.className = 'msg er'; m.textContent = 'Select the report and press Ctrl+C'; } s.removeAllRanges(); }
+  }
+  function xls() {
+    if (!REP) return; var b = $('rXls'); b.disabled = true; b.textContent = 'Preparing…';
+    function go() {
+      var R = REP, wb = XLSX.utils.book_new(), t = 'Texport Syndicate · Sampling · ' + R.date;
+      function add(name, rows) { var ws = XLSX.utils.aoa_to_sheet([[t + ' · ' + name], []].concat(rows)); ws['!cols'] = (rows[0] || []).map(function (h, i) { return { wch: i ? 13 : 24 }; }); XLSX.utils.book_append_sheet(wb, ws, name.slice(0, 31)); }
+      add('WIP Summary', [['Date', 'Opening Balance', 'Indent Recvd', 'Handover to merchant', 'Indent Cancel/Rejected', 'Transfer to TS9', 'WIP @ Sampling', 'Tailors Present']].concat(R.days.map(function (d) { return [d.d, d.op, d.rc, d.ho, d.cx, d.ts9, d.wip, d.tl]; }))
+        .concat([['Total', R.tot.op, R.tot.rc, R.tot.ho, R.tot.cx, R.tot.ts9, R.tot.wip, ''], ['This Month Avg/day', '', Math.round(R.avg.rc * 100) / 100, Math.round(R.avg.ho * 100) / 100]]));
+      add('Stage x Merchant', [['Stage', 'process1'].concat(R.merchants, ['Grand Total'])].concat(R.stage.map(function (s) { return [s.g, s.s].concat(s.v, [s.v.reduce(function (a, b) { return a + b; }, 0)]); })));
+      function piv(P, first) { return [[first].concat(P.cols, ['Grand Total'])].concat(P.rows.map(function (r, i) { return [r].concat(P.v[i], [P.v[i].reduce(function (a, b) { return a + b; }, 0)]); })); }
+      add('Excl Sewn-Hold-Dispatch', piv(R.excl, 'BUYER')); add('Indent Raised Till Date', piv(R.indent, 'BUYER')); add('Already Sewn Status', piv(R.sewn, 'Status'));
+      add('Open Samples', [['ID', 'Stage', 'Status', 'Merchant', 'Buyer', 'Style', 'Sample group', 'Sample type', 'Description', 'Fabric & combo', 'Size', 'Qty', 'In since', 'Indent date', 'Remark']].concat(D.open.map(function (x) { return [x.id, x.stage, x.sub, x.mer, x.buyer, x.style, x.group, x.type, x.desc, x.fab, x.size, x.qty, x.entry, x.indent, x.remark]; })));
+      XLSX.writeFile(wb, 'Sampling_Report_' + R.date + '.xlsx'); b.disabled = false; b.textContent = 'Download Excel';
+    }
+    if (window.XLSX) return go();
+    var sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'; sc.onload = go; sc.onerror = function () { b.disabled = false; b.textContent = 'Download Excel'; }; document.head.appendChild(sc);
+  }
+
+  load(false);
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>
