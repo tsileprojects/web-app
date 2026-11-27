@@ -285,7 +285,7 @@ tbody tr.click{cursor:pointer}tbody tr.click:hover{background:var(--soft)}
     var fr = e.target.closest('[data-fac]'); if (fr) { F.fac = fr.getAttribute('data-fac'); render(); window.scrollTo(0, 0); return; }
     var r = e.target.closest('[data-id]'); if (r) openStyle(r.getAttribute('data-id'));
   });
-  function CANXL() { var b = document.getElementById('btnXls'); return !!(b && !b.hidden); }
+  function CANXL() { var b = document.getElementById('btnXls'); return IS_AUD || !!(b && !b.hidden); }   // auditor may download the style tables (end bits / utilisation / cut log)
   function ecmSheets(k) {
     var R = window.__ecmR; if (!R) return []; var r = R.r, cats = R.cats, out = [];
     var cn = {}; cats.forEach(function (c) { cn[c.n] = (c.cat || 'Fabric ' + c.n) + (c.col ? ' · ' + c.col : ''); });
