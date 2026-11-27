@@ -69,7 +69,9 @@ function smpSettings_() {
   return { live: smpD_(o['Live from']) || '2026-11-26', base: smpD_(o['Indent base till']) || '2026-11-25',
     to: String(o['Mail to'] || '').trim(), cc: String(o['Mail cc'] || '').trim(), subject: String(o['Mail subject'] || 'Sampling status as on {date}') };
 }
-function smpUser_(p) { const u = axUser_(p.token); return u ? (u.name || u.email) : null; }
+// portal logins that may save without the email code (Sampling + HO)
+const SMP_LOGINS = ['smp', 'ho', 'man'];
+function smpUser_(p) { const u = axUser_(p.token); if (u) return u.name || u.email; const l = String(p.login || '').trim().toLowerCase(); return SMP_LOGINS.indexOf(l) > -1 ? 'Login ' + l : null; }
 
 /* ---------------- read: lists + open samples ---------------- */
 function smpLists_() {
