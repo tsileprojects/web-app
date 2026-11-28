@@ -67,8 +67,8 @@ tr.grp td{border-top:2px solid var(--line)}
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
   var NONDMG = { 'part miss': 1, 'size exchange': 1, 'cycle exchange': 1, 'size_exchange': 1, 'cycle_exchange': 1, 'part_miss': 1 };
-  var qs = new URLSearchParams(location.search), UNIT = window.TSPL_LOCK || qs.get('unit') || 'Emb', D = null, F = { iss: '', batch: '', reason: '', type: '' };
-  var NICE = { EMB: 'Embroidery', 'HO SMP': 'HO Sampling' }; $('uName').textContent = NICE[String(UNIT).toUpperCase()] || UNIT;
+  var qs = new URLSearchParams(location.search), UNIT = window.TSPL_LOCK || qs.get('unit') || 'Emb'; if (/^(smp|ho ?smp)$/i.test(UNIT)) UNIT = 'HO Smp'; var D = null, F = { iss: '', batch: '', reason: '', type: '' };
+  var NICE = { EMB: 'Embroidery', 'HO SMP': 'Sampling (HO)' }; $('uName').textContent = NICE[String(UNIT).toUpperCase()] || UNIT;
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function n0(v) { return (+v || 0).toLocaleString('en-IN'); }
   function ymd(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
