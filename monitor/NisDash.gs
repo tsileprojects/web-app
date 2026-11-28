@@ -42,3 +42,31 @@ function nisDash_(p) {
   if (u) out = Object.assign({}, out, { unit: u, rows: out.rows.filter(r => r[2] === u) });
   return out;
 }
+
+/* ================= NEEDLE DASHBOARD feed (action=ndl_dash&unit=Emb&from=YYYY-MM-DD&to=YYYY-MM-DD) =================
+   Read-only. Source: Needle 2.0 unit tabs (01_Needle_Issue_FormData_2.0 -> <Unit>_Ndl_Data) = new form entries
+   + old-form rows copied in by ndlSync_ every 10 min, so it is complete.
+   rows: [date, time, unitIssuer, batch, mcType, mcNo, recType, recQty, reason, issType, issQty, opId, operation, style]
+   Cached 2 minutes per unit+range; ?fresh=1 rebuilds. */
+const NDL_TABS = { 'FIPL': 'FIPL_Ndl_Data', 'TS2': 'TS2_Ndl_Data', 'TS4': 'TS4_Ndl_Data', 'TS9': 'TS9_Ndl_Data', 'AP2': 'AP2_Ndl_Data', 'HO Smp': 'HOSmp_Ndl_Data', 'EMB': 'Emb_Ndl_Data' };
+function ndlDash_(p) {
+  const u = nisUnit_(p.unit || ''), tab = NDL_TABS[u]; if (!tab) return { ok: false, error: 'Unknown unit' };
+  const tz = Session.getScriptTimeZone(), today = Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd');
+  const ok = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ''));
+  const to = ok(p.to) ? p.to : today, from = ok(p.from) ? p.from : to.slice(0, 8) + '01';
+  const key = 'ndl2_' + tab + '_' + from + '_' + to, c = CacheService.getScriptCache();
+  if (String(p.fresh) !== '1') { const h = c.get(key); if (h) return JSON.parse(h); }
+  const sh = SpreadsheetApp.openById(NSY_NEW_ID).getSheetByName(tab), rows = [];
+  const n = sh ? sh.getLastRow() - 1 : 0;
+  if (n > 0) {
+    const v = sh.getRange(2, 1, n, 17).getValues(), dv = sh.getRange(2, 2, n, 1).getDisplayValues(), s = x => String(x == null ? '' : x).trim();
+    for (let i = 0; i < v.length; i++) {
+      const r = v[i]; let d = r[0] instanceof Date ? Utilities.formatDate(r[0], tz, 'yyyy-MM-dd') : s(r[0]).slice(0, 10);
+      if (!ok(d) || d < from || d > to) continue;
+      rows.push([d, s(dv[i][0]), s(r[16]) || (u + '-' + s(r[3])), s(r[4]), s(r[8]), s(r[9]), s(r[10]), Number(r[11]) || 0, s(r[12]), s(r[14]), Number(r[15]) || 0, s(r[6]), s(r[7]), s(r[5])]);
+    }
+  }
+  const out = { ok: true, unit: u, from: from, to: to, generated: Utilities.formatDate(new Date(), tz, 'dd-MMM-yyyy HH:mm'), rows: rows };
+  try { const js = JSON.stringify(out); if (js.length < 95000) c.put(key, js, 120); } catch (e) {}
+  return out;
+}

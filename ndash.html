@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<script src="js/unitlock.js?v=1"></script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TSPL | Needle Issue Dashboard</title>
+<link rel="icon" href="img/tsilfaviconn.png" type="image/png" sizes="32x32">
+<style>
+:root{--bg:#F3F5F9;--card:#fff;--line:#E3E8F0;--ink:#0F172A;--mute:#475569;--navy:#0B2545;--gold:#C8962E;--r:#B42318;--b:#1D4ED8;--g:#067647;--a:#B45309}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+header{background:var(--navy);color:#fff}
+.hw{max-width:1500px;margin:0 auto;padding:12px 22px;display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.logo{width:40px;height:40px;border-radius:10px;background:var(--gold);color:var(--navy);font-weight:800;display:flex;align-items:center;justify-content:center}
+.hw h1{margin:0;font-size:19px}.hw h1 span{color:var(--gold)}.sub{font-size:12px;color:#B8C6DA;margin-top:2px}
+.hb{height:38px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;font:inherit;font-weight:600;cursor:pointer}
+.bar{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+.bw{max-width:1500px;margin:0 auto;padding:10px 22px;display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:11.5px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+input,select{height:38px;border:1px solid #CBD5E1;border-radius:8px;padding:0 10px;font:inherit;background:#fff;color:var(--ink);text-transform:none;letter-spacing:0;font-weight:500}
+.seg{display:flex;gap:4px;background:#EEF2F7;padding:4px;border-radius:10px}
+.seg button{height:30px;padding:0 12px;border:0;border-radius:7px;background:transparent;font:inherit;font-weight:600;color:#334155;cursor:pointer}
+.seg button.on{background:var(--navy);color:#fff}
+main{max-width:1500px;margin:0 auto;padding:18px 22px 50px}
+.kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;border-top:4px solid var(--c,#0B2545)}
+.kpi .l{font-size:11.5px;font-weight:700;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}.kpi .v{font-size:30px;font-weight:800;margin-top:4px;font-variant-numeric:tabular-nums}.kpi .n{font-size:12px;color:var(--mute)}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;min-width:0}
+.card h2{margin:0 0 10px;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:8px}.card h2 small{font-weight:500;font-size:12px;color:var(--mute)}
+.s3{grid-column:span 3}.s4{grid-column:span 4}.s5{grid-column:span 5}.s6{grid-column:span 6}.s7{grid-column:span 7}.s8{grid-column:span 8}.s12{grid-column:span 12}
+.scroll{max-height:440px;overflow:auto}
+table{border-collapse:collapse;width:100%}
+th{position:sticky;top:0;background:#F1F5F9;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;color:var(--mute);text-align:left;padding:8px;border-bottom:1px solid var(--line);z-index:1;cursor:pointer;white-space:nowrap}
+td{padding:7px 8px;border-bottom:1px solid #EEF2F7;font-size:13px}
+.n{text-align:right;font-variant-numeric:tabular-nums}
+.bar-row{display:grid;grid-template-columns:110px 1fr 54px;gap:8px;align-items:center;padding:5px 0;font-size:13px}
+.track{height:12px;background:#EEF2F7;border-radius:99px;overflow:hidden}.fill{height:12px;border-radius:99px;background:var(--b)}
+.dbars{display:flex;align-items:flex-end;gap:4px;height:170px;padding-top:10px;border-bottom:1px solid var(--line)}
+.dbars div{flex:1;background:#2F5FD0;border-radius:4px 4px 0 0;position:relative;min-width:6px}
+.dbars div span{position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--mute)}
+.dlab{display:flex;gap:4px;font-size:10px;color:var(--mute)}.dlab span{flex:1;text-align:center;min-width:6px}
+tr.tot td{font-weight:700;background:#F8FAFC}
+tr.grp td{border-top:2px solid var(--line)}
+.load{padding:50px;text-align:center;color:var(--mute)}
+.note{font-size:12px;color:var(--mute);margin-top:12px}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(3,minmax(0,1fr))}.s3,.s4,.s5,.s6,.s7,.s8{grid-column:span 12}}
+@media print{header,.bar{display:none}.scroll{max-height:none}}
+</style>
+</head>
+<body>
+<header><div class="hw"><div class="logo">TS</div><div><h1><span id="uName">Unit</span> · Needle Issue Dashboard</h1><div class="sub" id="sub">Loading…</div></div>
+  <div style="margin-left:auto;display:flex;gap:8px"><button class="hb" id="btnRef" type="button">Refresh</button><button class="hb" id="btnPrint" type="button">Print</button></div></div></header>
+<div class="bar"><div class="bw">
+  <div class="seg" id="quick"><button type="button" data-q="today">Today</button><button type="button" data-q="7">Last 7 days</button><button type="button" data-q="month" class="on">This month</button><button type="button" data-q="last">Last month</button></div>
+  <label class="f">From<input type="date" id="dFrom"></label><label class="f">To<input type="date" id="dTo"></label>
+  <label class="f">Unit issuer<select id="fIss"><option value="">All</option></select></label>
+  <label class="f">Batch<select id="fBatch"><option value="">All</option></select></label>
+  <label class="f">Reason<select id="fReason"><option value="">All</option></select></label>
+  <label class="f">Needle type<select id="fType"><option value="">All</option></select></label>
+</div></div>
+<main id="app"><div class="load">Loading needle data…</div></main>
+<script src="security.js"></script>
+<script src="js/tspl-config.js?v=20261122e"></script>
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var NONDMG = { 'part miss': 1, 'size exchange': 1, 'cycle exchange': 1, 'size_exchange': 1, 'cycle_exchange': 1, 'part_miss': 1 };
+  var qs = new URLSearchParams(location.search), UNIT = window.TSPL_LOCK || qs.get('unit') || 'Emb', D = null, F = { iss: '', batch: '', reason: '', type: '' };
+  var NICE = { EMB: 'Embroidery', 'HO SMP': 'HO Sampling' }; $('uName').textContent = NICE[String(UNIT).toUpperCase()] || UNIT;
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function n0(v) { return (+v || 0).toLocaleString('en-IN'); }
+  function ymd(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function jsonp(params, cb, ms) {
+    var name = '__nd' + Date.now() + Math.floor(Math.random() * 1e4), s = document.createElement('script'), done = false;
+    window[name] = function (r) { done = true; window[name] = function () {}; cb(r); };
+    s.src = (window.TSPL_MONITOR_URL || '') + '?' + Object.keys(params).map(function (k) { return k + '=' + encodeURIComponent(params[k]); }).join('&') + '&callback=' + name + '&_=' + Date.now();
+    s.onerror = function () { if (!done) { done = true; cb(null); } };
+    setTimeout(function () { if (!done) { done = true; window[name] = function () {}; cb(null); } }, ms || 90000);
+    document.body.appendChild(s);
+  }
+  function setRange(q) {
+    var t = new Date(), f = new Date(t);
+    if (q === 'today') {} else if (q === '7') f.setDate(t.getDate() - 6); else if (q === 'month') f = new Date(t.getFullYear(), t.getMonth(), 1);
+    else if (q === 'last') { f = new Date(t.getFullYear(), t.getMonth() - 1, 1); t = new Date(t.getFullYear(), t.getMonth(), 0); }
+    $('dFrom').value = ymd(f); $('dTo').value = ymd(t);
+    document.querySelectorAll('#quick button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-q') === q); });
+  }
+  function load(fresh) {
+    $('app').innerHTML = '<div class="load">Loading needle data…</div>';
+    jsonp({ action: 'ndl_dash', unit: UNIT, from: $('dFrom').value, to: $('dTo').value, fresh: fresh ? 1 : 0 }, function (r) {
+      if (!r || !r.ok) { $('app').innerHTML = '<div class="load">Could not load data. ' + esc((r && r.error) || 'Please press Refresh.') + '</div>'; return; }
+      D = r; fillFilters(); render();
+      $('sub').textContent = r.from + ' to ' + r.to + ' · ' + n0(r.rows.length) + ' entries · updated ' + r.generated + ' · from the Needle Issue Form';
+    });
+  }
+  function fillFilters() {
+    function opts(id, idx, key) { var s = {}; D.rows.forEach(function (r) { if (r[idx]) s[r[idx]] = 1; }); var cur = F[key];
+      $(id).innerHTML = '<option value="">All</option>' + Object.keys(s).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); }).map(function (v) { return '<option' + (v === cur ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join(''); }
+    opts('fIss', 2, 'iss'); opts('fBatch', 3, 'batch'); opts('fReason', 8, 'reason'); opts('fType', 6, 'type');
+  }
+  function isDmg(r) { return !NONDMG[String(r[8]).toLowerCase().trim()]; }
+  function group(rows, keyFn, valFn) { var m = {}; rows.forEach(function (r) { var k = keyFn(r); m[k] = (m[k] || 0) + valFn(r); }); return m; }
+  function render() {
+    var R = D.rows.filter(function (r) { return (!F.iss || r[2] === F.iss) && (!F.batch || r[3] === F.batch) && (!F.reason || r[8] === F.reason) && (!F.type || r[6] === F.type); });
+    var q = function (r) { return r[7] || 1; }, dmg = R.filter(isDmg), rs = function (re) { return R.filter(function (r) { return String(r[8]).toLowerCase().replace(/_/g, ' ').trim() === re; }).reduce(function (a, r) { return a + q(r); }, 0); };
+    var tot = R.reduce(function (a, r) { return a + q(r); }, 0), dTot = dmg.reduce(function (a, r) { return a + q(r); }, 0);
+    var types = {}; R.forEach(function (r) { if (r[6]) types[r[6]] = 1; });
+    var h = '<div class="kpis">' + kpi('Types of needle', Object.keys(types).length, 'needle types used', '#0B2545') + kpi('Total needles issued', n0(tot), R.length + ' entries', '#1D4ED8') +
+      kpi('Damage needle', n0(dTot), tot ? (dTot / tot * 100).toFixed(1) + '% of issued' : '', '#B42318') + kpi('Size exchange', n0(rs('size exchange')), 'not damage', '#B45309') +
+      kpi('Cycle exchange', n0(rs('cycle exchange')), 'not damage', '#B45309') + kpi('Part miss', n0(rs('part miss')), 'not damage', '#475569') + '</div>';
+    // date-wise
+    var byDate = group(dmg, function (r) { return r[0]; }, q), dates = Object.keys(byDate).sort(), mx = Math.max.apply(null, dates.map(function (d) { return byDate[d]; }).concat([1]));
+    h += '<div class="grid"><section class="card s8"><h2>Damage needles by date <small>' + dates.length + ' days</small></h2><div class="dbars">' +
+      dates.map(function (d) { return '<div style="height:' + Math.max(3, byDate[d] / mx * 100) + '%" title="' + d + ': ' + byDate[d] + '"><span>' + byDate[d] + '</span></div>'; }).join('') +
+      '</div><div class="dlab">' + dates.map(function (d) { return '<span>' + +d.slice(8) + '</span>'; }).join('') + '</div></section>';
+    // reason-wise
+    var byR = group(R, function (r) { return r[8] || '(blank)'; }, q), rk = Object.keys(byR).sort(function (a, b) { return byR[b] - byR[a]; }), rm = Math.max.apply(null, rk.map(function (k) { return byR[k]; }).concat([1]));
+    h += '<section class="card s4"><h2>Reason-wise summary</h2>' + rk.map(function (k) { return '<div class="bar-row"><span>' + esc(k) + '</span><div class="track"><div class="fill" style="width:' + (byR[k] / rm * 100) + '%;background:' + (NONDMG[k.toLowerCase()] ? '#94A3B8' : '#B42318') + '"></div></div><b class="n">' + n0(byR[k]) + '</b></div>'; }).join('') + '</section>';
+    // date table
+    h += '<section class="card s3"><h2>Date-wise</h2><div class="scroll"><table><thead><tr><th>#</th><th>Date</th><th class="n">Damage</th></tr></thead><tbody>' +
+      dates.slice().reverse().map(function (d, i) { var x = new Date(d + 'T12:00:00'); return '<tr><td>' + (i + 1) + '</td><td>' + x.getDate() + '-' + x.toLocaleString('en', { month: 'short' }) + '</td><td class="n">' + byDate[d] + '</td></tr>'; }).join('') +
+      '<tr class="tot"><td></td><td>Total</td><td class="n">' + n0(dTot) + '</td></tr></tbody></table></div></section>';
+    // batch-wise
+    var byB = group(dmg, function (r) { return r[3] || '(blank)'; }, q), bk = Object.keys(byB).sort(function (a, b) { return byB[b] - byB[a]; }), bm = Math.max.apply(null, bk.map(function (k) { return byB[k]; }).concat([1]));
+    h += '<section class="card s3"><h2>Batch-wise damage</h2><div class="scroll">' + bk.map(function (k) { return '<div class="bar-row" style="grid-template-columns:44px 1fr 44px"><b>' + esc(k) + '</b><div class="track"><div class="fill" style="width:' + (byB[k] / bm * 100) + '%"></div></div><span class="n">' + byB[k] + '</span></div>'; }).join('') + '</div></section>';
+    // needle type-wise
+    var byT = group(dmg, function (r) { return r[6] || '(blank)'; }, q), tk = Object.keys(byT).sort(function (a, b) { return byT[b] - byT[a]; });
+    h += '<section class="card s6"><h2>Needle type-wise</h2><table><thead><tr><th>Needle type</th><th class="n">Damage needle</th><th class="n">Damage %</th><th style="width:34%"></th></tr></thead><tbody>' +
+      tk.map(function (k) { var p = dTot ? byT[k] / dTot * 100 : 0; return '<tr><td>' + esc(k) + '</td><td class="n">' + n0(byT[k]) + '</td><td class="n">' + p.toFixed(1) + '%</td><td><div class="track"><div class="fill" style="width:' + p + '%;background:#2F5FD0"></div></div></td></tr>'; }).join('') +
+      '<tr class="tot"><td>Total</td><td class="n">' + n0(dTot) + '</td><td class="n">100%</td><td></td></tr></tbody></table></section>';
+    // batch x needle type, batch x machine
+    function nested(sub, label) {
+      var m = {}; dmg.forEach(function (r) { var b = r[3] || '(blank)', s = sub(r) || '(blank)'; m[b] = m[b] || {}; m[b][s] = (m[b][s] || 0) + q(r); });
+      var bks = Object.keys(m).sort(function (a, b) { return a.localeCompare(b, undefined, { numeric: true }); }), out = '';
+      bks.forEach(function (b) { var ss = Object.keys(m[b]).sort(function (x, y) { return m[b][y] - m[b][x]; }), t = 0;
+        ss.forEach(function (s, i) { t += m[b][s]; out += '<tr' + (i ? '' : ' class="grp"') + '><td>' + (i ? '' : '<b>' + esc(b) + '</b>') + '</td><td>' + esc(s) + '</td><td class="n">' + m[b][s] + '</td></tr>'; });
+        out += '<tr class="tot"><td></td><td>Total ' + esc(b) + '</td><td class="n">' + t + '</td></tr>'; });
+      return '<div class="scroll"><table><thead><tr><th>Batch</th><th>' + label + '</th><th class="n">Damage needle</th></tr></thead><tbody>' + out + '<tr class="tot"><td></td><td>Grand total</td><td class="n">' + n0(dTot) + '</td></tr></tbody></table></div>';
+    }
+    h += '<section class="card s6"><h2>Batch &amp; needle type summary</h2>' + nested(function (r) { return r[6]; }, 'Needle type') + '</section>';
+    h += '<section class="card s6"><h2>Batch &amp; machine no. summary</h2>' + nested(function (r) { return r[5]; }, 'Machine no.') + '</section></div>';
+    h += '<div class="note">Damage needle = all reasons except Size exchange, Cycle exchange and Part miss. Data comes straight from the Needle Issue Form (new form entries plus old form entries copied every 10 minutes).</div>';
+    $('app').innerHTML = h;
+  }
+  function kpi(l, v, n, c) { return '<div class="kpi" style="--c:' + c + '"><div class="l">' + l + '</div><div class="v">' + v + '</div><div class="n">' + n + '</div></div>'; }
+  $('quick').addEventListener('click', function (e) { var b = e.target.closest('[data-q]'); if (!b) return; setRange(b.getAttribute('data-q')); load(); });
+  ['dFrom', 'dTo'].forEach(function (id) { $(id).addEventListener('change', function () { document.querySelectorAll('#quick button').forEach(function (b) { b.classList.remove('on'); }); load(); }); });
+  [['fIss', 'iss'], ['fBatch', 'batch'], ['fReason', 'reason'], ['fType', 'type']].forEach(function (x) { $(x[0]).addEventListener('change', function () { F[x[1]] = this.value; if (D) render(); }); });
+  $('btnRef').addEventListener('click', function () { load(true); }); $('btnPrint').addEventListener('click', function () { window.print(); });
+  setRange('month'); load();
+})();
+</script>
+<script src="js/help.js" defer></script>
+</body>
+</html>

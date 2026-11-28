@@ -114,7 +114,7 @@ if (sessionStorage.getItem('userLoggedIn')) {
 }
 
 // Protection against frame embedding
-var _inMerchant = false; try { _inMerchant = self !== top && (/\/merchant\.html$/.test(top.location.pathname) || (/\/main_ho\.html$/.test(top.location.pathname) && /\/live\.html$/.test(location.pathname)) || (top.location.host === location.host && /\/smp\.html$/.test(location.pathname))); } catch (e) {}
+var _inMerchant = false; try { _inMerchant = self !== top && (/\/merchant\.html$/.test(top.location.pathname) || (/\/main_ho\.html$/.test(top.location.pathname) && /\/live\.html$/.test(location.pathname)) || (top.location.host === location.host && /\/(smp|ndash)\.html$/.test(location.pathname))); } catch (e) {}
 if (self !== top && !_inMerchant) {
     top.location = self.location;
 }
